@@ -1,0 +1,169 @@
+2026-01-09 23:27:34,513 - INFO - === English Study Manager Running (Tray Icon Active) ===
+2026-01-09 23:27:34,543 - DEBUG - Importing AvifImagePlugin
+2026-01-09 23:27:34,544 - DEBUG - Importing BlpImagePlugin
+2026-01-09 23:27:34,545 - DEBUG - Importing BmpImagePlugin
+2026-01-09 23:27:34,545 - DEBUG - Importing BufrStubImagePlugin
+2026-01-09 23:27:34,546 - DEBUG - Importing CurImagePlugin
+2026-01-09 23:27:34,546 - DEBUG - Importing DcxImagePlugin
+2026-01-09 23:27:34,547 - DEBUG - Importing DdsImagePlugin
+2026-01-09 23:27:34,549 - DEBUG - Importing EpsImagePlugin
+2026-01-09 23:27:34,550 - DEBUG - Importing FitsImagePlugin
+2026-01-09 23:27:34,551 - DEBUG - Importing FliImagePlugin
+2026-01-09 23:27:34,551 - DEBUG - Importing FpxImagePlugin
+2026-01-09 23:27:34,571 - DEBUG - Image: failed to import FpxImagePlugin: No module named 'olefile'
+2026-01-09 23:27:34,571 - DEBUG - Importing FtexImagePlugin
+2026-01-09 23:27:34,572 - DEBUG - Importing GbrImagePlugin
+2026-01-09 23:27:34,572 - DEBUG - Importing GifImagePlugin
+2026-01-09 23:27:34,572 - DEBUG - Importing GribStubImagePlugin
+2026-01-09 23:27:34,573 - DEBUG - Importing Hdf5StubImagePlugin
+2026-01-09 23:27:34,573 - DEBUG - Importing IcnsImagePlugin
+2026-01-09 23:27:34,574 - DEBUG - Importing IcoImagePlugin
+2026-01-09 23:27:34,575 - DEBUG - Importing ImImagePlugin
+2026-01-09 23:27:34,576 - DEBUG - Importing ImtImagePlugin
+2026-01-09 23:27:34,576 - DEBUG - Importing IptcImagePlugin
+2026-01-09 23:27:34,577 - DEBUG - Importing JpegImagePlugin
+2026-01-09 23:27:34,577 - DEBUG - Importing Jpeg2KImagePlugin
+2026-01-09 23:27:34,577 - DEBUG - Importing McIdasImagePlugin
+2026-01-09 23:27:34,577 - DEBUG - Importing MicImagePlugin
+2026-01-09 23:27:34,578 - DEBUG - Image: failed to import MicImagePlugin: No module named 'olefile'
+2026-01-09 23:27:34,578 - DEBUG - Importing MpegImagePlugin
+2026-01-09 23:27:34,578 - DEBUG - Importing MpoImagePlugin
+2026-01-09 23:27:34,584 - DEBUG - Importing MspImagePlugin
+2026-01-09 23:27:34,584 - DEBUG - Importing PalmImagePlugin
+2026-01-09 23:27:34,585 - DEBUG - Importing PcdImagePlugin
+2026-01-09 23:27:34,585 - DEBUG - Importing PcxImagePlugin
+2026-01-09 23:27:34,585 - DEBUG - Importing PdfImagePlugin
+2026-01-09 23:27:34,590 - DEBUG - Importing PixarImagePlugin
+2026-01-09 23:27:34,590 - DEBUG - Importing PngImagePlugin
+2026-01-09 23:27:34,590 - DEBUG - Importing PpmImagePlugin
+2026-01-09 23:27:34,590 - DEBUG - Importing PsdImagePlugin
+2026-01-09 23:27:34,591 - DEBUG - Importing QoiImagePlugin
+2026-01-09 23:27:34,591 - DEBUG - Importing SgiImagePlugin
+2026-01-09 23:27:34,591 - DEBUG - Importing SpiderImagePlugin
+2026-01-09 23:27:34,592 - DEBUG - Importing SunImagePlugin
+2026-01-09 23:27:34,592 - DEBUG - Importing TgaImagePlugin
+2026-01-09 23:27:34,593 - DEBUG - Importing TiffImagePlugin
+2026-01-09 23:27:34,593 - DEBUG - Importing WebPImagePlugin
+2026-01-09 23:27:34,594 - DEBUG - Importing WmfImagePlugin
+2026-01-09 23:27:34,595 - DEBUG - Importing XbmImagePlugin
+2026-01-09 23:27:34,596 - DEBUG - Importing XpmImagePlugin
+2026-01-09 23:27:34,596 - DEBUG - Importing XVThumbImagePlugin
+2026-01-09 23:28:15,880 - WARNING - EnglishStudyManager is already running. Exiting this instance.
+2026-01-09 23:30:32,986 - INFO - === English Study Manager Running (Tray Icon Active) ===
+2026-01-09 23:30:33,045 - DEBUG - Importing AvifImagePlugin
+2026-01-09 23:30:33,047 - DEBUG - Importing BlpImagePlugin
+2026-01-09 23:30:33,050 - DEBUG - Importing BmpImagePlugin
+2026-01-09 23:30:33,050 - DEBUG - Importing BufrStubImagePlugin
+2026-01-09 23:30:33,051 - DEBUG - Importing CurImagePlugin
+2026-01-09 23:30:33,052 - DEBUG - Importing DcxImagePlugin
+2026-01-09 23:30:33,054 - DEBUG - Importing DdsImagePlugin
+2026-01-09 23:30:33,060 - DEBUG - Importing EpsImagePlugin
+2026-01-09 23:30:33,062 - DEBUG - Importing FitsImagePlugin
+2026-01-09 23:30:33,065 - DEBUG - Importing FliImagePlugin
+2026-01-09 23:30:33,066 - DEBUG - Importing FpxImagePlugin
+2026-01-09 23:30:33,068 - DEBUG - Image: failed to import FpxImagePlugin: No module named 'olefile'
+2026-01-09 23:30:33,068 - DEBUG - Importing FtexImagePlugin
+2026-01-09 23:30:33,069 - DEBUG - Importing GbrImagePlugin
+2026-01-09 23:30:33,070 - DEBUG - Importing GifImagePlugin
+2026-01-09 23:30:33,071 - DEBUG - Importing GribStubImagePlugin
+2026-01-09 23:30:33,072 - DEBUG - Importing Hdf5StubImagePlugin
+2026-01-09 23:30:33,073 - DEBUG - Importing IcnsImagePlugin
+2026-01-09 23:30:33,076 - DEBUG - Importing IcoImagePlugin
+2026-01-09 23:30:33,078 - DEBUG - Importing ImImagePlugin
+2026-01-09 23:30:33,080 - DEBUG - Importing ImtImagePlugin
+2026-01-09 23:30:33,082 - DEBUG - Importing IptcImagePlugin
+2026-01-09 23:30:33,083 - DEBUG - Importing JpegImagePlugin
+2026-01-09 23:30:33,083 - DEBUG - Importing Jpeg2KImagePlugin
+2026-01-09 23:30:33,083 - DEBUG - Importing McIdasImagePlugin
+2026-01-09 23:30:33,084 - DEBUG - Importing MicImagePlugin
+2026-01-09 23:30:33,086 - DEBUG - Image: failed to import MicImagePlugin: No module named 'olefile'
+2026-01-09 23:30:33,086 - DEBUG - Importing MpegImagePlugin
+2026-01-09 23:30:33,087 - DEBUG - Importing MpoImagePlugin
+2026-01-09 23:30:33,099 - DEBUG - Importing MspImagePlugin
+2026-01-09 23:30:33,100 - DEBUG - Importing PalmImagePlugin
+2026-01-09 23:30:33,102 - DEBUG - Importing PcdImagePlugin
+2026-01-09 23:30:33,103 - DEBUG - Importing PcxImagePlugin
+2026-01-09 23:30:33,103 - DEBUG - Importing PdfImagePlugin
+2026-01-09 23:30:33,115 - DEBUG - Importing PixarImagePlugin
+2026-01-09 23:30:33,117 - DEBUG - Importing PngImagePlugin
+2026-01-09 23:30:33,117 - DEBUG - Importing PpmImagePlugin
+2026-01-09 23:30:33,117 - DEBUG - Importing PsdImagePlugin
+2026-01-09 23:30:33,118 - DEBUG - Importing QoiImagePlugin
+2026-01-09 23:30:33,119 - DEBUG - Importing SgiImagePlugin
+2026-01-09 23:30:33,120 - DEBUG - Importing SpiderImagePlugin
+2026-01-09 23:30:33,121 - DEBUG - Importing SunImagePlugin
+2026-01-09 23:30:33,122 - DEBUG - Importing TgaImagePlugin
+2026-01-09 23:30:33,123 - DEBUG - Importing TiffImagePlugin
+2026-01-09 23:30:33,123 - DEBUG - Importing WebPImagePlugin
+2026-01-09 23:30:33,126 - DEBUG - Importing WmfImagePlugin
+2026-01-09 23:30:33,127 - DEBUG - Importing XbmImagePlugin
+2026-01-09 23:30:33,130 - DEBUG - Importing XpmImagePlugin
+2026-01-09 23:30:33,131 - DEBUG - Importing XVThumbImagePlugin
+2026-01-09 23:31:15,418 - INFO - Hotkey Pressed: Open
+2026-01-09 23:31:15,418 - INFO - [EVENT] Opening English Study Environment...
+2026-01-09 23:31:52,981 - INFO - Hotkey Pressed: Close
+2026-01-09 23:31:52,981 - INFO - [EVENT] Closing English Study Environment...
+2026-01-09 23:32:22,528 - WARNING - EnglishStudyManager is already running. Exiting this instance.
+2026-01-09 23:32:27,164 - INFO - Hotkey Pressed: Open
+2026-01-09 23:32:27,164 - INFO - [EVENT] Opening English Study Environment...
+2026-01-09 23:32:56,821 - INFO - Hotkey Pressed: Close
+2026-01-09 23:32:56,822 - INFO - [EVENT] Closing English Study Environment...
+2026-01-09 23:34:32,269 - WARNING - EnglishStudyManager is already running. Exiting this instance.
+2026-01-09 23:34:35,016 - INFO - Hotkey Pressed: Open
+2026-01-09 23:34:35,017 - INFO - [EVENT] Opening English Study Environment...
+2026-01-09 23:35:44,589 - INFO - === English Study Manager Running (Tray Icon Active) ===
+2026-01-09 23:35:44,663 - DEBUG - Importing AvifImagePlugin
+2026-01-09 23:35:44,665 - DEBUG - Importing BlpImagePlugin
+2026-01-09 23:35:44,668 - DEBUG - Importing BmpImagePlugin
+2026-01-09 23:35:44,668 - DEBUG - Importing BufrStubImagePlugin
+2026-01-09 23:35:44,669 - DEBUG - Importing CurImagePlugin
+2026-01-09 23:35:44,671 - DEBUG - Importing DcxImagePlugin
+2026-01-09 23:35:44,673 - DEBUG - Importing DdsImagePlugin
+2026-01-09 23:35:44,681 - DEBUG - Importing EpsImagePlugin
+2026-01-09 23:35:44,684 - DEBUG - Importing FitsImagePlugin
+2026-01-09 23:35:44,687 - DEBUG - Importing FliImagePlugin
+2026-01-09 23:35:44,688 - DEBUG - Importing FpxImagePlugin
+2026-01-09 23:35:44,690 - DEBUG - Image: failed to import FpxImagePlugin: No module named 'olefile'
+2026-01-09 23:35:44,690 - DEBUG - Importing FtexImagePlugin
+2026-01-09 23:35:44,692 - DEBUG - Importing GbrImagePlugin
+2026-01-09 23:35:44,693 - DEBUG - Importing GifImagePlugin
+2026-01-09 23:35:44,694 - DEBUG - Importing GribStubImagePlugin
+2026-01-09 23:35:44,695 - DEBUG - Importing Hdf5StubImagePlugin
+2026-01-09 23:35:44,695 - DEBUG - Importing IcnsImagePlugin
+2026-01-09 23:35:44,698 - DEBUG - Importing IcoImagePlugin
+2026-01-09 23:35:44,700 - DEBUG - Importing ImImagePlugin
+2026-01-09 23:35:44,702 - DEBUG - Importing ImtImagePlugin
+2026-01-09 23:35:44,703 - DEBUG - Importing IptcImagePlugin
+2026-01-09 23:35:44,704 - DEBUG - Importing JpegImagePlugin
+2026-01-09 23:35:44,704 - DEBUG - Importing Jpeg2KImagePlugin
+2026-01-09 23:35:44,704 - DEBUG - Importing McIdasImagePlugin
+2026-01-09 23:35:44,705 - DEBUG - Importing MicImagePlugin
+2026-01-09 23:35:44,707 - DEBUG - Image: failed to import MicImagePlugin: No module named 'olefile'
+2026-01-09 23:35:44,707 - DEBUG - Importing MpegImagePlugin
+2026-01-09 23:35:44,708 - DEBUG - Importing MpoImagePlugin
+2026-01-09 23:35:44,722 - DEBUG - Importing MspImagePlugin
+2026-01-09 23:35:44,724 - DEBUG - Importing PalmImagePlugin
+2026-01-09 23:35:44,726 - DEBUG - Importing PcdImagePlugin
+2026-01-09 23:35:44,727 - DEBUG - Importing PcxImagePlugin
+2026-01-09 23:35:44,727 - DEBUG - Importing PdfImagePlugin
+2026-01-09 23:35:44,739 - DEBUG - Importing PixarImagePlugin
+2026-01-09 23:35:44,741 - DEBUG - Importing PngImagePlugin
+2026-01-09 23:35:44,741 - DEBUG - Importing PpmImagePlugin
+2026-01-09 23:35:44,741 - DEBUG - Importing PsdImagePlugin
+2026-01-09 23:35:44,742 - DEBUG - Importing QoiImagePlugin
+2026-01-09 23:35:44,744 - DEBUG - Importing SgiImagePlugin
+2026-01-09 23:35:44,745 - DEBUG - Importing SpiderImagePlugin
+2026-01-09 23:35:44,746 - DEBUG - Importing SunImagePlugin
+2026-01-09 23:35:44,748 - DEBUG - Importing TgaImagePlugin
+2026-01-09 23:35:44,749 - DEBUG - Importing TiffImagePlugin
+2026-01-09 23:35:44,749 - DEBUG - Importing WebPImagePlugin
+2026-01-09 23:35:44,753 - DEBUG - Importing WmfImagePlugin
+2026-01-09 23:35:44,755 - DEBUG - Importing XbmImagePlugin
+2026-01-09 23:35:44,758 - DEBUG - Importing XpmImagePlugin
+2026-01-09 23:35:44,759 - DEBUG - Importing XVThumbImagePlugin
+2026-01-09 23:35:47,041 - INFO - Hotkey Pressed: Close
+2026-01-09 23:35:47,041 - INFO - [EVENT] Closing English Study Environment...
+2026-01-09 23:36:00,155 - INFO - Hotkey Pressed: Open
+2026-01-09 23:36:00,155 - INFO - [EVENT] Opening English Study Environment...
+2026-01-09 23:36:14,383 - INFO - Hotkey Pressed: Close
+2026-01-09 23:36:14,383 - INFO - [EVENT] Closing English Study Environment...

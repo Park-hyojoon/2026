@@ -1,0 +1,26 @@
+{
+    "global": {
+        "color": "#008080",
+        "thickness": 5
+    },
+    "date": {
+        "color": "#efebc9",
+        "thickness": 5
+    },
+    "sermon": {
+        "color": "#008080",
+        "thickness": 5
+    },
+    "today": {
+        "color": "#008080",
+        "thickness": 5
+    },
+    "order": {
+        "color": "#008080",
+        "thickness": 5
+    },
+    "notice": {
+        "color": "#008080",
+        "thickness": 5
+    }
+}

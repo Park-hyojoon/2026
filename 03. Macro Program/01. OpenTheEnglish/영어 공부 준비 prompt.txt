@@ -1,0 +1,33 @@
+우리의 목표) 한번의 실행으로 "영어 공부 준비 완료!"할 수 있는 프로그램을 만들자.
+공부 환경  설명)영어 공부를 시작 할 때 다음과 같은 공부환경을 만들고 시작해.
+
+	1) Anki, Loqseq, Google Chrome 실행
+	2) 모니터 화면 분할을 3등분 하고 왼쪽부터 시작해서 'Anki, Loqseq, Google Chrome'를 차례대로 띄어놔.
+	3) Google Chrome은 3개의 tab menu를 열어. 3개의 tab menu는 왼쪽부터 'Gemini, DeepL, Naver영어사전' 순서로 띄어좌.
+
+
+아직 작업은 진행시키지 말고 내 의도를 파악했는지 알고 싶어.
+그리고 너의 작업 계획을 설명해줘.
+
+=====
+
+좋아. 설명 고마워.
+
+'작업 표시줄' 단축키 ) 
+추가로 '작업 표시줄'에 'Anki, Loqseq, Google Chrome'의 icons을 고정 시켜놨어. 단축키는 다음과 같아. 
+	- Anki :Win,6 
+	- Loqseq : Win,7 
+	- Google Chrome : Win,2
+물론 내가 실수로(혹은 환경 변화)  '작업 표시줄' 순서가 바뀔 수도 있어.
+
+질문)
+너는 'Anki, Loqseq, Google Chrome' 프로그램들을 어떻게 실행시킬거야?
+D:\Program Files (phj)\Anki
+C:\Users\MyPC\.logseq ---> Logseq의 경우는 여기에 설치 된게 맞는지 확실하지
+
+
+화면 분할에 대한 나의 의견) 
+내가 말한 화면 분할이 뭔지 이해했지? 단축키 'Win+Alt+Left key(or Right key)'를 눌러서 작업 창을 분할하는 걸 말한거야.
+
+나의 의도를 이해 했다면 작업 계회기을 md 파일로 만들고 저장을 해줘.
+검토 후 수정사항이 있으면 알려줄께.

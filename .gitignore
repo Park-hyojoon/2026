@@ -1,0 +1,16 @@
+# Environment variables
+.env
+
+# User's sensitive images
+03. Macro Program/04. QRcode-Download/requestment images/
+
+# Python virtual environment
+03. Macro Program/04. QRcode-Download/venv/
+
+# Downloaded files
+03. Macro Program/04. QRcode-Download/downloads/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class

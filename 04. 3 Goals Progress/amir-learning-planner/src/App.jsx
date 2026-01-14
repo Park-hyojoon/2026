@@ -67,6 +67,66 @@ function App() {
     setData(updatedData);
   }
 
+  // 학습 범위 저장 핸들러
+  const handleTopicSubmit = (taskId, topic) => {
+    const updatedData = { ...data };
+    const today = new Date().toISOString().split('T')[0];
+
+    if (taskId === 'accounting') {
+      if (!updatedData.accounting.studyLog) {
+        updatedData.accounting.studyLog = [];
+      }
+      // 같은 날짜에 이미 기록이 있으면 업데이트, 없으면 추가
+      const existingIndex = updatedData.accounting.studyLog.findIndex(
+        log => log.date === today
+      );
+      if (existingIndex >= 0) {
+        updatedData.accounting.studyLog[existingIndex].topic = topic;
+      } else {
+        updatedData.accounting.studyLog.push({ date: today, topic });
+      }
+    }
+
+    setData(updatedData);
+  };
+
+  // 오늘의 학습 범위 가져오기
+  const getTodayStudyTopics = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const topics = {};
+
+    const accountingLog = data?.accounting?.studyLog?.find(log => log.date === today);
+    if (accountingLog) {
+      topics.accounting = accountingLog.topic;
+    }
+
+    return topics;
+  };
+
+  // 영어 표현 저장 핸들러
+  const handleSavePhrase = (phrase) => {
+    const updatedData = { ...data };
+
+    if (!updatedData.english.targetPhrases) {
+      updatedData.english.targetPhrases = [];
+    }
+
+    // 중복 체크
+    const existing = updatedData.english.targetPhrases.find(
+      p => p.phrase.toLowerCase() === phrase.toLowerCase()
+    );
+
+    if (!existing) {
+      updatedData.english.targetPhrases.push({
+        phrase,
+        practiceCount: 0,
+        addedAt: new Date().toISOString()
+      });
+    }
+
+    setData(updatedData);
+  };
+
   const tabs = [
     { id: 'dashboard', label: data.user.language === 'en' ? 'Dashboard' : '현황', icon: Layout },
     { id: 'planner', label: data.user.language === 'en' ? 'Plan' : '계획', icon: Calendar },
@@ -196,12 +256,22 @@ ${data.user.name} 님, 오늘의 학습 피드백입니다.
                 <div className="h-full">
                   <TodayTasks
                     tasks={[
-                      { id: 'accounting', name: '회계 공부', goal: data.dailyGoals.accounting, current: data.currentWeek.days[0].accounting.hours, emoji: '📊', completed: data.currentWeek.days[0].accounting.completed },
+                      {
+                        id: 'accounting',
+                        name: '회계 공부',
+                        goal: data.dailyGoals.accounting,
+                        current: data.currentWeek.days[0].accounting.hours,
+                        emoji: '📊',
+                        completed: data.currentWeek.days[0].accounting.completed,
+                        uploadedFile: data.accounting?.referenceMaterials?.length > 0 ? data.accounting.referenceMaterials[data.accounting.referenceMaterials.length - 1].name : null
+                      },
                       { id: 'english', name: '영어 연습', goal: data.dailyGoals.english, current: data.currentWeek.days[0].english.hours, emoji: '🗣️', completed: data.currentWeek.days[0].english.completed },
                       { id: 'ai', name: 'AI 학습', goal: data.dailyGoals.ai, current: data.currentWeek.days[0].ai.hours, emoji: '🤖', completed: data.currentWeek.days[0].ai.completed },
                     ]}
                     onUpdate={handleUpdateTask}
                     onFileUpload={handleFileUpload}
+                    onTopicSubmit={handleTopicSubmit}
+                    savedStudyTopics={getTodayStudyTopics()}
                   />
                 </div>
 
@@ -229,7 +299,7 @@ ${data.user.name} 님, 오늘의 학습 피드백입니다.
           )}
 
           {activeTab === 'projects' && (
-            <AIHub data={data} />
+            <AIHub data={data} onSavePhrase={handleSavePhrase} />
           )}
 
           {activeTab === 'roadmap' && (

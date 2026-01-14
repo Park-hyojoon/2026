@@ -2,7 +2,7 @@ import React from 'react';
 import AccountingQuiz from './AccountingQuiz';
 import EnglishCoach from './EnglishCoach';
 
-export default function AIHub({ data }) {
+export default function AIHub({ data, onSavePhrase }) {
     return (
         <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <header className="text-center md:text-left">
@@ -15,7 +15,7 @@ export default function AIHub({ data }) {
                 <AccountingQuiz data={data} />
 
                 {/* Right: English Coach */}
-                <EnglishCoach data={data} />
+                <EnglishCoach data={data} onSavePhrase={onSavePhrase} />
             </div>
         </div>
     );

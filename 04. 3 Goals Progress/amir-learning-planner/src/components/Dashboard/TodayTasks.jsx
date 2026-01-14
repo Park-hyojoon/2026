@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { CheckCircle2, Circle, Clock, Check } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Check, ArrowUp } from 'lucide-react';
 
-export default function TodayTasks({ tasks, onUpdate, onFileUpload }) {
+export default function TodayTasks({ tasks, onUpdate, onFileUpload, onTopicSubmit, savedStudyTopics = {} }) {
     const today = new Date().toLocaleDateString('ko-KR', {
         month: 'long',
         day: 'numeric',
@@ -10,7 +10,21 @@ export default function TodayTasks({ tasks, onUpdate, onFileUpload }) {
 
     const [isEditing, setIsEditing] = useState(null);
     const [editValue, setEditValue] = useState("");
-    const [uploadState, setUploadState] = useState({}); // { [taskId]: { status: 'idle' | 'uploading' | 'done', filename: '' } }
+    const [uploadState, setUploadState] = useState({});
+
+    // Topic input state - initialized from props
+    const [topicInputs, setTopicInputs] = useState(savedStudyTopics);
+
+    // Sync with props when mounting or when tasks change
+    React.useEffect(() => {
+        const newUploadState = {};
+        tasks.forEach(task => {
+            if (task.uploadedFile) {
+                newUploadState[task.id] = { status: 'done', filename: task.uploadedFile };
+            }
+        });
+        setUploadState(prev => ({ ...prev, ...newUploadState }));
+    }, [tasks]);
 
     const handleEditStart = (taskId, currentGoal) => {
         setIsEditing(taskId);
@@ -32,6 +46,23 @@ export default function TodayTasks({ tasks, onUpdate, onFileUpload }) {
             setUploadState(prev => ({ ...prev, [taskId]: { status: 'done', filename: file.name } }));
             if (onFileUpload) onFileUpload(taskId, file);
         }, 1500); // 1.5s simulation
+    };
+
+    // Topic Handlers
+    const handleTopicChange = (taskId, value) => {
+        setTopicInputs(prev => ({ ...prev, [taskId]: value }));
+    };
+
+    const handleTopicSubmitLocal = (taskId) => {
+        if (!topicInputs[taskId]) return;
+        if (onTopicSubmit) {
+            onTopicSubmit(taskId, topicInputs[taskId]);
+        }
+    };
+
+    // Check if topic is saved (from props)
+    const isTopicSaved = (taskId) => {
+        return savedStudyTopics[taskId] === topicInputs[taskId] && topicInputs[taskId];
     };
 
     return (
@@ -106,22 +137,30 @@ export default function TodayTasks({ tasks, onUpdate, onFileUpload }) {
 
                         {/* Daily Topic & File Upload */}
                         <div className="mt-2 flex flex-col gap-2">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 relative">
                                 <input
                                     type="text"
-                                    placeholder={`무엇을 공부했나요? (예: ${task.id === 'accounting' ? '자산 부채 정의' : '비즈니스 이메일'})`}
-                                    className="flex-1 bg-white/50 border border-gray-100 rounded-xl px-3 py-2 text-xs font-medium text-gray-600 outline-none focus:border-primary/30 focus:bg-white transition-all"
+                                    placeholder={`무엇을 공부했나요? (예: ${task.id === 'accounting' ? 'Part 01 이론편-2. 유동자산' : '비즈니스 이메일'})`}
+                                    value={topicInputs[task.id] || ''}
+                                    onChange={(e) => handleTopicChange(task.id, e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleTopicSubmitLocal(task.id)}
+                                    className={`flex-1 bg-white/50 border ${isTopicSaved(task.id) ? 'border-green-200 bg-green-50/30' : 'border-gray-100'} rounded-xl px-3 py-2 text-xs font-medium text-gray-600 outline-none focus:border-primary/30 focus:bg-white transition-all`}
                                 />
-                                <label className="cursor-pointer p-2 bg-white border border-gray-100 rounded-xl text-gray-400 hover:text-primary hover:border-primary/30 transition-all shadow-sm">
-                                    <input type="file" className="hidden" />
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>
-                                </label>
+                                <button
+                                    onClick={() => handleTopicSubmitLocal(task.id)}
+                                    className={`p-2 rounded-xl border transition-all shadow-sm ${isTopicSaved(task.id)
+                                            ? 'bg-green-500 border-green-500 text-white'
+                                            : 'bg-white border-gray-100 text-gray-400 hover:text-primary hover:border-primary/30'
+                                        }`}
+                                >
+                                    {isTopicSaved(task.id) ? <Check size={16} strokeWidth={3} /> : <ArrowUp size={16} />}
+                                </button>
                             </div>
 
                             {task.id === 'accounting' && (
                                 <div className={`p-3 border rounded-xl transition-all duration-500 ${uploadState[task.id]?.status === 'done'
-                                        ? 'bg-green-50 border-green-200 shadow-sm'
-                                        : 'bg-indigo-50/50 border-indigo-100/50'
+                                    ? 'bg-green-50 border-green-200 shadow-sm'
+                                    : 'bg-indigo-50/50 border-indigo-100/50'
                                     }`}>
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center space-x-2">

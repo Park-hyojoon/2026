@@ -37,18 +37,27 @@ export const initialData = {
             ],
             tests: [],
             examDate: "2026-06-15",
-            referenceMaterials: [] // Stores metadata of uploaded books/PDFs
+            referenceMaterials: []
         },
         level1: {
             chapters: [],
             tests: [],
             examDate: "2026-12-15"
-        }
+        },
+        textbook: {
+            name: "",
+            publisher: "",
+            level: "",
+            features: ""
+        },
+        studyLog: []
     },
     english: {
         speakApp: { streak: 0, currentLevel: "Beginner" },
         expressions: [],
-        books: []
+        books: [],
+        targetPhrases: [],
+        practiceHistory: []
     },
     roadmap: {
         2026: {

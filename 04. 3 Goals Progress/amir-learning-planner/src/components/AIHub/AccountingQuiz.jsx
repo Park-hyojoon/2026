@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Brain, Calculator, ChevronRight, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Brain, Calculator, ChevronRight, CheckCircle, XCircle, RefreshCw, BookOpen } from 'lucide-react';
+import { getRecentTopics, getQuestionsForTopics } from '../../utils/questionBank';
 
 export default function AccountingQuiz({ data }) {
     const [quizState, setQuizState] = useState('idle'); // idle, loading, active, review
@@ -7,36 +8,21 @@ export default function AccountingQuiz({ data }) {
     const [score, setScore] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState(null);
     const [showResult, setShowResult] = useState(false);
+    const [questions, setQuestions] = useState([]);
 
-    // Mock AI generated questions
-    const mockQuestions = [
-        {
-            id: 1,
-            question: "재무상태표의 기본 등식으로 올바른 것은?",
-            options: ["자산 + 부채 = 자본", "자산 = 부채 + 자본", "자산 - 자본 = 부채", "자본 = 자산 + 부채"],
-            correct: 1,
-            explanation: "재무상태표의 기본 등식은 '자산 = 부채 + 자본'입니다. 이는 회계의 가장 기초적인 원리입니다."
-        },
-        {
-            id: 2,
-            question: "다음 중 유동자산에 해당하지 않는 것은?",
-            options: ["현금", "보통예금", "토지", "외상매출금"],
-            correct: 2,
-            explanation: "토지는 비유동자산(유형자산)에 해당합니다. 나머지는 모두 유동자산(당좌자산)입니다."
-        },
-        {
-            id: 3,
-            question: "회계기간 동안의 경영성과를 나타내는 보고서는?",
-            options: ["재무상태표", "손익계산서", "현금흐름표", "자본변동표"],
-            correct: 1,
-            explanation: "손익계산서(I/S)는 일정 기간 동안 기업의 경영성과(수익과 비용)를 나타내는 재무제표입니다."
-        }
-    ];
+    // 최근 학습 범위에서 토픽 추출
+    const studyLog = data?.accounting?.studyLog || [];
+    const recentTopics = useMemo(() => getRecentTopics(studyLog, 5), [studyLog]);
+
+    // 학습 범위가 없으면 기초 문제 출제
+    const hasStudyLog = studyLog.length > 0;
 
     const startQuiz = () => {
         setQuizState('loading');
-        // Simulate AI generation delay
+        // 학습 범위 기반 문제 생성
         setTimeout(() => {
+            const generatedQuestions = getQuestionsForTopics(recentTopics, 5);
+            setQuestions(generatedQuestions);
             setQuizState('active');
             setCurrentQuestion(0);
             setScore(0);
@@ -48,13 +34,13 @@ export default function AccountingQuiz({ data }) {
     const handleAnswer = (index) => {
         setSelectedAnswer(index);
         setShowResult(true);
-        if (index === mockQuestions[currentQuestion].correct) {
+        if (index === questions[currentQuestion].correct) {
             setScore(s => s + 1);
         }
     };
 
     const nextQuestion = () => {
-        if (currentQuestion < mockQuestions.length - 1) {
+        if (currentQuestion < questions.length - 1) {
             setCurrentQuestion(c => c + 1);
             setSelectedAnswer(null);
             setShowResult(false);
@@ -83,7 +69,23 @@ export default function AccountingQuiz({ data }) {
                         </div>
                         <div>
                             <h4 className="text-2xl font-black text-gray-900">준비 되셨나요?</h4>
-                            <p className="text-gray-500 mt-2">AI가 학습 이력을 분석하여<br />맞춤형 문제를 출제합니다.</p>
+                            {hasStudyLog ? (
+                                <div className="mt-3 space-y-2">
+                                    <p className="text-gray-500 text-sm">최근 학습 범위를 기반으로 문제를 출제합니다.</p>
+                                    <div className="flex flex-wrap justify-center gap-2 mt-2">
+                                        {recentTopics.slice(0, 3).map((topic, idx) => (
+                                            <span key={idx} className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold">
+                                                {topic}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-gray-500 mt-2">
+                                    <span className="text-amber-600 font-bold">학습 범위를 먼저 입력해주세요!</span><br />
+                                    <span className="text-sm">현황 &gt; 회계 공부 &gt; "무엇을 공부했나요?"</span>
+                                </p>
+                            )}
                         </div>
                         <button
                             onClick={startQuiz}
@@ -106,24 +108,24 @@ export default function AccountingQuiz({ data }) {
                 {quizState === 'active' && (
                     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className="flex justify-between items-center text-sm font-bold text-gray-400 uppercase tracking-widest">
-                            <span>Question {currentQuestion + 1} / {mockQuestions.length}</span>
+                            <span>Question {currentQuestion + 1} / {questions.length}</span>
                             <span>Score: {score}</span>
                         </div>
 
                         <div className="space-y-4">
                             <h4 className="text-xl font-black text-gray-900 leading-relaxed">
-                                {mockQuestions[currentQuestion].question}
+                                {questions[currentQuestion].question}
                             </h4>
 
                             <div className="space-y-3">
-                                {mockQuestions[currentQuestion].options.map((option, idx) => (
+                                {questions[currentQuestion].options.map((option, idx) => (
                                     <button
                                         key={idx}
                                         disabled={showResult}
                                         onClick={() => handleAnswer(idx)}
                                         className={`w-full p-4 rounded-xl text-left font-bold transition-all border-2 
                                             ${showResult
-                                                ? idx === mockQuestions[currentQuestion].correct
+                                                ? idx === questions[currentQuestion].correct
                                                     ? 'border-green-500 bg-green-50 text-green-700'
                                                     : idx === selectedAnswer
                                                         ? 'border-red-500 bg-red-50 text-red-700'
@@ -134,8 +136,8 @@ export default function AccountingQuiz({ data }) {
                                     >
                                         <div className="flex justify-between items-center">
                                             <span>{option}</span>
-                                            {showResult && idx === mockQuestions[currentQuestion].correct && <CheckCircle size={20} className="text-green-500" />}
-                                            {showResult && idx === selectedAnswer && idx !== mockQuestions[currentQuestion].correct && <XCircle size={20} className="text-red-500" />}
+                                            {showResult && idx === questions[currentQuestion].correct && <CheckCircle size={20} className="text-green-500" />}
+                                            {showResult && idx === selectedAnswer && idx !== questions[currentQuestion].correct && <XCircle size={20} className="text-red-500" />}
                                         </div>
                                     </button>
                                 ))}
@@ -146,13 +148,13 @@ export default function AccountingQuiz({ data }) {
                             <div className="bg-indigo-50 p-4 rounded-xl space-y-3 animate-in fade-in slide-in-from-bottom-2">
                                 <p className="text-sm font-bold text-indigo-900">
                                     <span className="inline-block px-2 py-0.5 bg-indigo-200 rounded text-xs mr-2">해설</span>
-                                    {mockQuestions[currentQuestion].explanation}
+                                    {questions[currentQuestion].explanation}
                                 </p>
                                 <button
                                     onClick={nextQuestion}
                                     className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700"
                                 >
-                                    {currentQuestion < mockQuestions.length - 1 ? '다음 문제' : '결과 보기'}
+                                    {currentQuestion < questions.length - 1 ? '다음 문제' : '결과 보기'}
                                 </button>
                             </div>
                         )}
@@ -163,14 +165,14 @@ export default function AccountingQuiz({ data }) {
                     <div className="text-center space-y-8 animate-in zoom-in duration-300">
                         <div className="inline-block p-6 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-[2rem] text-white shadow-xl shadow-indigo-200">
                             <p className="text-sm font-bold opacity-80 uppercase tracking-widest mb-1">Final Score</p>
-                            <p className="text-5xl font-black">{score} / {mockQuestions.length}</p>
+                            <p className="text-5xl font-black">{score} / {questions.length}</p>
                         </div>
                         <div>
                             <h4 className="text-2xl font-black text-gray-900">
-                                {score === mockQuestions.length ? "완벽합니다! 🎉" : "수고하셨습니다! 💪"}
+                                {score === questions.length ? "완벽합니다! 🎉" : "수고하셨습니다! 💪"}
                             </h4>
                             <p className="text-gray-500 mt-2 font-medium">
-                                {score === mockQuestions.length
+                                {score === questions.length
                                     ? "이번 주 학습 내용을 완벽하게 이해하셨네요."
                                     : "틀린 문제를 다시 한 번 복습해보세요."}
                             </p>

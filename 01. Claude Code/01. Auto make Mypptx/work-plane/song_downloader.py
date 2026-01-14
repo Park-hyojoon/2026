@@ -108,6 +108,10 @@ class SongDownloaderApp:
         type_combo['values'] = ("새찬송가 ppt", "통일찬송가 ppt", "새찬송가 악보")
         type_combo.pack(side="left", padx=(0, 10))
 
+        self.batch_search_btn = tk.Button(batch_frame, text="일괄 검색", command=self.batch_search,
+                                   bg="#FFD700", font=("Arial", 10, "bold"))  # Gold color
+        self.batch_search_btn.pack(side="right", padx=2)
+
         self.batch_btn = tk.Button(batch_frame, text="일괄 다운로드", command=self.batch_download,
                                    bg="#90EE90", font=("Arial", 10, "bold"))
         self.batch_btn.pack(side="right", padx=2)
@@ -254,31 +258,122 @@ class SongDownloaderApp:
         """
         찬송가 번호 입력을 파싱합니다.
         예: "28, 29, 30" 또는 "28-32" → [28, 29, 30, 31, 32]
+        복잡한 입력(예: "3( 436, 204, 288)")도 처리합니다.
         """
         numbers = []
-        input_text = input_text.strip()
+        if not input_text or "예:" in input_text:
+            return []
 
-        # 쉼표로 분리
-        parts = [p.strip() for p in input_text.split(',')]
+        # 불필요한 괄호 등을 쉼표로 치환하여 분리하기 쉽게 만듦
+        cleaned = input_text.replace('(', ',').replace(')', ',').replace('[', ',').replace(']', ',')
+        
+        parts = [p.strip() for p in cleaned.split(',')]
 
         for part in parts:
-            if '-' in part:
-                # 범위 (예: 28-32)
+            if not part: continue
+            
+            # 범위 확인 (예: 28-32)
+            # 숫자와 숫자 사이에 하이픈이 있는 경우
+            range_match = re.search(r'(\d+)\s*-\s*(\d+)', part)
+            if range_match:
                 try:
-                    start, end = part.split('-')
-                    start = int(start.strip())
-                    end = int(end.strip())
-                    numbers.extend(range(start, end + 1))
+                    start = int(range_match.group(1))
+                    end = int(range_match.group(2))
+                    if start <= end:
+                        numbers.extend(range(start, end + 1))
+                    continue
                 except:
                     pass
-            else:
-                # 단일 번호
+            
+            # 범위가 아니면 포함된 모든 숫자 추출
+            found_nums = re.findall(r'\d+', part)
+            for num_str in found_nums:
                 try:
-                    numbers.append(int(part))
+                    numbers.append(int(num_str))
                 except:
                     pass
 
         return numbers
+
+    def batch_search(self):
+        """일괄 검색 실행"""
+        input_text = self.batch_entry.get().strip()
+        if not input_text or "예:" in input_text:
+            messagebox.showwarning("경고", "찬송가 번호를 입력하세요.")
+            return
+
+        numbers = self.parse_song_numbers(input_text)
+        if not numbers:
+            messagebox.showwarning("경고", "검색할 번호가 없습니다.")
+            return
+
+        song_type = self.song_type_var.get()
+        
+        # 일괄 검색 시작
+        self.status_label.config(text=f"일괄 검색 시작: {len(numbers)}곡...")
+        self.batch_search_btn.config(state="disabled")
+        self.batch_btn.config(state="disabled")
+        self.search_btn.config(state="disabled")
+        
+        # 검색 결과 초기화 (누적 여부와 상관없이 일괄 검색은 보통 새로운 세트로 간주하지만, 
+        # 사용자가 혼동하지 않도록 기존 결과 유지 여부는 옵션을 따름)
+        if not self.cumulative_search.get():
+            self.result_listbox.delete(0, tk.END)
+            self.search_results = []
+        
+        threading.Thread(target=self._batch_search_thread, args=(numbers, song_type), daemon=True).start()
+
+    def _batch_search_thread(self, numbers, song_type):
+        """일괄 검색 스레드"""
+        total = len(numbers)
+        found_count = 0
+        
+        sources = []
+        if self.source_getwater.get(): sources.append('getwater')
+        if self.source_cwy0675.get(): sources.append('cwy0675')
+        
+        if not sources:
+            self.root.after(0, lambda: messagebox.showerror("오류", "검색 사이트를 선택하세요."))
+            self.root.after(0, lambda: self.batch_search_btn.config(state="normal"))
+            return
+
+        for i, num in enumerate(numbers):
+            try:
+                self.root.after(0, lambda n=num, idx=i+1, t=total:
+                    self.status_label.config(text=f"[{idx}/{t}] {n}장 검색 중..."))
+                
+                keyword = f"{song_type} {num}장"
+                results = search_songs(keyword, sources=sources)
+                
+                if results:
+                    found_count += 1
+                    # 결과 추가 (메인 스레드에서 UI 업데이트 권장하지만, 리스트 조작은 여기서 하고 UI 반영은 after로)
+                    self.search_results.extend(results)
+            except:
+                pass
+        
+        # UI 업데이트
+        self.root.after(0, lambda: self._on_batch_search_complete(found_count, total))
+
+    def _on_batch_search_complete(self, found, total):
+        self.batch_search_btn.config(state="normal")
+        self.batch_btn.config(state="normal")
+        self.search_btn.config(state="normal")
+        
+        # 중복 제거
+        if self.cumulative_search.get():
+             # 중복 제거 (URL 기준)
+            seen_urls = set()
+            unique_results = []
+            for r in self.search_results:
+                if r['url'] not in seen_urls:
+                    seen_urls.add(r['url'])
+                    unique_results.append(r)
+            self.search_results = unique_results
+        
+        self._redisplay_results()
+        self.status_label.config(text=f"일괄 검색 완료: {found}/{total}곡 찾음 (총 {len(self.search_results)}개 결과)")
+        messagebox.showinfo("완료", f"일괄 검색이 완료되었습니다.\n{found}/{total}곡을 찾았습니다.")
 
     def batch_download(self):
         """일괄 다운로드 실행"""
@@ -467,6 +562,17 @@ class SongDownloaderApp:
     def do_search(self):
         """개별 검색 실행"""
         keyword = self.search_entry.get().strip()
+        
+        # 안전 장치: 기본 검색어 상태에서 일괄 다운로드 입력창에 내용이 있는 경우
+        default_keywords = ["새찬송가 ppt", "새찬송가 ppt "]
+        batch_input = self.batch_entry.get().strip()
+        if keyword in default_keywords and batch_input and "예:" not in batch_input:
+            msg = "현재 '개별 검색' 버튼을 누르셨습니다.\n검색어: " + keyword + "\n\n"
+            msg += "'일괄 다운로드' 입력창에 숫자가 있습니다.\n'일괄 검색' 또는 '일괄 다운로드'를 하시려던 것인가요?\n\n"
+            msg += "그래도 현재 검색어(" + keyword + ")로 검색하시겠습니까?"
+            if not messagebox.askyesno("확인", msg):
+                return
+
         if not keyword:
             messagebox.showwarning("경고", "검색어를 입력하세요.")
             return

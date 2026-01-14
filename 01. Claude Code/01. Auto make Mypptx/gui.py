@@ -4,6 +4,7 @@ import os
 import threading
 import sys
 import pythoncom
+import webbrowser
 from main import generate_ppt
 
 # work-plane 폴더를 모듈 경로에 추가하여 song_downloader 임포트
@@ -27,6 +28,11 @@ except ImportError as e:
     # Actually, let's just print it for now, user can't see print in windowed mode.
     # We will handle the error display in create_widgets if it is None.
     error_msg = str(e)
+
+try:
+    from bible_search import search_and_get_verse
+except ImportError:
+    search_and_get_verse = None
 
 import datetime
 
@@ -78,13 +84,13 @@ class App:
     def __init__(self, root):
         self.root = root
         self.root.title("PPT Automation Tool")
-        self.root.geometry("1200x900") # Increased width to 1050 for path visibility
+        self.root.geometry("840x900") # Resized to 70% width (was 1200)
 
         # Variables
         current_dir = os.path.dirname(os.path.abspath(__file__))
         
-        # Worship Title (Default: 금요 기도회)
-        self.worship_title_var = tk.StringVar(value="금요 기도회")
+        # Worship Title (Default: 금요기도회)
+        self.worship_title_var = tk.StringVar(value="금요기도회")
         
         # 1) PPT Folder (Songs) -> D:\05. Download
         self.ppt_dir_var = tk.StringVar(value=r"D:\05. Download")
@@ -298,7 +304,20 @@ class App:
         # 3. Bible Chapter
         tk.Label(right_frame, text="Bible Chapter/Verse (All Slides):").pack(anchor="w", pady=(0, 2))
         entry_title = tk.Entry(right_frame, textvariable=self.bible_title_var)
-        entry_title.pack(fill="x", pady=(0, 10))
+        entry_title.pack(fill="x", pady=(0, 5))
+
+        # 3-1. Bible Search
+        if search_and_get_verse:
+            tk.Label(right_frame, text="성경 검색 (예: 창 1:5 또는 시 23:1-6):", font=("Arial", 9)).pack(anchor="w", pady=(0, 2))
+            frame_search = tk.Frame(right_frame)
+            frame_search.pack(fill="x", pady=(0, 10))
+
+            self.bible_search_var = tk.StringVar()
+            entry_search = tk.Entry(frame_search, textvariable=self.bible_search_var)
+            entry_search.pack(side="left", fill="x", expand=True, padx=(0, 5))
+
+            self.btn_search = tk.Button(frame_search, text="검색", command=self.search_bible_verse, width=8)
+            self.btn_search.pack(side="right")
 
         # 4. Bible Body
         tk.Label(right_frame, text="Bible Body (Slide 5) - Use '/' to split:", font=("Arial", 9)).pack(anchor="w", pady=(0, 2))
@@ -342,6 +361,8 @@ class App:
         self.shortcuts.register('I', self.btn_before_down)
         self.shortcuts.register('O', self.btn_before_del)
         self.shortcuts.register('P', self.btn_before_clear)
+        if search_and_get_verse:
+            self.shortcuts.register('R', self.btn_search)
         self.shortcuts.register('L', self.btn_gen)
         
         # Global Tab Shortcuts
@@ -380,6 +401,9 @@ class App:
             
             filename = f"{next_date.strftime('%Y년 %m월 %d일')} 수요기도회.pptx"
             
+            # 4. Worship Title (Auto Update)
+            self.worship_title_var.set("수요기도회")
+            
         else:
             # Friday Mode (Default)
             # 1. Template Path
@@ -396,6 +420,9 @@ class App:
             base_output_dir = r"D:\02. 열띰!\02. 교회\03. 금요기도회 PPT"
             
             filename = f"{next_date.strftime('%Y년 %m월 %d일')} 금요기도회.pptx"
+
+            # 4. Worship Title (Auto Update)
+            self.worship_title_var.set("금요기도회")
 
         # Apply changes
         self.template_path_var.set(new_tpl_path)
@@ -590,6 +617,57 @@ class App:
                 path += ".pptx"
             self.output_path_var.set(os.path.normpath(path))
 
+    def search_bible_verse(self):
+        """Search Bible verse and insert result into Bible Body text area"""
+        if not search_and_get_verse:
+            messagebox.showerror("Error", "Bible search module not available")
+            return
+
+        search_text = self.bible_search_var.get().strip()
+        if not search_text:
+            messagebox.showwarning("Warning", "검색어를 입력해주세요.")
+            return
+
+        # Disable button during search
+        self.btn_search.config(state=tk.DISABLED, text="검색 중...")
+
+        def do_search():
+            try:
+                verse_text, formatted_ref = search_and_get_verse(search_text)
+
+                # Update GUI in main thread
+                def update_text():
+                    if verse_text.startswith("오류:"):
+                        messagebox.showerror("검색 오류", verse_text)
+                    else:
+                        # Get current content
+                        current_content = self.bible_body_text.get("1.0", "end-1c").strip()
+
+                        # Add newline if content exists
+                        if current_content:
+                            self.bible_body_text.insert(tk.END, "\n" + verse_text)
+                        else:
+                            self.bible_body_text.insert(tk.END, verse_text)
+
+                        # Auto-fill Bible Chapter/Verse field with formatted reference
+                        if not self.bible_title_var.get().strip() and formatted_ref:
+                            self.bible_title_var.set(formatted_ref)
+
+                    # Re-enable button
+                    self.btn_search.config(state=tk.NORMAL, text="검색")
+
+                self.root.after(0, update_text)
+
+            except Exception as e:
+                def show_error():
+                    messagebox.showerror("Error", f"검색 중 오류 발생: {str(e)}")
+                    self.btn_search.config(state=tk.NORMAL, text="검색")
+
+                self.root.after(0, show_error)
+
+        # Run in background thread
+        threading.Thread(target=do_search, daemon=True).start()
+
     def start_generation(self):
         # Gather inputs
         ppt_dir = self.ppt_dir_var.get()
@@ -600,14 +678,14 @@ class App:
         sermon_title = self.sermon_title_var.get() if self.is_wednesday_var.get() else ""
         # bible_range = self.bible_range_var.get() # Removed
         bible_body = self.bible_body_text.get("1.0", "end-1c")
-        
+
         # Get songs from listboxes
         files_before = self.list_before.get(0, tk.END)
         files_after = self.list_after.get(0, tk.END)
-        
+
         songs_before = [os.path.join(ppt_dir, f) for f in files_before]
         songs_after = [os.path.join(ppt_dir, f) for f in files_after]
-        
+
         # Run in a separate thread
         # Pass bible_title for both title and range arguments
         threading.Thread(target=self.run_logic, args=(songs_before, songs_after, template_path, output_path, worship_title, bible_title, bible_title, bible_body, sermon_title)).start()
@@ -630,12 +708,18 @@ class App:
                     messagebox.showwarning("Completed with Warnings", msg)
                 else:
                     messagebox.showinfo("Success", msg)
-                
+
                 # Auto Open File
                 try:
                     os.startfile(output_path)
                 except Exception as e:
                     print(f"Could not auto-open file: {e}")
+
+                # Auto Open Chrome Browser
+                try:
+                    webbrowser.open("http://yeeun.synology.me:5000/")
+                except Exception as e:
+                    print(f"Could not auto-open browser: {e}")
 
             else:
                 messagebox.showerror("Error", msg)

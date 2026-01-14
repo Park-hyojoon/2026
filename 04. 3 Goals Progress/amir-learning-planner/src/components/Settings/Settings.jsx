@@ -42,6 +42,29 @@ export default function Settings({ data, onUpdate }) {
                                 className="w-full bg-gray-50 rounded-xl px-4 py-3 font-bold text-gray-900 outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                             />
                         </div>
+                        <div className="pt-2">
+                            <label className="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">Language / 언어</label>
+                            <select
+                                value={data.user.language}
+                                onChange={(e) => handleChange('user.language', e.target.value)}
+                                className="w-full bg-gray-50 rounded-xl px-4 py-3 font-bold text-gray-900 outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
+                            >
+                                <option value="ko">한국어 (Korean)</option>
+                                <option value="en">English (영어)</option>
+                            </select>
+                        </div>
+                        <div className="flex items-center justify-between pt-4">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-900">전략 가이드 표시</label>
+                                <p className="text-xs text-gray-400 font-medium">데스크탑 상단에 일일 학습 전략을 보여줍니다.</p>
+                            </div>
+                            <button
+                                onClick={() => handleChange('user.showStrategy', !data.user.showStrategy)}
+                                className={`w-12 h-6 rounded-full transition-colors relative ${data.user.showStrategy ? 'bg-primary' : 'bg-gray-200'}`}
+                            >
+                                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${data.user.showStrategy ? 'left-7' : 'left-1'}`} />
+                            </button>
+                        </div>
                     </div>
                 </section>
 

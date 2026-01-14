@@ -2,7 +2,9 @@ export const initialData = {
     user: {
         name: "아미르",
         startDate: new Date().toISOString().split('T')[0],
-        timezone: "Asia/Seoul"
+        timezone: "Asia/Seoul",
+        language: "ko", // ko or en
+        showStrategy: true
     },
     dailyGoals: {
         ai: 1.5,
@@ -34,7 +36,8 @@ export const initialData = {
                 { id: 2, title: "자산/부채/자본", completed: false, understanding: 0 },
             ],
             tests: [],
-            examDate: "2026-06-15"
+            examDate: "2026-06-15",
+            referenceMaterials: [] // Stores metadata of uploaded books/PDFs
         },
         level1: {
             chapters: [],

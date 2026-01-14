@@ -1,15 +1,16 @@
-import React from 'react';
-import { CheckCircle2, Circle, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle2, Circle, Clock, Check } from 'lucide-react';
 
-export default function TodayTasks({ tasks, onUpdate }) {
+export default function TodayTasks({ tasks, onUpdate, onFileUpload }) {
     const today = new Date().toLocaleDateString('ko-KR', {
         month: 'long',
         day: 'numeric',
         weekday: 'long'
     });
 
-    const [isEditing, setIsEditing] = React.useState(null);
-    const [editValue, setEditValue] = React.useState("");
+    const [isEditing, setIsEditing] = useState(null);
+    const [editValue, setEditValue] = useState("");
+    const [uploadState, setUploadState] = useState({}); // { [taskId]: { status: 'idle' | 'uploading' | 'done', filename: '' } }
 
     const handleEditStart = (taskId, currentGoal) => {
         setIsEditing(taskId);
@@ -17,11 +18,20 @@ export default function TodayTasks({ tasks, onUpdate }) {
     };
 
     const handleEditSave = (taskId) => {
-        // Here you would optimally lift this state up to App.jsx to update 'dailyGoals'
-        // For now, we will just exit edit mode as visual demo 
-        // (Real implementation requires changing App.js to support updating dailyGoals)
-        // onUpdateGoal(taskId, editValue); <-- Need to implement this prop
         setIsEditing(null);
+    };
+
+    const handleFileChange = (taskId, e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Simulate Upload Process
+        setUploadState(prev => ({ ...prev, [taskId]: { status: 'uploading', filename: file.name } }));
+
+        setTimeout(() => {
+            setUploadState(prev => ({ ...prev, [taskId]: { status: 'done', filename: file.name } }));
+            if (onFileUpload) onFileUpload(taskId, file);
+        }, 1500); // 1.5s simulation
     };
 
     return (
@@ -94,13 +104,59 @@ export default function TodayTasks({ tasks, onUpdate }) {
                             </div>
                         </div>
 
-                        {/* Daily Topic Input - For AI Analysis */}
-                        <div className="mt-2">
-                            <input
-                                type="text"
-                                placeholder={`무엇을 공부했나요? (예: ${task.id === 'accounting' ? '자산 부채 정의' : task.id === 'english' ? '비즈니스 이메일' : 'React Hooks'})`}
-                                className="w-full bg-white/50 border border-gray-100 rounded-xl px-3 py-2 text-xs font-medium text-gray-600 outline-none focus:border-primary/30 focus:bg-white transition-all"
-                            />
+                        {/* Daily Topic & File Upload */}
+                        <div className="mt-2 flex flex-col gap-2">
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    placeholder={`무엇을 공부했나요? (예: ${task.id === 'accounting' ? '자산 부채 정의' : '비즈니스 이메일'})`}
+                                    className="flex-1 bg-white/50 border border-gray-100 rounded-xl px-3 py-2 text-xs font-medium text-gray-600 outline-none focus:border-primary/30 focus:bg-white transition-all"
+                                />
+                                <label className="cursor-pointer p-2 bg-white border border-gray-100 rounded-xl text-gray-400 hover:text-primary hover:border-primary/30 transition-all shadow-sm">
+                                    <input type="file" className="hidden" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>
+                                </label>
+                            </div>
+
+                            {task.id === 'accounting' && (
+                                <div className={`p-3 border rounded-xl transition-all duration-500 ${uploadState[task.id]?.status === 'done'
+                                        ? 'bg-green-50 border-green-200 shadow-sm'
+                                        : 'bg-indigo-50/50 border-indigo-100/50'
+                                    }`}>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-2">
+                                            {uploadState[task.id]?.status === 'done' ? (
+                                                <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center text-white animate-in zoom-in">
+                                                    <Check size={10} strokeWidth={4} />
+                                                </div>
+                                            ) : (
+                                                <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">
+                                                    {uploadState[task.id]?.status === 'uploading' ? 'AI 분석 중...' : '📚 AI 학습용 자습서(PDF/IMG)'}
+                                                </span>
+                                            )}
+
+                                            {uploadState[task.id]?.filename && (
+                                                <span className={`text-[10px] font-bold ${uploadState[task.id]?.status === 'done' ? 'text-green-700' : 'text-indigo-600'}`}>
+                                                    {uploadState[task.id].filename}
+                                                    {uploadState[task.id]?.status === 'done' && <span className="ml-1 text-[9px] opacity-70">AI Confirmed</span>}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {uploadState[task.id]?.status !== 'done' && (
+                                            <label className={`cursor-pointer px-2 py-1 bg-white border border-indigo-100 rounded-lg text-[9px] font-black text-indigo-500 hover:bg-indigo-500 hover:text-white transition-all shadow-sm ${uploadState[task.id]?.status === 'uploading' ? 'opacity-50 pointer-events-none' : ''}`}>
+                                                {uploadState[task.id]?.status === 'uploading' ? '...' : 'UPLOAD'}
+                                                <input
+                                                    type="file"
+                                                    accept=".pdf,.txt,.md,.jpg,.png"
+                                                    className="hidden"
+                                                    onChange={(e) => handleFileChange(task.id, e)}
+                                                />
+                                            </label>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 ))}

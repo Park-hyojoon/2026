@@ -9,18 +9,48 @@ import YearlyGoalGraph from './components/Dashboard/YearlyGoalGraph';
 import Settings from './components/Settings/Settings';
 import AIHub from './components/AIHub/AIHub';
 import Roadmap from './components/Roadmap/Roadmap';
+import DailyStrategy from './components/Dashboard/DailyStrategy';
 import { Layout, Calendar, Book, Trophy, Settings as SettingsIcon, Bell, Search, User, Home } from 'lucide-react';
 
 function App() {
   const [data, setData] = useLocalStorage('amir-planner-data', initialData);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [showNotification, setShowNotification] = useState(false);
+  const [showReview, setShowReview] = useState(false);
 
   const handleUpdateTask = (subject, newHours) => {
-    const todayIndex = 0; // Simplified for MVP
+    const todayIndex = 0;
     const updatedData = { ...data };
     const today = updatedData.currentWeek.days[todayIndex];
     today[subject].hours = parseFloat(newHours);
     today[subject].completed = today[subject].hours >= data.dailyGoals[subject];
+
+    // Simulate notification when a goal is hit
+    if (today[subject].completed) {
+      setShowNotification(true);
+    }
+
+    setData(updatedData);
+  };
+
+  // Handle Metadata of uploaded files (Mock implementation)
+  const handleFileUpload = (taskId, file) => {
+    const updatedData = { ...data };
+
+    // In a real app, you'd upload 'file' to a server and get a URL/ID back.
+    // Here we just store the filename for UI persistence
+    if (taskId === 'accounting') {
+      updatedData.accounting.referenceMaterials.push({
+        id: Date.now(),
+        name: file.name,
+        uploadedAt: new Date().toISOString()
+      });
+
+      // Trigger a "Material Analyzed" notification
+      setTimeout(() => {
+        setShowNotification(true);
+      }, 2000);
+    }
     setData(updatedData);
   };
 
@@ -38,15 +68,45 @@ function App() {
   }
 
   const tabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: Layout },
-    { id: 'planner', label: 'Weekly Plan', icon: Calendar },
-    { id: 'projects', label: 'AI Projects', icon: Book },
-    { id: 'roadmap', label: 'Roadmap', icon: Trophy },
-    { id: 'settings', label: 'Settings', icon: SettingsIcon },
+    { id: 'dashboard', label: data.user.language === 'en' ? 'Dashboard' : '현황', icon: Layout },
+    { id: 'planner', label: data.user.language === 'en' ? 'Plan' : '계획', icon: Calendar },
+    { id: 'projects', label: data.user.language === 'en' ? 'AI Hub' : 'AI Hub', icon: Book },
+    { id: 'roadmap', label: data.user.language === 'en' ? 'Roadmap' : '로드맵', icon: Trophy },
+    { id: 'settings', label: data.user.language === 'en' ? 'Settings' : '설정', icon: SettingsIcon },
   ];
+
+  const reviewContent = `[Study Review]
+${data.user.name} 님, 오늘의 학습 피드백입니다.
+
+* 학습 일시 : ${new Date().toLocaleDateString()}
+* 수강 과목 : 회계 & 영어 & AI
+* 담당 AI : Amir AI Coach
+
+📌 수업 내용 및 전략 :
+오늘 설정하신 목표를 달성하셨습니다. 특히 회계 파트에서 전산회계 1급 관련 자산 계정 과목 분류를 성공적으로 끝내셨네요.
+📌 강점 및 취약점 :
+자본 파트보다 자산 파트의 이해도가 20% 높게 나타납니다. 내일은 취약한 부채/자본 파트에 집중하세요.
+📌 다음 숙제 :
+1. 전산회계 1급 기출문제 5회차 풀기
+2. 영어 Golden Phrases 3번 반복 말하기
+`;
 
   return (
     <div className="min-h-screen bg-[#fcfdfe] text-gray-900 font-['Inter'] flex flex-col md:flex-row overflow-hidden">
+      {/* Review Modal */}
+      {showReview && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+          <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-xl shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-black text-gray-900">Study Feedback</h3>
+              <button onClick={() => setShowReview(false)} className="text-gray-400 font-bold hover:text-gray-900">Close</button>
+            </div>
+            <div className="bg-gray-50 p-6 rounded-2xl whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-700 h-[400px] overflow-y-auto">
+              {reviewContent}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Premium Sidebar (Desktop) */}
       <nav className="hidden md:flex flex-col w-72 bg-white p-8 space-y-2 z-20 shadow-[20px_0_50px_rgba(0,0,0,0.02)]">
@@ -96,14 +156,22 @@ function App() {
             </button>
             <div className="hidden md:flex items-center bg-gray-100 rounded-2xl px-4 py-2 w-80">
               <Search size={18} className="text-gray-400 mr-2" />
-              <input type="text" placeholder="Search milestones..." className="bg-transparent border-none outline-none text-sm font-medium w-full" />
+              <input type="text" placeholder={data.user.language === 'en' ? "Search milestones..." : "검색..."} className="bg-transparent border-none outline-none text-sm font-medium w-full" />
             </div>
           </div>
 
           <div className="flex items-center space-x-4">
-            <button className="p-2.5 rounded-2xl bg-gray-50 text-gray-500 hover:bg-white hover:shadow-md transition-all relative">
+            <button
+              onClick={() => {
+                setShowReview(true);
+                setShowNotification(false);
+              }}
+              className="p-2.5 rounded-2xl bg-gray-50 text-gray-500 hover:bg-white hover:shadow-md transition-all relative"
+            >
               <Bell size={20} />
-              <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>
+              {showNotification && (
+                <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>
+              )}
             </button>
             <button className="p-1 rounded-2xl bg-gray-100 p-1.5">
               <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><User size={20} /></div>
@@ -115,8 +183,12 @@ function App() {
         <main className="flex-1 p-6 md:p-12 pb-32 overflow-y-auto bg-[#fafbfc]">
           {activeTab === 'dashboard' && (
             <div className="max-w-6xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              {/* 1. Yearly Goal Graph (Top) */}
-              <YearlyGoalGraph data={data} />
+              {/* 1. Daily Strategy (Replaces purple bar if enabled) */}
+              {data.user.showStrategy ? (
+                <DailyStrategy data={data} />
+              ) : (
+                <div className="pt-2" />
+              )}
 
               {/* 2. Parallel Layout (Today Tasks + Weekly Progress) */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start h-full">
@@ -129,6 +201,7 @@ function App() {
                       { id: 'ai', name: 'AI 학습', goal: data.dailyGoals.ai, current: data.currentWeek.days[0].ai.hours, emoji: '🤖', completed: data.currentWeek.days[0].ai.completed },
                     ]}
                     onUpdate={handleUpdateTask}
+                    onFileUpload={handleFileUpload}
                   />
                 </div>
 

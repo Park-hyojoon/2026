@@ -1,33 +1,98 @@
 import React, { useState } from 'react';
-import { MessageCircle, Zap, BookOpen, Mic, LineChart, Sparkles, RefreshCw } from 'lucide-react';
+import { MessageCircle, Zap, BookOpen, Mic, LineChart, Sparkles, RefreshCw, Send, Quote } from 'lucide-react';
 
 export default function EnglishCoach({ data }) {
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [analysisDone, setAnalysisDone] = useState(false);
+    const [view, setView] = useState('dashboard'); // dashboard, chat
+    const [targetPhrases, setTargetPhrases] = useState([]);
+    const [messages, setMessages] = useState([]);
+    const [input, setInput] = useState("");
+    const [newPhraseInput, setNewPhraseInput] = useState("");
 
-    // Determine feedback based on progress
+    // --- Mock Data & Logic ---
     const englishGoal = data.weeklyGoals.english;
     const currentEnglish = data.currentWeek.days.reduce((acc, day) => acc + (day.english?.hours || 0), 0);
     const progressRate = (currentEnglish / englishGoal) * 100;
 
-    const runAnalysis = () => {
-        setIsAnalyzing(true);
+    const startSession = (phrases) => {
+        setTargetPhrases(phrases);
+        setView('chat');
+        setMessages([
+            { role: 'ai', text: `Hi Amir! Let's practice using: "${phrases.join(', ')}". I'll ask questions to help you use them naturally. Ready?` }
+        ]);
+    };
+
+    const handleSendMessage = () => {
+        if (!input.trim()) return;
+
+        const userMsg = input;
+        setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+        setInput("");
+
+        // Simple mock AI response logic to simulate "Elicitation"
         setTimeout(() => {
-            setIsAnalyzing(false);
-            setAnalysisDone(true);
-        }, 2000);
+            let aiResponse = "That's interesting! Tell me more.";
+
+            // Very basic keyword detection simulation
+            if (targetPhrases.some(p => userMsg.includes(p))) {
+                aiResponse = "Great usage! You nailed that phrase. What about the next one?";
+            } else {
+                if (targetPhrases[0] === 'kick off') aiResponse = "So, when do you plan to start the new project?";
+                else aiResponse = "Can you try using our target phrase in your next sentence?";
+            }
+
+            setMessages(prev => [...prev, { role: 'ai', text: aiResponse }]);
+        }, 1000);
     };
 
-    const getInsight = () => {
-        if (progressRate >= 80) return "학습량이 매우 우수합니다! 특히 스피킹 근육이 잘 형성되고 있어요. 지금처럼 매일 20분씩 쉐도잉을 유지하면 한 달 뒤 원어민과의 대화가 훨씬 부드러워질 거예요.";
-        if (progressRate >= 50) return "꾸준히 노력하고 계시네요. 다만, 이번 주엔 스피킹보다 리스닝 비중이 큽니다. 주말에는 'Shadowing Challenge'를 통해 입을 더 열어보는 것을 추천해요.";
-        return "학습량이 조금 부족합니다. 영어는 짧게라도 '매일' 하는 것이 중요해요. 오늘 잠들기 전 10분만 팝송 가사를 따라 적어보는 건 어떨까요?";
-    };
+    // --- Render ---
+    if (view === 'chat') {
+        return (
+            <div className="bg-white rounded-[2rem] p-6 shadow-sm h-full flex flex-col">
+                <header className="flex justify-between items-center mb-4 pb-4 border-b border-gray-100">
+                    <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-emerald-100 rounded-xl text-emerald-600">
+                            <Mic size={20} />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-gray-900">Live Practice</h3>
+                            <p className="text-xs text-emerald-600 font-bold">Target: {targetPhrases.join(', ')}</p>
+                        </div>
+                    </div>
+                    <button onClick={() => setView('dashboard')} className="text-xs font-bold text-gray-400 hover:text-gray-600">Exit</button>
+                </header>
 
-    const challenges = [
-        { icon: Mic, title: "Shadowing Practice", desc: "Repeat after a 2-min TED Talk to mimic intonation.", type: "Speaking" },
-        { icon: BookOpen, title: "Vocab Journal", desc: "Write 3 sentences using new expressions from today.", type: "Writing" },
-    ];
+                <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1 custom-scrollbar">
+                    {messages.map((msg, idx) => (
+                        <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[80%] p-3 rounded-2xl text-sm font-medium ${msg.role === 'user'
+                                    ? 'bg-emerald-500 text-white rounded-br-none'
+                                    : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                                }`}>
+                                {msg.text}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="flex items-center space-x-2">
+                    <input
+                        type="text"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                        placeholder="Type your answer..."
+                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                    />
+                    <button
+                        onClick={handleSendMessage}
+                        className="p-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-200"
+                    >
+                        <Send size={18} />
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-white rounded-[2rem] p-8 shadow-sm h-full flex flex-col">
@@ -37,75 +102,61 @@ export default function EnglishCoach({ data }) {
                 </div>
                 <div>
                     <h3 className="text-xl font-bold text-gray-900">AI English Coach</h3>
-                    <p className="text-sm font-medium text-gray-400">Personalized feedback & insights.</p>
+                    <p className="text-sm font-medium text-gray-400">Target Expression Training</p>
                 </div>
             </header>
 
-            {!analysisDone && !isAnalyzing ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6">
-                    <div className="p-6 bg-emerald-50 rounded-full">
-                        <LineChart size={48} className="text-emerald-500 opacity-60" />
+            <div className="flex-1 space-y-6">
+                {/* Input Target Phrases */}
+                <div className="bg-gray-50 rounded-2xl p-6 space-y-4">
+                    <div className="flex items-center space-x-2 text-emerald-700 mb-2">
+                        <Quote size={18} />
+                        <h4 className="font-black text-sm uppercase tracking-wider">Golden Phrases</h4>
                     </div>
-                    <div>
-                        <h4 className="text-xl font-black text-gray-900">학습 패턴 분석</h4>
-                        <p className="text-sm text-gray-500 mt-2 font-medium">당신의 이번 주 영어 학습량과 패턴을 분석하여<br />최적의 피드백을 제공합니다.</p>
-                    </div>
-                    <button
-                        onClick={runAnalysis}
-                        className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all flex items-center justify-center space-x-2 shadow-lg shadow-emerald-200"
-                    >
-                        <Sparkles size={20} />
-                        <span>분석 시작하기</span>
-                    </button>
-                </div>
-            ) : isAnalyzing ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
-                    <RefreshCw size={40} className="text-emerald-500 animate-spin" />
-                    <p className="font-bold text-gray-900">최근 공부 기록을 읽어오는 중...</p>
-                </div>
-            ) : (
-                <div className="space-y-8 flex-1 animate-in fade-in slide-in-from-right-4 duration-500">
-                    {/* Insight Card */}
-                    <div className="p-6 bg-emerald-50 rounded-3xl border-l-4 border-emerald-500 relative overflow-hidden">
-                        <Sparkles className="absolute right-[-10px] top-[-10px] w-20 h-20 text-emerald-500 opacity-5" />
-                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-2">AI Coaching Insight</p>
-                        <p className="text-base font-bold text-emerald-900 leading-relaxed">
-                            "{getInsight()}"
-                        </p>
-                    </div>
+                    <p className="text-sm text-gray-500 font-medium">연습하고 싶은 핵심 표현을 입력하세요.</p>
 
-                    {/* Challenges */}
-                    <div className="space-y-4">
-                        <h4 className="flex items-center gap-2 text-sm font-black text-gray-400 uppercase tracking-widest px-1">
-                            <Zap size={16} className="text-yellow-500" />
-                            Suggested Challenges
-                        </h4>
-                        <div className="space-y-3">
-                            {challenges.map((challenge, idx) => (
-                                <div key={idx} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-2xl hover:bg-white border border-transparent hover:border-emerald-100 transition-all cursor-pointer group">
-                                    <div className="p-3 bg-white rounded-xl text-gray-400 group-hover:text-emerald-500 group-hover:shadow-md transition-all">
-                                        <challenge.icon size={20} />
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex justify-between items-center">
-                                            <h5 className="font-bold text-gray-900">{challenge.title}</h5>
-                                            <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full">{challenge.type}</span>
-                                        </div>
-                                        <p className="text-sm text-gray-500 font-medium mt-1">{challenge.desc}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                    <div className="flex space-x-2">
+                        <input
+                            type="text"
+                            value={newPhraseInput}
+                            onChange={(e) => setNewPhraseInput(e.target.value)}
+                            placeholder="e.g., kick off, catch up"
+                            className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold text-gray-800 focus:outline-none focus:border-emerald-500"
+                        />
+                        <button
+                            onClick={() => {
+                                if (newPhraseInput) {
+                                    startSession([newPhraseInput]);
+                                    setNewPhraseInput("");
+                                }
+                            }}
+                            className="bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-200"
+                        >
+                            Start
+                        </button>
                     </div>
-
-                    <button
-                        onClick={() => setAnalysisDone(false)}
-                        className="text-xs font-bold text-gray-400 hover:text-emerald-600 transition-colors mx-auto block"
-                    >
-                        다시 분석하기
-                    </button>
                 </div>
-            )}
+
+                {/* Quick Suggestions */}
+                <div>
+                    <h4 className="flex items-center gap-2 text-sm font-black text-gray-400 uppercase tracking-widest mb-4 px-1">
+                        <Zap size={16} className="text-yellow-500" />
+                        Today's Suggestions
+                    </h4>
+                    <div className="space-y-3">
+                        {['kick off', 'touch base', 'look into'].map((phrase, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => startSession([phrase])}
+                                className="w-full flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl hover:border-emerald-200 hover:shadow-md transition-all group"
+                            >
+                                <span className="font-bold text-gray-700 group-hover:text-emerald-600">{phrase}</span>
+                                <Mic size={18} className="text-gray-300 group-hover:text-emerald-500" />
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

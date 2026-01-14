@@ -14,3 +14,6 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Fix for Windows reserved names
+nul

@@ -9,6 +9,7 @@ import YearlyGoalGraph from './components/Dashboard/YearlyGoalGraph';
 import Settings from './components/Settings/Settings';
 import AIHub from './components/AIHub/AIHub';
 import Roadmap from './components/Roadmap/Roadmap';
+import { Layout, Calendar, Book, Trophy, Settings as SettingsIcon, Bell, Search, User, Home } from 'lucide-react';
 
 function App() {
   const [data, setData] = useLocalStorage('amir-planner-data', initialData);
@@ -123,9 +124,9 @@ function App() {
                 <div className="h-full">
                   <TodayTasks
                     tasks={[
-                      { id: 'ai', name: 'AI 학습', goal: data.dailyGoals.ai, current: data.currentWeek.days[0].ai.hours, emoji: '🤖', completed: data.currentWeek.days[0].ai.completed },
                       { id: 'accounting', name: '회계 공부', goal: data.dailyGoals.accounting, current: data.currentWeek.days[0].accounting.hours, emoji: '📊', completed: data.currentWeek.days[0].accounting.completed },
                       { id: 'english', name: '영어 연습', goal: data.dailyGoals.english, current: data.currentWeek.days[0].english.hours, emoji: '🗣️', completed: data.currentWeek.days[0].english.completed },
+                      { id: 'ai', name: 'AI 학습', goal: data.dailyGoals.ai, current: data.currentWeek.days[0].ai.hours, emoji: '🤖', completed: data.currentWeek.days[0].ai.completed },
                     ]}
                     onUpdate={handleUpdateTask}
                   />

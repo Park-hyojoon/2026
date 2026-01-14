@@ -3,9 +3,9 @@ import { TrendingUp, Award } from 'lucide-react';
 
 export default function WeeklyProgress({ weekly, current }) {
     const subjects = [
-        { key: 'ai', name: 'AI Mastery', emoji: '🤖', colors: 'from-blue-500 to-cyan-400', shadow: 'shadow-blue-200' },
         { key: 'accounting', name: 'Accounting', emoji: '📊', colors: 'from-purple-500 to-pink-400', shadow: 'shadow-purple-200' },
-        { key: 'english', name: 'English Coach', emoji: '🗣️', colors: 'from-emerald-500 to-green-400', shadow: 'shadow-emerald-200' }
+        { key: 'english', name: 'English Coach', emoji: '🗣️', colors: 'from-emerald-500 to-green-400', shadow: 'shadow-emerald-200' },
+        { key: 'ai', name: 'AI Mastery', emoji: '🤖', colors: 'from-blue-500 to-cyan-400', shadow: 'shadow-blue-200' }
     ];
 
     const calculateActual = (key) => {

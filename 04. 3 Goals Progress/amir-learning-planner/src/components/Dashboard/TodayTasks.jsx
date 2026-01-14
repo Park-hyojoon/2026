@@ -43,7 +43,7 @@ export default function TodayTasks({ tasks, onUpdate }) {
                                 : 'bg-gray-50 hover:bg-white hover:shadow-sm'
                             }`}
                     >
-                        <div className="relative flex items-center justify-between">
+                        <div className="relative flex items-center justify-between mb-3">
                             <div className="flex items-center space-x-3">
                                 <div className={`p-2 rounded-xl transition-all duration-300 ${task.completed ? 'bg-green-500 text-white' : 'bg-white text-gray-300 shadow-sm'}`}>
                                     {task.completed ? <CheckCircle2 size={18} strokeWidth={3} /> : <Circle size={18} strokeWidth={2} />}
@@ -57,7 +57,6 @@ export default function TodayTasks({ tasks, onUpdate }) {
                             </div>
 
                             <div className="flex items-center space-x-4">
-                                {/* Current Hours Input */}
                                 <div className="flex items-center bg-white rounded-xl px-3 py-1.5 shadow-sm">
                                     <input
                                         type="number"
@@ -69,10 +68,7 @@ export default function TodayTasks({ tasks, onUpdate }) {
                                     />
                                     <span className="text-[10px] font-black text-gray-400 ml-1">h</span>
                                 </div>
-
                                 <span className="text-gray-300 font-bold">/</span>
-
-                                {/* Target Goal (Editable) */}
                                 {isEditing === task.id ? (
                                     <div className="flex items-center">
                                         <input
@@ -96,6 +92,15 @@ export default function TodayTasks({ tasks, onUpdate }) {
                                     </div>
                                 )}
                             </div>
+                        </div>
+
+                        {/* Daily Topic Input - For AI Analysis */}
+                        <div className="mt-2">
+                            <input
+                                type="text"
+                                placeholder={`무엇을 공부했나요? (예: ${task.id === 'accounting' ? '자산 부채 정의' : task.id === 'english' ? '비즈니스 이메일' : 'React Hooks'})`}
+                                className="w-full bg-white/50 border border-gray-100 rounded-xl px-3 py-2 text-xs font-medium text-gray-600 outline-none focus:border-primary/30 focus:bg-white transition-all"
+                            />
                         </div>
                     </div>
                 ))}

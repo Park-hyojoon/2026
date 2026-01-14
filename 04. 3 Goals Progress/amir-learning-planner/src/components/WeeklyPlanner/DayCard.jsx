@@ -1,10 +1,10 @@
 import React from 'react';
 import { CheckCircle2, Circle } from 'lucide-react';
 
-export default function DayCard({ dayName, data, isSunday, onUpdate }) {
+export default function DayCard({ dayName, data, isSunday, onUpdate, lang = 'ko' }) {
     const subjects = [
-        { key: 'accounting', name: '회계', emoji: '📊', duration: '1.5h' },
-        { key: 'english', name: '영어', emoji: '🗣️', duration: '1h' },
+        { key: 'accounting', name: lang === 'en' ? 'Accounting' : '회계', emoji: '📊', duration: '1.5h' },
+        { key: 'english', name: lang === 'en' ? 'English' : '영어', emoji: '🗣️', duration: '1h' },
         { key: 'ai', name: 'AI', emoji: '🤖', duration: '1.5h' }
     ];
 
@@ -25,8 +25,12 @@ export default function DayCard({ dayName, data, isSunday, onUpdate }) {
             <div className="bg-primary/5 rounded-2xl p-6 flex flex-col items-center justify-center text-center space-y-2">
                 <span className="text-3xl">🌴</span>
                 <h3 className="text-lg font-bold text-primary">{dayName}</h3>
-                <p className="text-sm text-gray-600 font-medium">완전한 휴식</p>
-                <p className="text-xs text-gray-400">가족 시간, 조깅, 회고 작성</p>
+                <p className="text-sm text-gray-600 font-medium">
+                    {lang === 'en' ? 'Full Rest' : '완전한 휴식'}
+                </p>
+                <p className="text-xs text-gray-400">
+                    {lang === 'en' ? 'Family Time, Jogging, Review' : '가족 시간, 조깅, 회고 작성'}
+                </p>
             </div>
         );
     }

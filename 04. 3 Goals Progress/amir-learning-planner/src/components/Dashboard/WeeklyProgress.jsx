@@ -1,22 +1,27 @@
 import React from 'react';
 import { TrendingUp, Award } from 'lucide-react';
 
-export default function WeeklyProgress({ weekly, current }) {
+export default function WeeklyProgress({ weekly, current, lang = 'ko' }) {
     const subjects = [
-        { key: 'accounting', name: 'Accounting', emoji: '📊', colors: 'from-purple-500 to-pink-400', shadow: 'shadow-purple-200' },
-        { key: 'english', name: 'English Coach', emoji: '🗣️', colors: 'from-emerald-500 to-green-400', shadow: 'shadow-emerald-200' },
-        { key: 'ai', name: 'AI Mastery', emoji: '🤖', colors: 'from-blue-500 to-cyan-400', shadow: 'shadow-blue-200' }
+        { key: 'accounting', name: lang === 'en' ? 'Accounting' : '회계', emoji: '📊', colors: 'from-purple-500 to-pink-400', shadow: 'shadow-purple-200' },
+        { key: 'english', name: lang === 'en' ? 'English Coach' : '영어 연습', emoji: '🗣️', colors: 'from-emerald-500 to-green-400', shadow: 'shadow-emerald-200' },
+        { key: 'ai', name: lang === 'en' ? 'AI Mastery' : 'AI 학습', emoji: '🤖', colors: 'from-blue-500 to-cyan-400', shadow: 'shadow-blue-200' }
     ];
 
     const calculateActual = (key) => {
         return current.days.reduce((sum, day) => sum + (day[key]?.hours || 0), 0);
     };
 
+    const t = {
+        title: lang === 'en' ? '📈 Weekly Progress' : '📈 주간 진행률',
+        efficiency: lang === 'en' ? 'Efficiency' : '달성률'
+    };
+
     return (
         <div className="bg-white rounded-[2rem] p-8">
             <header className="flex justify-between items-start mb-10">
                 <div>
-                    <h2 className="text-2xl font-black text-gray-900 tracking-tight">📈 주간 진행률</h2>
+                    <h2 className="text-2xl font-black text-gray-900 tracking-tight">{t.title}</h2>
                     <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mt-1">Consistency is Key</p>
                 </div>
                 <div className="p-3 bg-primary/5 rounded-2xl text-primary">
@@ -42,7 +47,7 @@ export default function WeeklyProgress({ weekly, current }) {
                                         <span className="text-xl font-black text-gray-900">{actual.toFixed(1)}</span>
                                         <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter">/ {goal}h</span>
                                     </div>
-                                    <div className="text-[10px] font-black text-primary tracking-widest uppercase mt-0.5">{percentage.toFixed(0)}% Efficiency</div>
+                                    <div className="text-[10px] font-black text-primary tracking-widest uppercase mt-0.5">{percentage.toFixed(0)}% {t.efficiency}</div>
                                 </div>
                             </div>
 

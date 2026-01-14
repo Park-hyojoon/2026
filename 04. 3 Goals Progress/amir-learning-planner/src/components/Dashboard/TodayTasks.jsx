@@ -1,12 +1,23 @@
 import React, { useState } from 'react';
 import { CheckCircle2, Circle, Clock, Check, ArrowUp } from 'lucide-react';
 
-export default function TodayTasks({ tasks, onUpdate, onFileUpload, onTopicSubmit, savedStudyTopics = {} }) {
-    const today = new Date().toLocaleDateString('ko-KR', {
+export default function TodayTasks({ tasks, onUpdate, onFileUpload, onTopicSubmit, savedStudyTopics = {}, lang = 'ko' }) {
+    const today = new Date().toLocaleDateString(lang === 'en' ? 'en-US' : 'ko-KR', {
         month: 'long',
         day: 'numeric',
         weekday: 'long'
     });
+
+    const t = {
+        title: lang === 'en' ? '🎯 To-Do Today' : '🎯 오늘 할 일',
+        placeholder: lang === 'en' ? 'What did you study?' : '무엇을 공부했나요?',
+        example: lang === 'en' ? 'e.g. Current Assets' : '예: 유동자산',
+        engExample: lang === 'en' ? 'e.g. Business Email' : '예: 비즈니스 이메일',
+        aiAnalysis: lang === 'en' ? 'AI Analyzing...' : 'AI 분석 중...',
+        tutorialLabel: lang === 'en' ? '📚 AI 학습용 자습서(PDF/IMG)' : '📚 AI 학습용 자습서(PDF/IMG)', // Same in both for now
+        upload: lang === 'en' ? 'UPLOAD' : '업로드',
+        confirmed: lang === 'en' ? 'AI Confirmed' : 'AI 확인됨'
+    };
 
     const [isEditing, setIsEditing] = useState(null);
     const [editValue, setEditValue] = useState("");
@@ -69,7 +80,7 @@ export default function TodayTasks({ tasks, onUpdate, onFileUpload, onTopicSubmi
         <div className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 h-full flex flex-col">
             <header className="flex justify-between items-center mb-6">
                 <div>
-                    <h2 className="text-2xl font-black text-gray-900 tracking-tight">🎯 오늘 할 일</h2>
+                    <h2 className="text-2xl font-black text-gray-900 tracking-tight">{t.title}</h2>
                     <p className="text-sm font-semibold text-primary/60">{today}</p>
                 </div>
             </header>
@@ -140,7 +151,7 @@ export default function TodayTasks({ tasks, onUpdate, onFileUpload, onTopicSubmi
                             <div className="flex items-center gap-2 relative">
                                 <input
                                     type="text"
-                                    placeholder={`무엇을 공부했나요? (예: ${task.id === 'accounting' ? 'Part 01 이론편-2. 유동자산' : '비즈니스 이메일'})`}
+                                    placeholder={`${t.placeholder} (${task.id === 'accounting' ? t.example : t.engExample})`}
                                     value={topicInputs[task.id] || ''}
                                     onChange={(e) => handleTopicChange(task.id, e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleTopicSubmitLocal(task.id)}
@@ -149,8 +160,8 @@ export default function TodayTasks({ tasks, onUpdate, onFileUpload, onTopicSubmi
                                 <button
                                     onClick={() => handleTopicSubmitLocal(task.id)}
                                     className={`p-2 rounded-xl border transition-all shadow-sm ${isTopicSaved(task.id)
-                                            ? 'bg-green-500 border-green-500 text-white'
-                                            : 'bg-white border-gray-100 text-gray-400 hover:text-primary hover:border-primary/30'
+                                        ? 'bg-green-500 border-green-500 text-white'
+                                        : 'bg-white border-gray-100 text-gray-400 hover:text-primary hover:border-primary/30'
                                         }`}
                                 >
                                     {isTopicSaved(task.id) ? <Check size={16} strokeWidth={3} /> : <ArrowUp size={16} />}
@@ -170,21 +181,21 @@ export default function TodayTasks({ tasks, onUpdate, onFileUpload, onTopicSubmi
                                                 </div>
                                             ) : (
                                                 <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">
-                                                    {uploadState[task.id]?.status === 'uploading' ? 'AI 분석 중...' : '📚 AI 학습용 자습서(PDF/IMG)'}
+                                                    {uploadState[task.id]?.status === 'uploading' ? t.aiAnalysis : t.tutorialLabel}
                                                 </span>
                                             )}
 
                                             {uploadState[task.id]?.filename && (
                                                 <span className={`text-[10px] font-bold ${uploadState[task.id]?.status === 'done' ? 'text-green-700' : 'text-indigo-600'}`}>
                                                     {uploadState[task.id].filename}
-                                                    {uploadState[task.id]?.status === 'done' && <span className="ml-1 text-[9px] opacity-70">AI Confirmed</span>}
+                                                    {uploadState[task.id]?.status === 'done' && <span className="ml-1 text-[9px] opacity-70">{t.confirmed}</span>}
                                                 </span>
                                             )}
                                         </div>
 
                                         {uploadState[task.id]?.status !== 'done' && (
                                             <label className={`cursor-pointer px-2 py-1 bg-white border border-indigo-100 rounded-lg text-[9px] font-black text-indigo-500 hover:bg-indigo-500 hover:text-white transition-all shadow-sm ${uploadState[task.id]?.status === 'uploading' ? 'opacity-50 pointer-events-none' : ''}`}>
-                                                {uploadState[task.id]?.status === 'uploading' ? '...' : 'UPLOAD'}
+                                                {uploadState[task.id]?.status === 'uploading' ? '...' : t.upload}
                                                 <input
                                                     type="file"
                                                     accept=".pdf,.txt,.md,.jpg,.png"

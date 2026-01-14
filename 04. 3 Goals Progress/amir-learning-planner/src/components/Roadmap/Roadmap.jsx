@@ -2,32 +2,39 @@ import React from 'react';
 import { Flag, CheckCircle, Circle, ArrowRight } from 'lucide-react';
 
 export default function Roadmap({ data }) {
+    const lang = data?.user?.language || 'ko';
     // Mock roadmap data structure (In a real app, this might come from 'data.roadmap')
     const roadmapData = [
         {
             year: '2026',
             quarters: [
                 {
-                    id: 'q1', period: 'Q1 (1-3월)', title: '기초 다지기',
+                    id: 'q1',
+                    period: lang === 'en' ? 'Q1 (Jan-Mar)' : 'Q1 (1-3월)',
+                    title: lang === 'en' ? 'Building Foundations' : '기초 다지기',
                     items: [
-                        { id: 1, text: 'React 기본 완전 마스터', completed: true, type: 'ai' },
-                        { id: 2, text: '전산회계 2급 자격증 취득', completed: false, type: 'accounting' },
-                        { id: 3, text: '영어 학습 습관 형성', completed: true, type: 'english' }
+                        { id: 1, text: lang === 'en' ? 'Master React Basics' : 'React 기본 완전 마스터', completed: true, type: 'ai' },
+                        { id: 2, text: lang === 'en' ? 'Get Accounting Level 2' : '전산회계 2급 자격증 취득', completed: false, type: 'accounting' },
+                        { id: 3, text: lang === 'en' ? 'Establish English Habits' : '영어 학습 습관 형성', completed: true, type: 'english' }
                     ]
                 },
                 {
-                    id: 'q2', period: 'Q2 (4-6월)', title: '심화 학습 및 적용',
+                    id: 'q2',
+                    period: lang === 'en' ? 'Q2 (Apr-Jun)' : 'Q2 (4-6월)',
+                    title: lang === 'en' ? 'In-depth Study' : '심화 학습 및 적용',
                     items: [
-                        { id: 4, text: 'AI 에이전트 프로토타입 제작', completed: false, type: 'ai' },
-                        { id: 5, text: '전산회계 1급 시험 준비', completed: false, type: 'accounting' },
-                        { id: 6, text: '영어 회화 B1 레벨 도달', completed: false, type: 'english' }
+                        { id: 4, text: lang === 'en' ? 'Build AI Agent Prototype' : 'AI 에이전트 프로토타입 제작', completed: false, type: 'ai' },
+                        { id: 5, text: lang === 'en' ? 'Prepare Accounting Level 1' : '전산회계 1급 시험 준비', completed: false, type: 'accounting' },
+                        { id: 6, text: lang === 'en' ? 'Reach English Speaking B1' : '영어 회화 B1 레벨 도달', completed: false, type: 'english' }
                     ]
                 },
                 {
-                    id: 'q3', period: 'Q3 (7-9월)', title: '확장 및 성장',
+                    id: 'q3',
+                    period: lang === 'en' ? 'Q3 (Jul-Sep)' : 'Q3 (7-9월)',
+                    title: lang === 'en' ? 'Expansion & Growth' : '확장 및 성장',
                     items: [
-                        { id: 7, text: '첫 SAAS 제품 배포', completed: false, type: 'ai' },
-                        { id: 8, text: '세무회계 기초 학습', completed: false, type: 'accounting' },
+                        { id: 7, text: lang === 'en' ? 'Deploy first SAAS product' : '첫 SAAS 제품 배포', completed: false, type: 'ai' },
+                        { id: 8, text: lang === 'en' ? 'Learn Tax Accounting Basics' : '세무회계 기초 학습', completed: false, type: 'accounting' },
                     ]
                 }
             ]
@@ -44,10 +51,12 @@ export default function Roadmap({ data }) {
     };
 
     return (
-        <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+        <div className="max-w-[1380px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
             <header className="mb-12 text-center md:text-left">
                 <h2 className="text-4xl font-black text-gray-900 tracking-tighter">2026 Roadmap</h2>
-                <p className="text-gray-400 font-bold mt-2">큰 꿈을 향한 구체적인 이정표를 확인하세요.</p>
+                <p className="text-gray-400 font-bold mt-2">
+                    {lang === 'en' ? 'Check the concrete milestones toward your big dreams.' : '큰 꿈을 향한 구체적인 이정표를 확인하세요.'}
+                </p>
             </header>
 
             <div className="space-y-12">
@@ -71,7 +80,7 @@ export default function Roadmap({ data }) {
                                                 <h3 className="text-2xl font-black text-gray-900">{quarter.title}</h3>
                                             </div>
                                             <div className="mt-4 md:mt-0 px-4 py-2 bg-gray-50 rounded-2xl text-xs font-bold text-gray-400">
-                                                {quarter.items.filter(i => i.completed).length} / {quarter.items.length} Completed
+                                                {quarter.items.filter(i => i.completed).length} / {quarter.items.length} {lang === 'en' ? 'Completed' : '완료됨'}
                                             </div>
                                         </div>
 
@@ -101,7 +110,9 @@ export default function Roadmap({ data }) {
             <div className="mt-12 p-8 bg-gradient-to-r from-gray-900 to-gray-800 rounded-[2.5rem] text-white text-center">
                 <Flag size={48} className="mx-auto mb-4 text-primary" />
                 <h3 className="text-2xl font-black mb-2">Keep Moving Forward</h3>
-                <p className="text-gray-400 font-medium">"미래는 준비하는 자의 것입니다."</p>
+                <p className="text-gray-400 font-medium">
+                    {lang === 'en' ? '"The future belongs to those who prepare for it."' : '"미래는 준비하는 자의 것입니다."'}
+                </p>
             </div>
         </div>
     );

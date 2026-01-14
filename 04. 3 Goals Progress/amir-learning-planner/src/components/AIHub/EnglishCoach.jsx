@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Zap, Mic, MicOff, Send, Quote, Volume2, VolumeX } from 'lucide-react';
 
 export default function EnglishCoach({ data, onSavePhrase }) {
+    const lang = data?.user?.language || 'ko';
     const [view, setView] = useState('dashboard'); // dashboard, chat
     const [targetPhrases, setTargetPhrases] = useState([]);
     const [messages, setMessages] = useState([]);
@@ -13,6 +14,27 @@ export default function EnglishCoach({ data, onSavePhrase }) {
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [voiceEnabled, setVoiceEnabled] = useState(true);
     const recognitionRef = useRef(null);
+
+    const t = {
+        title: lang === 'en' ? 'AI English Coach' : 'AI 영어 코치',
+        subtitle: lang === 'en' ? 'Target Expression Training' : '핵심 표현 트레이닝',
+        goldenPhrases: lang === 'en' ? 'Golden Phrases' : '집착 학습 표현',
+        inputInstruction: lang === 'en' ? 'Enter the expressions you want to master.' : '연습하고 싶은 핵심 표현을 입력하세요.',
+        start: lang === 'en' ? 'Start' : '시작',
+        mySavedPhrases: lang === 'en' ? 'My Saved Phrases' : '나의 저장된 표현',
+        practiceCount: lang === 'en' ? 'times' : '회 연습',
+        suggestions: lang === 'en' ? "Today's Suggestions" : '오늘의 추천 표현',
+        livePractice: lang === 'en' ? 'Live Practice' : '라이브 실전 연습',
+        target: lang === 'en' ? 'Target' : '목표',
+        listening: lang === 'en' ? 'Listening...' : '듣는 중...',
+        placeholder: lang === 'en' ? 'Type or speak your answer...' : '답변을 입력하거나 말씀하세요...',
+        exit: lang === 'en' ? 'Exit' : '종료',
+        voiceSupportError: lang === 'en' ? 'Speech recognition is not supported in this browser.' : '음성 인식이 지원되지 않는 브라우저입니다.',
+        voiceToggleOn: lang === 'en' ? 'Turn voice off' : '음성 끄기',
+        voiceToggleOff: lang === 'en' ? 'Turn voice on' : '음성 켜기',
+        micOn: lang === 'en' ? 'Listening... click to stop' : '듣는 중... 클릭하여 중지',
+        micOff: lang === 'en' ? 'Speak with voice' : '음성으로 말하기'
+    };
 
     // 저장된 phrases 불러오기
     const savedPhrases = data?.english?.targetPhrases || [];
@@ -58,7 +80,7 @@ export default function EnglishCoach({ data, onSavePhrase }) {
     // 음성 인식 토글
     const toggleListening = () => {
         if (!recognitionRef.current) {
-            alert('음성 인식이 지원되지 않는 브라우저입니다.');
+            alert(t.voiceSupportError);
             return;
         }
 
@@ -122,26 +144,26 @@ export default function EnglishCoach({ data, onSavePhrase }) {
     // --- Chat View ---
     if (view === 'chat') {
         return (
-            <div className="bg-white rounded-[2rem] p-6 shadow-sm h-full flex flex-col">
+            <div className="bg-white rounded-[2rem] p-6 shadow-sm h-full flex flex-col w-[90%] mx-auto">
                 <header className="flex justify-between items-center mb-4 pb-4 border-b border-gray-100">
                     <div className="flex items-center space-x-3">
                         <div className={`p-2 rounded-xl ${isSpeaking ? 'bg-emerald-500 text-white animate-pulse' : 'bg-emerald-100 text-emerald-600'}`}>
                             <Volume2 size={20} />
                         </div>
                         <div>
-                            <h3 className="font-bold text-gray-900">Live Practice</h3>
-                            <p className="text-xs text-emerald-600 font-bold">Target: {targetPhrases.join(', ')}</p>
+                            <h3 className="font-bold text-gray-900">{t.livePractice}</h3>
+                            <p className="text-xs text-emerald-600 font-bold">{t.target}: {targetPhrases.join(', ')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setVoiceEnabled(!voiceEnabled)}
                             className={`p-2 rounded-lg ${voiceEnabled ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}
-                            title={voiceEnabled ? '음성 끄기' : '음성 켜기'}
+                            title={voiceEnabled ? t.voiceToggleOn : t.voiceToggleOff}
                         >
                             {voiceEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
                         </button>
-                        <button onClick={() => setView('dashboard')} className="text-xs font-bold text-gray-400 hover:text-gray-600">Exit</button>
+                        <button onClick={() => setView('dashboard')} className="text-xs font-bold text-gray-400 hover:text-gray-600">{t.exit}</button>
                     </div>
                 </header>
 
@@ -149,8 +171,8 @@ export default function EnglishCoach({ data, onSavePhrase }) {
                     {messages.map((msg, idx) => (
                         <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                             <div className={`max-w-[80%] p-3 rounded-2xl text-sm font-medium ${msg.role === 'user'
-                                    ? 'bg-emerald-500 text-white rounded-br-none'
-                                    : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                                ? 'bg-emerald-500 text-white rounded-br-none'
+                                : 'bg-gray-100 text-gray-800 rounded-bl-none'
                                 }`}>
                                 {msg.text}
                             </div>
@@ -164,8 +186,8 @@ export default function EnglishCoach({ data, onSavePhrase }) {
                         className={`p-3 rounded-xl transition-all ${isListening
                             ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-200'
                             : 'bg-gray-100 text-gray-600 hover:bg-emerald-100 hover:text-emerald-600'
-                        }`}
-                        title={isListening ? '듣는 중... 클릭하여 중지' : '음성으로 말하기'}
+                            }`}
+                        title={isListening ? t.micOn : t.micOff}
                     >
                         {isListening ? <MicOff size={18} /> : <Mic size={18} />}
                     </button>
@@ -174,7 +196,7 @@ export default function EnglishCoach({ data, onSavePhrase }) {
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                        placeholder={isListening ? "Listening..." : "Type or speak your answer..."}
+                        placeholder={isListening ? t.listening : t.placeholder}
                         className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
                     />
                     <button
@@ -190,14 +212,14 @@ export default function EnglishCoach({ data, onSavePhrase }) {
 
     // --- Dashboard View ---
     return (
-        <div className="bg-white rounded-[2rem] p-8 shadow-sm h-full flex flex-col">
+        <div className="bg-white rounded-[2rem] p-8 shadow-sm h-full flex flex-col w-[90%] mx-auto">
             <header className="flex items-center space-x-4 mb-8">
                 <div className="p-3 bg-emerald-100 rounded-xl text-emerald-600">
                     <MessageCircle size={24} />
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold text-gray-900">AI English Coach</h3>
-                    <p className="text-sm font-medium text-gray-400">Target Expression Training</p>
+                    <h3 className="text-xl font-bold text-gray-900">{t.title}</h3>
+                    <p className="text-sm font-medium text-gray-400">{t.subtitle}</p>
                 </div>
             </header>
 
@@ -206,9 +228,9 @@ export default function EnglishCoach({ data, onSavePhrase }) {
                 <div className="bg-gray-50 rounded-2xl p-6 space-y-4">
                     <div className="flex items-center space-x-2 text-emerald-700 mb-2">
                         <Quote size={18} />
-                        <h4 className="font-black text-sm uppercase tracking-wider">Golden Phrases</h4>
+                        <h4 className="font-black text-sm uppercase tracking-wider">{t.goldenPhrases}</h4>
                     </div>
-                    <p className="text-sm text-gray-500 font-medium">연습하고 싶은 핵심 표현을 입력하세요.</p>
+                    <p className="text-sm text-gray-500 font-medium">{t.inputInstruction}</p>
 
                     <div className="flex space-x-2">
                         <input
@@ -223,7 +245,7 @@ export default function EnglishCoach({ data, onSavePhrase }) {
                             onClick={handleSavePhrase}
                             className="bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-200"
                         >
-                            Start
+                            {t.start}
                         </button>
                     </div>
                 </div>
@@ -233,7 +255,7 @@ export default function EnglishCoach({ data, onSavePhrase }) {
                     <div>
                         <h4 className="flex items-center gap-2 text-sm font-black text-gray-400 uppercase tracking-widest mb-4 px-1">
                             <Quote size={16} className="text-emerald-500" />
-                            My Saved Phrases
+                            {t.mySavedPhrases}
                         </h4>
                         <div className="space-y-2">
                             {savedPhrases.slice(-5).reverse().map((item, idx) => (
@@ -244,7 +266,7 @@ export default function EnglishCoach({ data, onSavePhrase }) {
                                 >
                                     <span className="font-bold text-emerald-700">{item.phrase}</span>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-xs text-emerald-500">{item.practiceCount || 0}회 연습</span>
+                                        <span className="text-xs text-emerald-500">{item.practiceCount || 0}{t.practiceCount}</span>
                                         <Mic size={16} className="text-emerald-400 group-hover:text-emerald-600" />
                                     </div>
                                 </button>
@@ -257,7 +279,7 @@ export default function EnglishCoach({ data, onSavePhrase }) {
                 <div>
                     <h4 className="flex items-center gap-2 text-sm font-black text-gray-400 uppercase tracking-widest mb-4 px-1">
                         <Zap size={16} className="text-yellow-500" />
-                        Today's Suggestions
+                        {t.suggestions}
                     </h4>
                     <div className="space-y-3">
                         {['kick off', 'touch base', 'look into'].map((phrase, idx) => (

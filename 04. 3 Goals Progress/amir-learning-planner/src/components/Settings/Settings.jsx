@@ -96,11 +96,45 @@ export default function Settings({ data, onUpdate, onImportData }) {
         handleChange('settings.savePath', newPath);
     };
 
+    const lang = data?.user?.language || 'ko';
+
+    const t = {
+        title: lang === 'en' ? 'Settings' : '설정',
+        subtitle: lang === 'en' ? 'Set your own learning goals and environment.' : '나만의 학습 목표와 환경을 설정하세요.',
+        basicInfo: lang === 'en' ? 'Basic Info' : '기본 정보',
+        name: lang === 'en' ? 'Name' : '이름',
+        language: lang === 'en' ? 'Language' : 'Language / 언어',
+        strategyGuide: lang === 'en' ? 'Strategy Guide' : '전략 가이드 표시',
+        strategyDesc: lang === 'en' ? 'Shows daily learning strategy on top.' : '데스크탑 상단에 일일 학습 전략을 보여줍니다.',
+        examSchedule: lang === 'en' ? 'Exam Schedule' : '시험 일정',
+        level2: lang === 'en' ? 'Accounting Level 2' : '전산회계 2급',
+        level1: lang === 'en' ? 'Accounting Level 1' : '전산회계 1급',
+        dailyGoals: lang === 'en' ? 'Daily Goals (Hours)' : '일일 목표 (시간)',
+        weeklyGoals: lang === 'en' ? 'Weekly Goals (Hours)' : '주간 목표 (시간)',
+        dataManagement: lang === 'en' ? 'Data Management' : '데이터 관리',
+        savePath: lang === 'en' ? 'Save Path (Reference)' : '저장 경로 (참고용)',
+        savePathDesc: lang === 'en' ? '* Actually stored in browser localStorage. This is for reference when exporting.' : '* 웹앱 특성상 실제 저장은 브라우저 localStorage에 됩니다. 이 경로는 내보낸 파일을 저장할 위치를 기억하기 위한 참고용입니다.',
+        exportTitle: lang === 'en' ? 'Export Data' : '데이터 내보내기',
+        exportDesc: lang === 'en' ? 'Save all records and settings as a JSON file.' : '모든 학습 기록, 설정, 회고록을 JSON 파일로 저장합니다.',
+        exportBtn: lang === 'en' ? 'Export to JSON' : 'JSON 파일로 내보내기',
+        importTitle: lang === 'en' ? 'Import Data' : '데이터 가져오기',
+        importDesc: lang === 'en' ? 'Restore data from a previously exported JSON file.' : '이전에 내보낸 JSON 파일을 불러와 데이터를 복원합니다.',
+        importBtn: lang === 'en' ? 'Import from JSON' : 'JSON 파일 가져오기',
+        importWarning: lang === 'en' ? '* Current data will be overwritten.' : '* 가져오기 시 현재 데이터가 덮어씌워집니다.',
+        currentData: lang === 'en' ? 'Current Data Status' : '현재 저장된 데이터',
+        records: lang === 'en' ? 'Study Records' : '학습 기록',
+        phrases: lang === 'en' ? 'English Phrases' : '영어 표현',
+        materials: lang === 'en' ? 'Materials' : '업로드 자료',
+        lastModified: lang === 'en' ? 'Last Modified' : '마지막 수정',
+        saveBtn: lang === 'en' ? 'Save Settings' : '설정 저장하기',
+        saved: lang === 'en' ? 'Saved!' : '저장 완료!',
+    };
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
             <header className="mb-8">
-                <h2 className="text-4xl font-black text-gray-900 tracking-tighter">Settings</h2>
-                <p className="text-gray-400 font-bold mt-2">나만의 학습 목표와 환경을 설정하세요.</p>
+                <h2 className="text-4xl font-black text-gray-900 tracking-tighter">{t.title}</h2>
+                <p className="text-gray-400 font-bold mt-2">{t.subtitle}</p>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -110,11 +144,11 @@ export default function Settings({ data, onUpdate, onImportData }) {
                         <div className="p-3 bg-primary/10 rounded-xl text-primary">
                             <User size={24} />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900">기본 정보</h3>
+                        <h3 className="text-xl font-bold text-gray-900">{t.basicInfo}</h3>
                     </div>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">이름</label>
+                            <label className="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">{t.name}</label>
                             <input
                                 type="text"
                                 value={data.user.name}
@@ -123,7 +157,7 @@ export default function Settings({ data, onUpdate, onImportData }) {
                             />
                         </div>
                         <div className="pt-2">
-                            <label className="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">Language / 언어</label>
+                            <label className="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">{t.language}</label>
                             <select
                                 value={data.user.language}
                                 onChange={(e) => handleChange('user.language', e.target.value)}
@@ -135,8 +169,8 @@ export default function Settings({ data, onUpdate, onImportData }) {
                         </div>
                         <div className="flex items-center justify-between pt-4">
                             <div>
-                                <label className="block text-sm font-bold text-gray-900">전략 가이드 표시</label>
-                                <p className="text-xs text-gray-400 font-medium">데스크탑 상단에 일일 학습 전략을 보여줍니다.</p>
+                                <label className="block text-sm font-bold text-gray-900">{t.strategyGuide}</label>
+                                <p className="text-xs text-gray-400 font-medium">{t.strategyDesc}</p>
                             </div>
                             <button
                                 onClick={() => handleChange('user.showStrategy', !data.user.showStrategy)}
@@ -154,11 +188,11 @@ export default function Settings({ data, onUpdate, onImportData }) {
                         <div className="p-3 bg-purple-100 rounded-xl text-purple-600">
                             <Calendar size={24} />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900">시험 일정</h3>
+                        <h3 className="text-xl font-bold text-gray-900">{t.examSchedule}</h3>
                     </div>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">전산회계 2급</label>
+                            <label className="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">{t.level2}</label>
                             <input
                                 type="date"
                                 value={data.accounting.level2.examDate}
@@ -167,7 +201,7 @@ export default function Settings({ data, onUpdate, onImportData }) {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">전산회계 1급</label>
+                            <label className="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">{t.level1}</label>
                             <input
                                 type="date"
                                 value={data.accounting.level1.examDate}
@@ -184,13 +218,15 @@ export default function Settings({ data, onUpdate, onImportData }) {
                         <div className="p-3 bg-blue-100 rounded-xl text-blue-600">
                             <Clock size={24} />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900">일일 목표 (시간)</h3>
+                        <h3 className="text-xl font-bold text-gray-900">{t.dailyGoals}</h3>
                     </div>
                     <div className="space-y-6">
                         {Object.entries(data.dailyGoals).map(([key, value]) => (
                             <div key={key}>
                                 <div className="flex justify-between mb-2">
-                                    <label className="text-sm font-bold text-gray-500 uppercase tracking-wide">{key}</label>
+                                    <label className="text-sm font-bold text-gray-500 uppercase tracking-wide">
+                                        {lang === 'en' ? key.toUpperCase() : key === 'accounting' ? '회계' : key === 'english' ? '영어' : 'AI'}
+                                    </label>
                                     <span className="text-sm font-black text-blue-600">{value}h</span>
                                 </div>
                                 <input
@@ -213,13 +249,15 @@ export default function Settings({ data, onUpdate, onImportData }) {
                         <div className="p-3 bg-green-100 rounded-xl text-green-600">
                             <Hash size={24} />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900">주간 목표 (시간)</h3>
+                        <h3 className="text-xl font-bold text-gray-900">{t.weeklyGoals}</h3>
                     </div>
                     <div className="space-y-6">
                         {Object.entries(data.weeklyGoals).map(([key, value]) => (
                             <div key={key}>
                                 <div className="flex justify-between mb-2">
-                                    <label className="text-sm font-bold text-gray-500 uppercase tracking-wide">{key}</label>
+                                    <label className="text-sm font-bold text-gray-500 uppercase tracking-wide">
+                                        {lang === 'en' ? key.toUpperCase() : key === 'accounting' ? '회계' : key === 'english' ? '영어' : 'AI'}
+                                    </label>
                                     <span className="text-sm font-black text-green-600">{value}h</span>
                                 </div>
                                 <input
@@ -242,14 +280,14 @@ export default function Settings({ data, onUpdate, onImportData }) {
                         <div className="p-3 bg-amber-100 rounded-xl text-amber-600">
                             <FolderOpen size={24} />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900">데이터 관리</h3>
+                        <h3 className="text-xl font-bold text-gray-900">{t.dataManagement}</h3>
                     </div>
 
                     <div className="space-y-6">
                         {/* 저장 경로 설정 */}
                         <div>
                             <label className="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">
-                                저장 경로 (참고용)
+                                {t.savePath}
                             </label>
                             <div className="flex gap-2">
                                 <input
@@ -261,8 +299,7 @@ export default function Settings({ data, onUpdate, onImportData }) {
                                 />
                             </div>
                             <p className="text-xs text-gray-400 mt-2">
-                                * 웹앱 특성상 실제 저장은 브라우저 localStorage에 됩니다.
-                                이 경로는 내보낸 파일을 저장할 위치를 기억하기 위한 참고용입니다.
+                                {t.savePathDesc}
                             </p>
                         </div>
 
@@ -272,40 +309,39 @@ export default function Settings({ data, onUpdate, onImportData }) {
                             <div className="p-6 bg-blue-50 rounded-2xl">
                                 <h4 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
                                     <Download size={18} />
-                                    데이터 내보내기
+                                    {t.exportTitle}
                                 </h4>
                                 <p className="text-sm text-blue-700 mb-4">
-                                    모든 학습 기록, 설정, 회고록을 JSON 파일로 저장합니다.
+                                    {t.exportDesc}
                                 </p>
                                 <button
                                     onClick={handleExport}
-                                    className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
-                                        exportStatus === 'success'
+                                    className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${exportStatus === 'success'
                                             ? 'bg-green-500 text-white'
                                             : exportStatus === 'error'
                                                 ? 'bg-red-500 text-white'
                                                 : 'bg-blue-500 text-white hover:bg-blue-600'
-                                    }`}
+                                        }`}
                                 >
                                     {exportStatus === 'success' ? (
                                         <>
                                             <CheckCircle size={18} />
-                                            내보내기 완료!
+                                            {lang === 'en' ? 'Export Successful!' : '내보내기 완료!'}
                                         </>
                                     ) : exportStatus === 'error' ? (
                                         <>
                                             <AlertCircle size={18} />
-                                            오류 발생
+                                            {lang === 'en' ? 'Error' : '오류 발생'}
                                         </>
                                     ) : (
                                         <>
                                             <Download size={18} />
-                                            JSON 파일로 내보내기
+                                            {t.exportBtn}
                                         </>
                                     )}
                                 </button>
                                 <p className="text-xs text-blue-600 mt-2 text-center">
-                                    파일명: amir-planner-backup-{currentYear}-{new Date().toISOString().split('T')[0]}.json
+                                    {lang === 'en' ? 'Filename' : '파일명'}: amir-planner-backup-{currentYear}-{new Date().toISOString().split('T')[0]}.json
                                 </p>
                             </div>
 
@@ -313,10 +349,10 @@ export default function Settings({ data, onUpdate, onImportData }) {
                             <div className="p-6 bg-emerald-50 rounded-2xl">
                                 <h4 className="font-bold text-emerald-900 mb-2 flex items-center gap-2">
                                     <Upload size={18} />
-                                    데이터 가져오기
+                                    {t.importTitle}
                                 </h4>
                                 <p className="text-sm text-emerald-700 mb-4">
-                                    이전에 내보낸 JSON 파일을 불러와 데이터를 복원합니다.
+                                    {t.importDesc}
                                 </p>
                                 <input
                                     ref={fileInputRef}
@@ -327,55 +363,54 @@ export default function Settings({ data, onUpdate, onImportData }) {
                                 />
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
-                                    className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
-                                        importStatus === 'success'
+                                    className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${importStatus === 'success'
                                             ? 'bg-green-500 text-white'
                                             : importStatus === 'error'
                                                 ? 'bg-red-500 text-white'
                                                 : 'bg-emerald-500 text-white hover:bg-emerald-600'
-                                    }`}
+                                        }`}
                                 >
                                     {importStatus === 'success' ? (
                                         <>
                                             <CheckCircle size={18} />
-                                            가져오기 완료!
+                                            {lang === 'en' ? 'Import Successful!' : '가져오기 완료!'}
                                         </>
                                     ) : importStatus === 'error' ? (
                                         <>
                                             <AlertCircle size={18} />
-                                            파일 형식 오류
+                                            {lang === 'en' ? 'Invalid File' : '파일 형식 오류'}
                                         </>
                                     ) : (
                                         <>
                                             <Upload size={18} />
-                                            JSON 파일 가져오기
+                                            {t.importBtn}
                                         </>
                                     )}
                                 </button>
                                 <p className="text-xs text-emerald-600 mt-2 text-center">
-                                    * 가져오기 시 현재 데이터가 덮어씌워집니다.
+                                    {t.importWarning}
                                 </p>
                             </div>
                         </div>
 
                         {/* 현재 데이터 상태 */}
                         <div className="p-4 bg-gray-50 rounded-xl mt-4">
-                            <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">현재 저장된 데이터</h4>
+                            <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">{t.currentData}</h4>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                                 <div className="bg-white p-3 rounded-lg">
-                                    <p className="text-gray-400 text-xs">학습 기록</p>
-                                    <p className="font-bold text-gray-900">{data.accounting?.studyLog?.length || 0}개</p>
+                                    <p className="text-gray-400 text-xs">{t.records}</p>
+                                    <p className="font-bold text-gray-900">{data.accounting?.studyLog?.length || 0}</p>
                                 </div>
                                 <div className="bg-white p-3 rounded-lg">
-                                    <p className="text-gray-400 text-xs">영어 표현</p>
-                                    <p className="font-bold text-gray-900">{data.english?.targetPhrases?.length || 0}개</p>
+                                    <p className="text-gray-400 text-xs">{t.phrases}</p>
+                                    <p className="font-bold text-gray-900">{data.english?.targetPhrases?.length || 0}</p>
                                 </div>
                                 <div className="bg-white p-3 rounded-lg">
-                                    <p className="text-gray-400 text-xs">업로드 자료</p>
-                                    <p className="font-bold text-gray-900">{data.accounting?.level2?.referenceMaterials?.length || 0}개</p>
+                                    <p className="text-gray-400 text-xs">{t.materials}</p>
+                                    <p className="font-bold text-gray-900">{data.accounting?.level2?.referenceMaterials?.length || 0}</p>
                                 </div>
                                 <div className="bg-white p-3 rounded-lg">
-                                    <p className="text-gray-400 text-xs">마지막 수정</p>
+                                    <p className="text-gray-400 text-xs">{t.lastModified}</p>
                                     <p className="font-bold text-gray-900">{new Date().toLocaleDateString()}</p>
                                 </div>
                             </div>
@@ -391,7 +426,7 @@ export default function Settings({ data, onUpdate, onImportData }) {
                         }`}
                 >
                     <Save size={20} />
-                    <span>{saved ? '저장 완료!' : '설정 저장하기'}</span>
+                    <span>{saved ? t.saved : t.saveBtn}</span>
                 </button>
             </div>
         </div>

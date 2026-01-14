@@ -160,6 +160,8 @@ ${data.user.name} 님, 오늘의 학습 피드백입니다.
 2. 영어 Golden Phrases 3번 반복 말하기
 `;
 
+  const lang = data?.user?.language || 'ko';
+
   return (
     <div className="min-h-screen bg-[#fcfdfe] text-gray-900 font-['Inter'] flex flex-col md:flex-row overflow-hidden">
       {/* Review Modal */}
@@ -167,8 +169,12 @@ ${data.user.name} 님, 오늘의 학습 피드백입니다.
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
           <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-xl shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-black text-gray-900">Study Feedback</h3>
-              <button onClick={() => setShowReview(false)} className="text-gray-400 font-bold hover:text-gray-900">Close</button>
+              <h3 className="text-2xl font-black text-gray-900">
+                {lang === 'en' ? 'Study Feedback' : '학습 피드백'}
+              </h3>
+              <button onClick={() => setShowReview(false)} className="text-gray-400 font-bold hover:text-gray-900">
+                {lang === 'en' ? 'Close' : '닫기'}
+              </button>
             </div>
             <div className="bg-gray-50 p-6 rounded-2xl whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-700 h-[400px] overflow-y-auto">
               {reviewContent}
@@ -178,12 +184,15 @@ ${data.user.name} 님, 오늘의 학습 피드백입니다.
       )}
 
       {/* Premium Sidebar (Desktop) */}
-      <nav className="hidden md:flex flex-col w-72 bg-white p-8 space-y-2 z-20 shadow-[20px_0_50px_rgba(0,0,0,0.02)]">
+      <nav className="hidden md:flex flex-col w-64 bg-white p-8 space-y-2 z-20 shadow-[20px_0_50px_rgba(0,0,0,0.02)]">
         <div className="mb-12 px-2">
+          <h1 className="text-2xl font-black text-primary tracking-tighter">AMIR Planner</h1>
         </div>
 
         <div className="space-y-1.5">
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 px-2">Main Menu</p>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 px-2">
+            {lang === 'en' ? 'Main Menu' : '메인 메뉴'}
+          </p>
           {tabs.map(tab => (
             <button
               key={tab.id}
@@ -204,16 +213,15 @@ ${data.user.name} 님, 오늘의 학습 피드백입니다.
           {/* 사용자 프로필 (클릭 시 Dashboard 이동) */}
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`w-full rounded-[1.5rem] p-4 flex items-center space-x-3 transition-all duration-300 ${
-              activeTab === 'dashboard'
-                ? 'bg-primary shadow-xl shadow-primary/20'
-                : 'bg-gray-50 hover:bg-gray-100'
-            }`}
+            className={`w-full rounded-[1.5rem] p-4 flex items-center space-x-3 transition-all duration-300 ${activeTab === 'dashboard'
+              ? 'bg-primary shadow-xl shadow-primary/20'
+              : 'bg-gray-50 hover:bg-gray-100'
+              }`}
           >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark"></div>
             <div className="text-left">
               <p className={`text-xs font-black tracking-tight ${activeTab === 'dashboard' ? 'text-white' : 'text-gray-900'}`}>
-                {data.user.name}님
+                {data.user.name}{lang === 'en' ? '' : '님'}
               </p>
               <p className={`text-[10px] font-bold ${activeTab === 'dashboard' ? 'text-white/70' : 'text-gray-400'}`}>
                 Premium Member
@@ -238,9 +246,9 @@ ${data.user.name} 님, 오늘의 학습 피드백입니다.
             >
               <Home size={24} strokeWidth={2.5} />
             </button>
-            <div className="hidden md:flex items-center bg-gray-100 rounded-2xl px-4 py-2 w-80">
+            <div className="hidden md:flex items-center bg-gray-100 rounded-2xl px-4 py-2 w-96">
               <Search size={18} className="text-gray-400 mr-2" />
-              <input type="text" placeholder={data.user.language === 'en' ? "Search milestones..." : "검색..."} className="bg-transparent border-none outline-none text-sm font-medium w-full" />
+              <input type="text" placeholder={lang === 'en' ? "Search milestones..." : "검색..."} className="bg-transparent border-none outline-none text-sm font-medium w-full" />
             </div>
           </div>
 
@@ -266,7 +274,7 @@ ${data.user.name} 님, 오늘의 학습 피드백입니다.
         {/* Scrollable Main Content */}
         <main className="flex-1 p-6 md:p-12 pb-32 overflow-y-auto bg-[#fafbfc]">
           {activeTab === 'dashboard' && (
-            <div className="max-w-6xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="max-w-[1380px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
               {/* 1. Daily Strategy (Replaces purple bar if enabled) */}
               {data.user.showStrategy ? (
                 <DailyStrategy data={data} />
@@ -282,33 +290,48 @@ ${data.user.name} 님, 오늘의 학습 피드백입니다.
                     tasks={[
                       {
                         id: 'accounting',
-                        name: '회계 공부',
+                        name: lang === 'en' ? 'Accounting' : '회계 공부',
                         goal: data.dailyGoals.accounting,
                         current: data.currentWeek.days[0].accounting.hours,
                         emoji: '📊',
                         completed: data.currentWeek.days[0].accounting.completed,
                         uploadedFile: data.accounting?.level2?.referenceMaterials?.length > 0 ? data.accounting.level2.referenceMaterials[data.accounting.level2.referenceMaterials.length - 1].name : null
                       },
-                      { id: 'english', name: '영어 연습', goal: data.dailyGoals.english, current: data.currentWeek.days[0].english.hours, emoji: '🗣️', completed: data.currentWeek.days[0].english.completed },
-                      { id: 'ai', name: 'AI 학습', goal: data.dailyGoals.ai, current: data.currentWeek.days[0].ai.hours, emoji: '🤖', completed: data.currentWeek.days[0].ai.completed },
+                      {
+                        id: 'english',
+                        name: lang === 'en' ? 'English Practice' : '영어 연습',
+                        goal: data.dailyGoals.english,
+                        current: data.currentWeek.days[0].english.hours,
+                        emoji: '🗣️',
+                        completed: data.currentWeek.days[0].english.completed
+                      },
+                      {
+                        id: 'ai',
+                        name: lang === 'en' ? 'AI Learning' : 'AI 학습',
+                        goal: data.dailyGoals.ai,
+                        current: data.currentWeek.days[0].ai.hours,
+                        emoji: '🤖',
+                        completed: data.currentWeek.days[0].ai.completed
+                      },
                     ]}
                     onUpdate={handleUpdateTask}
                     onFileUpload={handleFileUpload}
                     onTopicSubmit={handleTopicSubmit}
                     savedStudyTopics={getTodayStudyTopics()}
+                    lang={lang}
                   />
                 </div>
 
                 {/* Right Column: Weekly Progress */}
                 <div className="h-full">
-                  <WeeklyProgress weekly={data.weeklyGoals} current={data.currentWeek} />
+                  <WeeklyProgress weekly={data.weeklyGoals} current={data.currentWeek} lang={lang} />
                 </div>
               </div>
             </div>
           )}
 
           {activeTab === 'planner' && (
-            <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="max-w-[1380px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
               <WeeklyPlanner
                 weekData={data.currentWeek}
                 onUpdate={(updatedWeek) => setData({ ...data, currentWeek: updatedWeek })}
@@ -318,7 +341,7 @@ ${data.user.name} 님, 오늘의 학습 피드백입니다.
           )}
 
           {activeTab === 'settings' && (
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-[1380px] mx-auto">
               <Settings data={data} onUpdate={handleUpdateSettings} onImportData={handleImportData} />
             </div>
           )}

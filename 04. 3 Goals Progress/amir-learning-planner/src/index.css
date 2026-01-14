@@ -24,11 +24,17 @@
 body {
   margin: 0;
   padding: 0;
-  min-width: 320px;
-  min-height: 100vh;
+  min-width: 1200px;
+  min-height: 800px;
   display: block;
   /* Removed place-items: center to avoid layout shifts */
   background-color: #f8fafc;
+}
+
+/* 권장 크기: 1400x800 */
+#root {
+  min-width: 1200px;
+  min-height: 800px;
 }
 
 /* Custom Scrollbar for better UX */

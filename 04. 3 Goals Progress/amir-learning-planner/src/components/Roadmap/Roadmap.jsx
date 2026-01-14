@@ -8,26 +8,26 @@ export default function Roadmap({ data }) {
             year: '2026',
             quarters: [
                 {
-                    id: 'q1', period: 'Q1 (Jan-Mar)', title: 'Foundation & Basics',
+                    id: 'q1', period: 'Q1 (1-3월)', title: '기초 다지기',
                     items: [
-                        { id: 1, text: 'Master React Fundamentals', completed: true, type: 'ai' },
-                        { id: 2, text: 'Acquire Basic Accounting Cert (Level 2)', completed: false, type: 'accounting' },
-                        { id: 3, text: 'English Daily Habit Formation', completed: true, type: 'english' }
+                        { id: 1, text: 'React 기본 완전 마스터', completed: true, type: 'ai' },
+                        { id: 2, text: '전산회계 2급 자격증 취득', completed: false, type: 'accounting' },
+                        { id: 3, text: '영어 학습 습관 형성', completed: true, type: 'english' }
                     ]
                 },
                 {
-                    id: 'q2', period: 'Q2 (Apr-Jun)', title: 'Deep Dive & Application',
+                    id: 'q2', period: 'Q2 (4-6월)', title: '심화 학습 및 적용',
                     items: [
-                        { id: 4, text: 'Build AI Agent Prototype', completed: false, type: 'ai' },
-                        { id: 5, text: 'Prepare for Level 1 Accounting Exam', completed: false, type: 'accounting' },
-                        { id: 6, text: 'Reach B1 Speaking Level', completed: false, type: 'english' }
+                        { id: 4, text: 'AI 에이전트 프로토타입 제작', completed: false, type: 'ai' },
+                        { id: 5, text: '전산회계 1급 시험 준비', completed: false, type: 'accounting' },
+                        { id: 6, text: '영어 회화 B1 레벨 도달', completed: false, type: 'english' }
                     ]
                 },
                 {
-                    id: 'q3', period: 'Q3 (Jul-Sep)', title: 'Expansion',
+                    id: 'q3', period: 'Q3 (7-9월)', title: '확장 및 성장',
                     items: [
-                        { id: 7, text: 'Deploy First SAAS Product', completed: false, type: 'ai' },
-                        { id: 8, text: 'Tax Accounting Basics', completed: false, type: 'accounting' },
+                        { id: 7, text: '첫 SAAS 제품 배포', completed: false, type: 'ai' },
+                        { id: 8, text: '세무회계 기초 학습', completed: false, type: 'accounting' },
                     ]
                 }
             ]

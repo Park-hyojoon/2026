@@ -63,5 +63,8 @@ export const initialData = {
         2026: {
             Q1: { ai: "기초 학습", accounting: "전산회계 2급 이론", english: "기본 회화" }
         }
+    },
+    settings: {
+        savePath: `amir-learning-planner/data/${new Date().getFullYear()}`
     }
 };

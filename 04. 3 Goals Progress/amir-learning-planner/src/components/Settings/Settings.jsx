@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
-import { Save, User, Clock, Calendar, Hash } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Save, User, Clock, Calendar, Hash, Download, Upload, FolderOpen, AlertCircle, CheckCircle } from 'lucide-react';
 
-export default function Settings({ data, onUpdate }) {
+export default function Settings({ data, onUpdate, onImportData }) {
     const [saved, setSaved] = useState(false);
+    const [exportStatus, setExportStatus] = useState(null); // null, 'success', 'error'
+    const [importStatus, setImportStatus] = useState(null); // null, 'success', 'error'
+    const fileInputRef = useRef(null);
+
+    // 저장 경로 설정 (UI 표시용)
+    const currentYear = new Date().getFullYear();
+    const defaultSavePath = `amir-learning-planner/data/${currentYear}`;
+    const [savePath, setSavePath] = useState(data.settings?.savePath || defaultSavePath);
 
     const handleChange = (path, value) => {
         onUpdate(path, value);
@@ -10,10 +18,82 @@ export default function Settings({ data, onUpdate }) {
     };
 
     const handleSave = () => {
-        // Since useLocalStorage persists immediately on change (via onUpdate), this button is mostly visual/UX.
-        // We simulate a 'save' action.
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
+    };
+
+    // 데이터 내보내기
+    const handleExport = () => {
+        try {
+            const exportData = {
+                ...data,
+                exportedAt: new Date().toISOString(),
+                version: '1.0',
+                savePath: savePath
+            };
+
+            const jsonString = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const today = new Date().toISOString().split('T')[0];
+            const filename = `amir-planner-backup-${currentYear}-${today}.json`;
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            setExportStatus('success');
+            setTimeout(() => setExportStatus(null), 3000);
+        } catch (error) {
+            console.error('Export failed:', error);
+            setExportStatus('error');
+            setTimeout(() => setExportStatus(null), 3000);
+        }
+    };
+
+    // 데이터 가져오기
+    const handleImport = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const importedData = JSON.parse(e.target.result);
+
+                // 데이터 유효성 검사
+                if (!importedData.user || !importedData.dailyGoals) {
+                    throw new Error('Invalid data format');
+                }
+
+                // 부모 컴포넌트로 전달
+                if (onImportData) {
+                    onImportData(importedData);
+                }
+
+                setImportStatus('success');
+                setTimeout(() => setImportStatus(null), 3000);
+            } catch (error) {
+                console.error('Import failed:', error);
+                setImportStatus('error');
+                setTimeout(() => setImportStatus(null), 3000);
+            }
+        };
+        reader.readAsText(file);
+
+        // 파일 입력 초기화
+        event.target.value = '';
+    };
+
+    // 저장 경로 변경
+    const handleSavePathChange = (newPath) => {
+        setSavePath(newPath);
+        handleChange('settings.savePath', newPath);
     };
 
     return (
@@ -153,6 +233,153 @@ export default function Settings({ data, onUpdate }) {
                                 />
                             </div>
                         ))}
+                    </div>
+                </section>
+
+                {/* Data Management Section */}
+                <section className="bg-white rounded-[2rem] p-8 shadow-sm md:col-span-2">
+                    <div className="flex items-center space-x-3 mb-6">
+                        <div className="p-3 bg-amber-100 rounded-xl text-amber-600">
+                            <FolderOpen size={24} />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900">데이터 관리</h3>
+                    </div>
+
+                    <div className="space-y-6">
+                        {/* 저장 경로 설정 */}
+                        <div>
+                            <label className="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">
+                                저장 경로 (참고용)
+                            </label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={savePath}
+                                    onChange={(e) => handleSavePathChange(e.target.value)}
+                                    className="flex-1 bg-gray-50 rounded-xl px-4 py-3 font-mono text-sm text-gray-700 outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
+                                    placeholder="amir-learning-planner/data/2026"
+                                />
+                            </div>
+                            <p className="text-xs text-gray-400 mt-2">
+                                * 웹앱 특성상 실제 저장은 브라우저 localStorage에 됩니다.
+                                이 경로는 내보낸 파일을 저장할 위치를 기억하기 위한 참고용입니다.
+                            </p>
+                        </div>
+
+                        {/* 내보내기/가져오기 버튼 */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                            {/* 내보내기 */}
+                            <div className="p-6 bg-blue-50 rounded-2xl">
+                                <h4 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                                    <Download size={18} />
+                                    데이터 내보내기
+                                </h4>
+                                <p className="text-sm text-blue-700 mb-4">
+                                    모든 학습 기록, 설정, 회고록을 JSON 파일로 저장합니다.
+                                </p>
+                                <button
+                                    onClick={handleExport}
+                                    className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                                        exportStatus === 'success'
+                                            ? 'bg-green-500 text-white'
+                                            : exportStatus === 'error'
+                                                ? 'bg-red-500 text-white'
+                                                : 'bg-blue-500 text-white hover:bg-blue-600'
+                                    }`}
+                                >
+                                    {exportStatus === 'success' ? (
+                                        <>
+                                            <CheckCircle size={18} />
+                                            내보내기 완료!
+                                        </>
+                                    ) : exportStatus === 'error' ? (
+                                        <>
+                                            <AlertCircle size={18} />
+                                            오류 발생
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Download size={18} />
+                                            JSON 파일로 내보내기
+                                        </>
+                                    )}
+                                </button>
+                                <p className="text-xs text-blue-600 mt-2 text-center">
+                                    파일명: amir-planner-backup-{currentYear}-{new Date().toISOString().split('T')[0]}.json
+                                </p>
+                            </div>
+
+                            {/* 가져오기 */}
+                            <div className="p-6 bg-emerald-50 rounded-2xl">
+                                <h4 className="font-bold text-emerald-900 mb-2 flex items-center gap-2">
+                                    <Upload size={18} />
+                                    데이터 가져오기
+                                </h4>
+                                <p className="text-sm text-emerald-700 mb-4">
+                                    이전에 내보낸 JSON 파일을 불러와 데이터를 복원합니다.
+                                </p>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept=".json"
+                                    onChange={handleImport}
+                                    className="hidden"
+                                />
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                                        importStatus === 'success'
+                                            ? 'bg-green-500 text-white'
+                                            : importStatus === 'error'
+                                                ? 'bg-red-500 text-white'
+                                                : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                                    }`}
+                                >
+                                    {importStatus === 'success' ? (
+                                        <>
+                                            <CheckCircle size={18} />
+                                            가져오기 완료!
+                                        </>
+                                    ) : importStatus === 'error' ? (
+                                        <>
+                                            <AlertCircle size={18} />
+                                            파일 형식 오류
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload size={18} />
+                                            JSON 파일 가져오기
+                                        </>
+                                    )}
+                                </button>
+                                <p className="text-xs text-emerald-600 mt-2 text-center">
+                                    * 가져오기 시 현재 데이터가 덮어씌워집니다.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* 현재 데이터 상태 */}
+                        <div className="p-4 bg-gray-50 rounded-xl mt-4">
+                            <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">현재 저장된 데이터</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                <div className="bg-white p-3 rounded-lg">
+                                    <p className="text-gray-400 text-xs">학습 기록</p>
+                                    <p className="font-bold text-gray-900">{data.accounting?.studyLog?.length || 0}개</p>
+                                </div>
+                                <div className="bg-white p-3 rounded-lg">
+                                    <p className="text-gray-400 text-xs">영어 표현</p>
+                                    <p className="font-bold text-gray-900">{data.english?.targetPhrases?.length || 0}개</p>
+                                </div>
+                                <div className="bg-white p-3 rounded-lg">
+                                    <p className="text-gray-400 text-xs">업로드 자료</p>
+                                    <p className="font-bold text-gray-900">{data.accounting?.level2?.referenceMaterials?.length || 0}개</p>
+                                </div>
+                                <div className="bg-white p-3 rounded-lg">
+                                    <p className="text-gray-400 text-xs">마지막 수정</p>
+                                    <p className="font-bold text-gray-900">{new Date().toLocaleDateString()}</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
             </div>

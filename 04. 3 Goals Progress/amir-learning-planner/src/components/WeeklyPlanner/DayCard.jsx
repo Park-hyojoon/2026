@@ -3,9 +3,9 @@ import { CheckCircle2, Circle } from 'lucide-react';
 
 export default function DayCard({ dayName, data, isSunday, onUpdate }) {
     const subjects = [
-        { key: 'ai', name: 'AI', emoji: '🤖', duration: '1.5h' },
         { key: 'accounting', name: '회계', emoji: '📊', duration: '1.5h' },
-        { key: 'english', name: '영어', emoji: '🗣️', duration: '1h' }
+        { key: 'english', name: '영어', emoji: '🗣️', duration: '1h' },
+        { key: 'ai', name: 'AI', emoji: '🤖', duration: '1.5h' }
     ];
 
     const handleToggle = (key) => {

@@ -10,12 +10,20 @@ export default function AccountingQuiz({ data }) {
     const [showResult, setShowResult] = useState(false);
     const [questions, setQuestions] = useState([]);
 
+    // 언어 설정
+    const lang = data?.user?.language || 'ko';
+
     // 최근 학습 범위에서 토픽 추출
     const studyLog = data?.accounting?.studyLog || [];
     const recentTopics = useMemo(() => getRecentTopics(studyLog, 5), [studyLog]);
 
     // 학습 범위가 없으면 기초 문제 출제
     const hasStudyLog = studyLog.length > 0;
+
+    // 현재 학습 중인 단원 (가장 최근 학습 기록)
+    const currentStudyTopic = studyLog.length > 0
+        ? studyLog[studyLog.length - 1].topic
+        : (lang === 'en' ? 'No study records' : '학습 기록 없음');
 
     const startQuiz = () => {
         setQuizState('loading');
@@ -50,15 +58,32 @@ export default function AccountingQuiz({ data }) {
     };
 
     return (
-        <div className="bg-white rounded-[2rem] p-8 shadow-sm h-full flex flex-col">
-            <header className="flex items-center space-x-4 mb-6">
-                <div className="p-3 bg-indigo-100 rounded-xl text-indigo-600">
-                    <Calculator size={24} />
+        <div className="bg-white rounded-[2rem] p-8 shadow-sm flex flex-col" style={{ minHeight: '400px' }}>
+            <header className="space-y-3 mb-6">
+                <div className="flex items-center space-x-4">
+                    <div className="p-3 bg-indigo-100 rounded-xl text-indigo-600">
+                        <Calculator size={24} />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold text-gray-900">
+                            {lang === 'en' ? 'AI Accounting Tutor' : 'AI 회계 튜터'}
+                        </h3>
+                        <p className="text-sm font-medium text-gray-400">
+                            {lang === 'en'
+                                ? 'Generate quizzes based on this week\'s learning content.'
+                                : '이번 주 학습 내용을 바탕으로 퀴즈를 생성합니다.'}
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <h3 className="text-xl font-bold text-gray-900">AI 회계 튜터</h3>
-                    <p className="text-sm font-medium text-gray-400">이번 주 학습 내용을 바탕으로 퀴즈를 생성합니다.</p>
-                </div>
+                {/* 현재 학습 단원 표시 */}
+                {hasStudyLog && (
+                    <div className="bg-indigo-50 rounded-xl p-3 border-l-4 border-indigo-500">
+                        <p className="text-xs font-bold text-indigo-600 uppercase tracking-wide mb-1">
+                            {lang === 'en' ? 'Currently Studying' : '현재 학습 중'}
+                        </p>
+                        <p className="text-sm font-bold text-indigo-900">{currentStudyTopic}</p>
+                    </div>
+                )}
             </header>
 
             <div className="flex-1 flex flex-col justify-center">

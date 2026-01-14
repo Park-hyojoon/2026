@@ -14,7 +14,7 @@ import { Layout, Calendar, Book, Trophy, Settings as SettingsIcon, Bell, Search,
 
 function App() {
   const [data, setData] = useLocalStorage('amir-planner-data', initialData);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('projects'); // AI Hub가 기본 화면
   const [showNotification, setShowNotification] = useState(false);
   const [showReview, setShowReview] = useState(false);
 
@@ -40,7 +40,10 @@ function App() {
     // In a real app, you'd upload 'file' to a server and get a URL/ID back.
     // Here we just store the filename for UI persistence
     if (taskId === 'accounting') {
-      updatedData.accounting.referenceMaterials.push({
+      if (!updatedData.accounting.level2.referenceMaterials) {
+        updatedData.accounting.level2.referenceMaterials = [];
+      }
+      updatedData.accounting.level2.referenceMaterials.push({
         id: Date.now(),
         name: file.name,
         uploadedAt: new Date().toISOString()
@@ -103,6 +106,13 @@ function App() {
     return topics;
   };
 
+  // 데이터 가져오기 핸들러
+  const handleImportData = (importedData) => {
+    // exportedAt, version 등 메타데이터 제거 후 저장
+    const { exportedAt, version, ...cleanData } = importedData;
+    setData(cleanData);
+  };
+
   // 영어 표현 저장 핸들러
   const handleSavePhrase = (phrase) => {
     const updatedData = { ...data };
@@ -128,9 +138,8 @@ function App() {
   };
 
   const tabs = [
-    { id: 'dashboard', label: data.user.language === 'en' ? 'Dashboard' : '현황', icon: Layout },
-    { id: 'planner', label: data.user.language === 'en' ? 'Plan' : '계획', icon: Calendar },
     { id: 'projects', label: data.user.language === 'en' ? 'AI Hub' : 'AI Hub', icon: Book },
+    { id: 'planner', label: data.user.language === 'en' ? 'Plan' : '계획', icon: Calendar },
     { id: 'roadmap', label: data.user.language === 'en' ? 'Roadmap' : '로드맵', icon: Trophy },
     { id: 'settings', label: data.user.language === 'en' ? 'Settings' : '설정', icon: SettingsIcon },
   ];
@@ -192,13 +201,28 @@ ${data.user.name} 님, 오늘의 학습 피드백입니다.
         </div>
 
         <div className="mt-auto pt-8">
-          <div className="bg-gray-50 rounded-[1.5rem] p-4 flex items-center space-x-3">
+          {/* 사용자 프로필 (클릭 시 Dashboard 이동) */}
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`w-full rounded-[1.5rem] p-4 flex items-center space-x-3 transition-all duration-300 ${
+              activeTab === 'dashboard'
+                ? 'bg-primary shadow-xl shadow-primary/20'
+                : 'bg-gray-50 hover:bg-gray-100'
+            }`}
+          >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark"></div>
-            <div>
-              <p className="text-xs font-black text-gray-900 tracking-tight">{data.user.name}님</p>
-              <p className="text-[10px] font-bold text-gray-400">Premium Member</p>
+            <div className="text-left">
+              <p className={`text-xs font-black tracking-tight ${activeTab === 'dashboard' ? 'text-white' : 'text-gray-900'}`}>
+                {data.user.name}님
+              </p>
+              <p className={`text-[10px] font-bold ${activeTab === 'dashboard' ? 'text-white/70' : 'text-gray-400'}`}>
+                Premium Member
+              </p>
             </div>
-          </div>
+            {activeTab === 'dashboard' && (
+              <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full"></div>
+            )}
+          </button>
         </div>
       </nav>
 
@@ -209,7 +233,7 @@ ${data.user.name} 님, 오늘의 학습 피드백입니다.
         <header className="bg-white/80 backdrop-blur-md p-6 flex justify-between items-center z-10 sticky top-0 md:px-12">
           <div className="flex items-center space-x-4">
             <button
-              onClick={() => setActiveTab('dashboard')}
+              onClick={() => setActiveTab('projects')}
               className="md:hidden p-2 rounded-xl bg-gray-50 text-gray-600 hover:text-primary transition-colors"
             >
               <Home size={24} strokeWidth={2.5} />
@@ -263,7 +287,7 @@ ${data.user.name} 님, 오늘의 학습 피드백입니다.
                         current: data.currentWeek.days[0].accounting.hours,
                         emoji: '📊',
                         completed: data.currentWeek.days[0].accounting.completed,
-                        uploadedFile: data.accounting?.referenceMaterials?.length > 0 ? data.accounting.referenceMaterials[data.accounting.referenceMaterials.length - 1].name : null
+                        uploadedFile: data.accounting?.level2?.referenceMaterials?.length > 0 ? data.accounting.level2.referenceMaterials[data.accounting.level2.referenceMaterials.length - 1].name : null
                       },
                       { id: 'english', name: '영어 연습', goal: data.dailyGoals.english, current: data.currentWeek.days[0].english.hours, emoji: '🗣️', completed: data.currentWeek.days[0].english.completed },
                       { id: 'ai', name: 'AI 학습', goal: data.dailyGoals.ai, current: data.currentWeek.days[0].ai.hours, emoji: '🤖', completed: data.currentWeek.days[0].ai.completed },
@@ -288,13 +312,14 @@ ${data.user.name} 님, 오늘의 학습 피드백입니다.
               <WeeklyPlanner
                 weekData={data.currentWeek}
                 onUpdate={(updatedWeek) => setData({ ...data, currentWeek: updatedWeek })}
+                data={data}
               />
             </div>
           )}
 
           {activeTab === 'settings' && (
             <div className="max-w-7xl mx-auto">
-              <Settings data={data} onUpdate={handleUpdateSettings} />
+              <Settings data={data} onUpdate={handleUpdateSettings} onImportData={handleImportData} />
             </div>
           )}
 

@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { initialData } from './utils/dataInitializer';
-import TodayTasks from './components/Dashboard/TodayTasks';
-import WeeklyProgress from './components/Dashboard/WeeklyProgress';
-import WeeklyPlanner from './components/WeeklyPlanner/WeeklyPlanner';
 import ContributionGraph from './components/Dashboard/ContributionGraph'; // Kept primarily for file history, but unused in render
 import YearlyGoalGraph from './components/Dashboard/YearlyGoalGraph';
 import Settings from './components/Settings/Settings';
 import AIHub from './components/AIHub/AIHub';
 import Roadmap from './components/Roadmap/Roadmap';
-import DailyStrategy from './components/Dashboard/DailyStrategy';
 import { Layout, Calendar, Book, Trophy, Settings as SettingsIcon, Bell, Search, User, Home } from 'lucide-react';
 
 function App() {
@@ -139,7 +135,6 @@ function App() {
 
   const tabs = [
     { id: 'projects', label: data.user.language === 'en' ? 'AI Hub' : 'AI Hub', icon: Book },
-    { id: 'planner', label: data.user.language === 'en' ? 'Plan' : '계획', icon: Calendar },
     { id: 'roadmap', label: data.user.language === 'en' ? 'Roadmap' : '로드맵', icon: Trophy },
     { id: 'settings', label: data.user.language === 'en' ? 'Settings' : '설정', icon: SettingsIcon },
   ];
@@ -209,29 +204,6 @@ ${data.user.name} 님, 오늘의 학습 피드백입니다.
           ))}
         </div>
 
-        <div className="mt-auto pt-8">
-          {/* 사용자 프로필 (클릭 시 Dashboard 이동) */}
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`w-full rounded-[1.5rem] p-4 flex items-center space-x-3 transition-all duration-300 ${activeTab === 'dashboard'
-              ? 'bg-primary shadow-xl shadow-primary/20'
-              : 'bg-gray-50 hover:bg-gray-100'
-              }`}
-          >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-dark"></div>
-            <div className="text-left">
-              <p className={`text-xs font-black tracking-tight ${activeTab === 'dashboard' ? 'text-white' : 'text-gray-900'}`}>
-                {data.user.name}{lang === 'en' ? '' : '님'}
-              </p>
-              <p className={`text-[10px] font-bold ${activeTab === 'dashboard' ? 'text-white/70' : 'text-gray-400'}`}>
-                Premium Member
-              </p>
-            </div>
-            {activeTab === 'dashboard' && (
-              <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full"></div>
-            )}
-          </button>
-        </div>
       </nav>
 
       {/* Main Content Area */}
@@ -273,72 +245,6 @@ ${data.user.name} 님, 오늘의 학습 피드백입니다.
 
         {/* Scrollable Main Content */}
         <main className="flex-1 p-6 md:p-12 pb-32 overflow-y-auto bg-[#fafbfc]">
-          {activeTab === 'dashboard' && (
-            <div className="max-w-[1380px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              {/* 1. Daily Strategy (Replaces purple bar if enabled) */}
-              {data.user.showStrategy ? (
-                <DailyStrategy data={data} />
-              ) : (
-                <div className="pt-2" />
-              )}
-
-              {/* 2. Parallel Layout (Today Tasks + Weekly Progress) */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start h-full">
-                {/* Left Column: Today's Tasks */}
-                <div className="h-full">
-                  <TodayTasks
-                    tasks={[
-                      {
-                        id: 'accounting',
-                        name: lang === 'en' ? 'Accounting' : '회계 공부',
-                        goal: data.dailyGoals.accounting,
-                        current: data.currentWeek.days[0].accounting.hours,
-                        emoji: '📊',
-                        completed: data.currentWeek.days[0].accounting.completed,
-                        uploadedFile: data.accounting?.level2?.referenceMaterials?.length > 0 ? data.accounting.level2.referenceMaterials[data.accounting.level2.referenceMaterials.length - 1].name : null
-                      },
-                      {
-                        id: 'english',
-                        name: lang === 'en' ? 'English Practice' : '영어 연습',
-                        goal: data.dailyGoals.english,
-                        current: data.currentWeek.days[0].english.hours,
-                        emoji: '🗣️',
-                        completed: data.currentWeek.days[0].english.completed
-                      },
-                      {
-                        id: 'ai',
-                        name: lang === 'en' ? 'AI Learning' : 'AI 학습',
-                        goal: data.dailyGoals.ai,
-                        current: data.currentWeek.days[0].ai.hours,
-                        emoji: '🤖',
-                        completed: data.currentWeek.days[0].ai.completed
-                      },
-                    ]}
-                    onUpdate={handleUpdateTask}
-                    onFileUpload={handleFileUpload}
-                    onTopicSubmit={handleTopicSubmit}
-                    savedStudyTopics={getTodayStudyTopics()}
-                    lang={lang}
-                  />
-                </div>
-
-                {/* Right Column: Weekly Progress */}
-                <div className="h-full">
-                  <WeeklyProgress weekly={data.weeklyGoals} current={data.currentWeek} lang={lang} />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'planner' && (
-            <div className="max-w-[1380px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <WeeklyPlanner
-                weekData={data.currentWeek}
-                onUpdate={(updatedWeek) => setData({ ...data, currentWeek: updatedWeek })}
-                data={data}
-              />
-            </div>
-          )}
 
           {activeTab === 'settings' && (
             <div className="max-w-[1380px] mx-auto">
@@ -351,7 +257,13 @@ ${data.user.name} 님, 오늘의 학습 피드백입니다.
           )}
 
           {activeTab === 'roadmap' && (
-            <Roadmap data={data} />
+            <Roadmap
+              data={data}
+              onUpdate={handleUpdateTask}
+              onFileUpload={handleFileUpload}
+              onTopicSubmit={handleTopicSubmit}
+              savedStudyTopics={getTodayStudyTopics()}
+            />
           )}
         </main>
 

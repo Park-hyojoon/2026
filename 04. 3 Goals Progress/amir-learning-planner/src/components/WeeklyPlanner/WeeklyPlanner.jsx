@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import DayCard from './DayCard';
 import ExamCountdown from './ExamCountdown';
-import { Calendar, CalendarDays, CalendarRange } from 'lucide-react';
+import { Calendar, CalendarDays, CalendarRange, Brain } from 'lucide-react';
 
 export default function WeeklyPlanner({ weekData, onUpdate, data }) {
     const lang = data?.user?.language || 'ko';
@@ -102,37 +101,6 @@ export default function WeeklyPlanner({ weekData, onUpdate, data }) {
                 </div>
             </header>
 
-            {/* Weekly View */}
-            {activeView === 'weekly' && (
-                <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {weekData.days.map((dayData, index) => (
-                            <DayCard
-                                key={index}
-                                dayName={days[index]}
-                                data={dayData}
-                                isSunday={index === 6}
-                                onUpdate={(updatedDay) => {
-                                    const newDays = [...weekData.days];
-                                    newDays[index] = updatedDay;
-                                    onUpdate({ ...weekData, days: newDays });
-                                }}
-                                lang={lang}
-                            />
-                        ))}
-                    </div>
-
-                    <div className="bg-white rounded-2xl shadow-sm p-6 mt-6">
-                        <h3 className="text-xl font-bold text-gray-800 mb-4">{t.retrospective}</h3>
-                        <textarea
-                            className="w-full h-32 p-4 rounded-xl bg-gray-50 focus:ring-2 focus:ring-primary/20 focus:bg-white outline-none transition-all resize-none"
-                            placeholder={t.placeholder}
-                            value={weekData.retrospective}
-                            onChange={(e) => onUpdate({ ...weekData, retrospective: e.target.value })}
-                        />
-                    </div>
-                </>
-            )}
 
             {/* Monthly View */}
             {activeView === 'monthly' && (

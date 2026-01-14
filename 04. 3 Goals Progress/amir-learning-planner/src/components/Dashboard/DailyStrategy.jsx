@@ -36,29 +36,25 @@ export default function DailyStrategy({ data }) {
     const strategy = getStrategy();
 
     return (
-        <div className={`bg-gradient-to-r ${strategy.color} rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-100 mb-10 relative overflow-hidden animate-in fade-in slide-in-from-top-4 duration-1000`}>
-            {/* Decorative Elements */}
-            <div className="absolute top-0 right-0 p-4 opacity-10 transform translate-x-10 -translate-y-10">
-                <strategy.icon size={200} />
-            </div>
-
-            <div className="relative z-10">
-                <div className="flex items-center space-x-3 mb-4">
-                    <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md">
-                        <Target size={20} />
+        <div className="bg-white border text-gray-900 rounded-[2rem] p-8 shadow-sm mb-6 relative overflow-hidden animate-in fade-in slide-in-from-top-4 duration-1000">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+                <div>
+                    <div className="flex items-center space-x-3 mb-2">
+                        <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
+                            <Target size={20} />
+                        </div>
+                        <h3 className="text-lg font-black tracking-tight text-gray-900">{strategy.title}</h3>
                     </div>
-                    <h3 className="text-xl font-black tracking-tight">{strategy.title}</h3>
+                    <p className="text-gray-600 font-bold text-sm leading-relaxed">
+                        "{strategy.instruction}"
+                    </p>
                 </div>
 
-                <p className="text-white/90 font-bold text-lg mb-6 leading-relaxed max-w-2xl">
-                    "{strategy.instruction}"
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex flex-col gap-2 min-w-[300px]">
                     {strategy.points.map((pt, i) => (
-                        <div key={i} className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-2xl px-5 py-3 hover:bg-white/20 transition-all cursor-pointer group">
-                            <div className="w-1.5 h-1.5 bg-white rounded-full group-hover:scale-150 transition-transform" />
-                            <span className="text-sm font-black tracking-tight">{pt}</span>
+                        <div key={i} className="flex items-center space-x-3 bg-gray-50 rounded-xl px-4 py-2.5">
+                            <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
+                            <span className="text-xs font-bold tracking-tight text-gray-700">{pt}</span>
                         </div>
                     ))}
                 </div>

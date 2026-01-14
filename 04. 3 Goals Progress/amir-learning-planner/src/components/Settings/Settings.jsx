@@ -317,10 +317,10 @@ export default function Settings({ data, onUpdate, onImportData }) {
                                 <button
                                     onClick={handleExport}
                                     className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${exportStatus === 'success'
-                                            ? 'bg-green-500 text-white'
-                                            : exportStatus === 'error'
-                                                ? 'bg-red-500 text-white'
-                                                : 'bg-blue-500 text-white hover:bg-blue-600'
+                                        ? 'bg-green-500 text-white'
+                                        : exportStatus === 'error'
+                                            ? 'bg-red-500 text-white'
+                                            : 'bg-blue-500 text-white hover:bg-blue-600'
                                         }`}
                                 >
                                     {exportStatus === 'success' ? (
@@ -364,10 +364,10 @@ export default function Settings({ data, onUpdate, onImportData }) {
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
                                     className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${importStatus === 'success'
-                                            ? 'bg-green-500 text-white'
-                                            : importStatus === 'error'
-                                                ? 'bg-red-500 text-white'
-                                                : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                                        ? 'bg-green-500 text-white'
+                                        : importStatus === 'error'
+                                            ? 'bg-red-500 text-white'
+                                            : 'bg-emerald-500 text-white hover:bg-emerald-600'
                                         }`}
                                 >
                                     {importStatus === 'success' ? (
@@ -413,6 +413,32 @@ export default function Settings({ data, onUpdate, onImportData }) {
                                     <p className="text-gray-400 text-xs">{t.lastModified}</p>
                                     <p className="font-bold text-gray-900">{new Date().toLocaleDateString()}</p>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* 데이터 초기화 (Danger Zone) */}
+                        <div className="mt-8 pt-8 border-t border-gray-100">
+                            <div className="flex items-center justify-between p-4 bg-red-50 rounded-xl">
+                                <div>
+                                    <h4 className="font-bold text-red-700 flex items-center gap-2">
+                                        <AlertCircle size={18} />
+                                        {lang === 'en' ? 'Factory Reset' : '데이터 초기화'}
+                                    </h4>
+                                    <p className="text-xs text-red-500 mt-1">
+                                        {lang === 'en' ? 'Delete all data and return to initial state.' : '모든 데이터를 삭제하고 초기 상태로 되돌립니다.'}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        if (window.confirm(lang === 'en' ? 'Are you sure? This cannot be undone.' : '정말 초기화하시겠습니까? 복구할 수 없습니다.')) {
+                                            localStorage.clear();
+                                            window.location.reload();
+                                        }
+                                    }}
+                                    className="px-4 py-2 bg-white border border-red-200 text-red-600 rounded-lg text-sm font-bold hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                                >
+                                    {lang === 'en' ? 'Reset All Data' : '초기화 실행'}
+                                </button>
                             </div>
                         </div>
                     </div>

@@ -41,12 +41,19 @@ class AccountingQuizApp:
                 with open(self.config_file, 'r', encoding='utf-8') as f:
                     config = json.load(f)
                     self.api_key = config.get('api_key', '')
+                    # 저장된 PDF 경로 로드
+                    saved_pdf = config.get('last_pdf_path', '')
+                    if saved_pdf and os.path.exists(saved_pdf):
+                        self.pdf_path = saved_pdf
             except:
                 pass
 
     def save_config(self):
         """설정 파일 저장"""
-        config = {'api_key': self.api_key}
+        config = {
+            'api_key': self.api_key,
+            'last_pdf_path': self.pdf_path or ''
+        }
         with open(self.config_file, 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
 
@@ -113,10 +120,18 @@ class AccountingQuizApp:
         pdf_select_frame = tk.Frame(pdf_frame)
         pdf_select_frame.pack(fill='x', pady=5)
 
+        # 저장된 PDF 경로가 있으면 표시
+        if self.pdf_path:
+            pdf_display_text = f"선택됨: {os.path.basename(self.pdf_path)}"
+            pdf_display_color = "#27ae60"
+        else:
+            pdf_display_text = "PDF 파일을 선택해주세요"
+            pdf_display_color = "#7f8c8d"
+
         self.pdf_label = tk.Label(pdf_select_frame,
-                                 text="PDF 파일을 선택해주세요",
+                                 text=pdf_display_text,
                                  font=("맑은 고딕", 9),
-                                 fg="#7f8c8d",
+                                 fg=pdf_display_color,
                                  anchor='w')
         self.pdf_label.pack(side='left', fill='x', expand=True)
 
@@ -184,6 +199,8 @@ class AccountingQuizApp:
             self.pdf_path = file_path
             file_name = os.path.basename(file_path)
             self.pdf_label.config(text=f"선택됨: {file_name}", fg="#27ae60")
+            # PDF 경로 저장
+            self.save_config()
 
     def check_ollama_status(self):
         """Ollama 연결 상태 확인"""

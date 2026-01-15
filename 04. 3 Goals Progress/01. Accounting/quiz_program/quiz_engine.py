@@ -1,69 +1,111 @@
-from google import genai
-from google.genai import types
+import requests
 import json
-import re
 import traceback
 
-client = None
+# Ollama 설정
+OLLAMA_URL = "http://localhost:11434/api/generate"
+OLLAMA_MODEL = "gpt-oss:120b-cloud"
 
-def configure_gemini(api_key):
-    """Configures the Gemini API with the provided key."""
-    global client
+def configure_gemini(api_key=None):
+    """Ollama는 API 키가 필요 없음. 호환성을 위해 함수 유지."""
+    print("Ollama 모드 - API 키 불필요 (로컬 실행)")
+    # Ollama 서버 연결 확인
     try:
-        client = genai.Client(api_key=api_key)
-        print("Gemini API 클라이언트 생성 완료")
-    except Exception as e:
-        print(f"API 클라이언트 생성 오류: {e}")
-        raise
+        response = requests.get("http://localhost:11434/api/tags", timeout=5)
+        if response.status_code == 200:
+            print("✓ Ollama 서버 연결 성공!")
+            return True
+    except:
+        pass
+    print("⚠ Ollama 서버가 실행 중이 아닙니다.")
+    print("  터미널에서 'ollama serve' 실행 후 다시 시도하세요.")
+    return False
 
 def generate_quiz_questions(text_context, num_questions=3):
     """
-    Generates multiple-choice questions based on the provided text using Gemini.
+    Ollama를 사용하여 문제 생성
     """
-    if not client:
-        raise ValueError("Gemini API not configured. Call configure_gemini() first.")
+    prompt = f"""당신은 회계 전문 튜터입니다. 아래 학습 자료를 바탕으로 {num_questions}개의 4지선다 문제를 만들어주세요.
 
-    prompt = f"""
-    You are an expert accounting tutor. Based on the following text context from a study material,
-    create {num_questions} multiple-choice questions (4 options each) to test the student's understanding.
+반드시 아래 JSON 형식으로만 응답하세요. 다른 텍스트 없이 JSON만 출력하세요:
+[
+  {{
+    "id": 1,
+    "question": "문제 내용 (한국어)",
+    "options": ["선택지1", "선택지2", "선택지3", "선택지4"],
+    "answer": 0,
+    "explanation": "정답 해설 (한국어)"
+  }}
+]
 
-    Return the result strictly in JSON format as a list of objects.
-    Each object should have:
-    - "id": number
-    - "question": string (The question text in Korean)
-    - "options": list of 4 strings (The choices in Korean)
-    - "answer": number (The index of the correct option, 0-3)
-    - "explanation": string (A brief explanation of why the answer is correct in Korean)
+answer는 정답의 인덱스입니다 (0, 1, 2, 3 중 하나).
 
-    Context:
-    {text_context[:10000]}
-    """
+학습 자료:
+{text_context[:5000]}
+
+위 자료를 바탕으로 {num_questions}개의 문제를 JSON 형식으로 생성하세요:"""
 
     try:
-        print("Gemini API 호출 중...")
-        response = client.models.generate_content(
-            model='models/gemini-1.5-flash',
-            contents=prompt
+        print(f"Ollama ({OLLAMA_MODEL}) 호출 중...")
+
+        response = requests.post(
+            OLLAMA_URL,
+            json={
+                "model": OLLAMA_MODEL,
+                "prompt": prompt,
+                "stream": False,
+                "options": {
+                    "temperature": 0.7,
+                    "num_predict": 2000
+                }
+            },
+            timeout=120
         )
-        print("API 응답 받음")
 
-        text_response = response.text
-        print(f"응답 텍스트 길이: {len(text_response)}")
+        if response.status_code != 200:
+            print(f"Ollama 오류: {response.status_code}")
+            return []
 
-        # Clean up Markdown code blocks if present
-        text_response = text_response.replace("```json", "").replace("```", "").strip()
+        result = response.json()
+        text_response = result.get("response", "")
+        print(f"응답 받음 (길이: {len(text_response)})")
+
+        # JSON 추출
+        text_response = text_response.strip()
+
+        # ```json ... ``` 블록 제거
+        if "```json" in text_response:
+            start = text_response.find("```json") + 7
+            end = text_response.find("```", start)
+            text_response = text_response[start:end].strip()
+        elif "```" in text_response:
+            start = text_response.find("```") + 3
+            end = text_response.find("```", start)
+            text_response = text_response[start:end].strip()
+
+        # [ 로 시작하는 부분 찾기
+        if "[" in text_response:
+            start_idx = text_response.find("[")
+            end_idx = text_response.rfind("]") + 1
+            text_response = text_response[start_idx:end_idx]
 
         questions = json.loads(text_response)
         print(f"문제 생성 완료: {len(questions)}개")
         return questions
+
     except json.JSONDecodeError as e:
         print(f"JSON 파싱 오류: {e}")
         print(f"응답 내용: {text_response[:500]}")
         return []
+    except requests.exceptions.ConnectionError:
+        print("Ollama 서버에 연결할 수 없습니다.")
+        print("터미널에서 'ollama serve' 실행 후 다시 시도하세요.")
+        return []
     except Exception as e:
-        print(f"문제 생성 오류: {type(e).__name__}: {e}")
+        print(f"문제 생성 오류: {e}")
         traceback.print_exc()
         return []
 
 if __name__ == "__main__":
-    print("This module is intended to be imported.")
+    print("Ollama 연결 테스트...")
+    configure_gemini()

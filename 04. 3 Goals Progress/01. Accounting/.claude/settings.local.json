@@ -3,7 +3,9 @@
     "allow": [
       "Bash(python main.py:*)",
       "Bash(pip install:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(ollama:*)",
+      "Bash(curl:*)"
     ]
   }
 }

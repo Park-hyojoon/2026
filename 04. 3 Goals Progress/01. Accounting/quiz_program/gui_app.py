@@ -81,27 +81,27 @@ class AccountingQuizApp:
                         font=("맑은 고딕", 24, "bold"), fg="#2c3e50")
         title.pack(pady=30)
 
-        subtitle = tk.Label(self.root, text="로컬에서 작동하는 AI 기반 학습 프로그램",
+        subtitle = tk.Label(self.root, text="Ollama 기반 로컬 AI 학습 프로그램",
                            font=("맑은 고딕", 12), fg="#7f8c8d")
         subtitle.pack(pady=10)
 
-        # API 키 설정 프레임
-        api_frame = tk.Frame(self.root)
-        api_frame.pack(pady=20, padx=50, fill='x')
+        # Ollama 상태 프레임
+        ollama_frame = tk.Frame(self.root, bg="#e8f5e9")
+        ollama_frame.pack(pady=20, padx=50, fill='x')
 
-        tk.Label(api_frame, text="Google Gemini API 키:",
-                font=("맑은 고딕", 11)).pack(anchor='w', pady=5)
+        self.ollama_status_label = tk.Label(ollama_frame,
+                                           text="Ollama 상태 확인 중...",
+                                           font=("맑은 고딕", 11),
+                                           bg="#e8f5e9", fg="#2e7d32")
+        self.ollama_status_label.pack(pady=15)
 
-        self.api_entry = tk.Entry(api_frame, width=60, font=("맑은 고딕", 10))
-        self.api_entry.pack(fill='x', pady=5)
+        # Ollama 상태 확인
+        self.check_ollama_status()
 
-        if self.api_key:
-            self.api_entry.insert(0, self.api_key)
-
-        info_label = tk.Label(api_frame,
-                             text="* Google AI Studio에서 무료 API 키를 받으셨다면 위에 입력해주세요.",
-                             font=("맑은 고딕", 9), fg="#95a5a6")
-        info_label.pack(anchor='w', pady=5)
+        info_label = tk.Label(ollama_frame,
+                             text="* Ollama가 설치되어 있어야 합니다. (ollama.com)",
+                             font=("맑은 고딕", 9), bg="#e8f5e9", fg="#7f8c8d")
+        info_label.pack(anchor='w', padx=10, pady=5)
 
         # PDF 선택 프레임
         pdf_frame = tk.Frame(self.root)
@@ -185,22 +185,44 @@ class AccountingQuizApp:
             file_name = os.path.basename(file_path)
             self.pdf_label.config(text=f"선택됨: {file_name}", fg="#27ae60")
 
+    def check_ollama_status(self):
+        """Ollama 연결 상태 확인"""
+        import requests
+        try:
+            response = requests.get("http://localhost:11434/api/tags", timeout=3)
+            if response.status_code == 200:
+                models = response.json().get("models", [])
+                if models:
+                    model_names = [m.get("name", "") for m in models]
+                    self.ollama_status_label.config(
+                        text=f"✓ Ollama 연결됨 (모델: {', '.join(model_names[:2])})",
+                        fg="#27ae60"
+                    )
+                else:
+                    self.ollama_status_label.config(
+                        text="⚠ Ollama 연결됨 - 모델 없음 (ollama pull llama3.2 실행 필요)",
+                        fg="#e67e22"
+                    )
+                return True
+        except:
+            pass
+        self.ollama_status_label.config(
+            text="✗ Ollama 연결 안됨 - 터미널에서 'ollama serve' 실행 필요",
+            fg="#e74c3c"
+        )
+        return False
+
     def start_quiz(self):
         """퀴즈 시작"""
-        # API 키 확인
-        api_key = self.api_entry.get().strip()
-        if not api_key:
-            messagebox.showerror("오류", "Google Gemini API 키를 입력해주세요.")
+        # Ollama 연결 확인
+        if not self.check_ollama_status():
+            messagebox.showerror("오류", "Ollama가 실행 중이 아닙니다.\n터미널에서 'ollama serve' 명령을 실행해주세요.")
             return
 
         # PDF 파일 확인
         if not self.pdf_path:
             messagebox.showerror("오류", "학습할 PDF 파일을 선택해주세요.")
             return
-
-        # API 키 저장
-        self.api_key = api_key
-        self.save_config()
 
         # 로딩 화면 표시
         self.show_loading_screen()
@@ -225,8 +247,8 @@ class AccountingQuizApp:
     def generate_questions(self):
         """문제 생성"""
         try:
-            # API 설정
-            configure_gemini(self.api_key)
+            # Ollama 연결 확인
+            configure_gemini()
 
             # PDF 텍스트 추출
             self.pdf_text = extract_text_from_pdf(self.pdf_path)
@@ -241,7 +263,7 @@ class AccountingQuizApp:
             self.questions = generate_quiz_questions(self.pdf_text, num_questions)
 
             if not self.questions:
-                messagebox.showerror("오류", "문제 생성에 실패했습니다. API 키를 확인해주세요.")
+                messagebox.showerror("오류", "문제 생성에 실패했습니다.\nOllama가 실행 중인지 확인해주세요.")
                 self.show_setup_screen()
                 return
 

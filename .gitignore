@@ -9,6 +9,8 @@
 
 # Downloaded files
 03. Macro Program/04. QRcode-Download/downloads/
+*.pptx
+*.ppt
 
 # Python cache
 __pycache__/

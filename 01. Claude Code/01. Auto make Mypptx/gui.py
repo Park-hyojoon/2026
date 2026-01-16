@@ -83,8 +83,24 @@ class ShortcutManager:
 class App:
     def __init__(self, root):
         self.root = root
-        self.root.title("PPT Automation Tool")
-        self.root.geometry("840x900") # Resized to 70% width (was 1200)
+        self.root.title("MyPPT 2.5")
+        self.root.title("MyPPT 2.5")
+        
+        # Calculate Window Size and Position
+        # Width: 840 (unchanged)
+        # Height: 900 * 0.85 = 765 (Reduced by 15%)
+        window_width = 840
+        window_height = 765
+        
+        # Get Screen Dimensions
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        
+        # Calculate Center Position
+        center_x = int((screen_width / 2) - (window_width / 2))
+        center_y = int((screen_height / 2) - (window_height / 2))
+        
+        self.root.geometry(f"{window_width}x{window_height}+{center_x}+{center_y}")
 
         # Variables
         current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -139,6 +155,13 @@ class App:
         
         # Initial population - Removed as requested
         # self.populate_song_lists()
+
+        # Add Open Work Folder Button (Top Right)
+        # Using current_dir which resolves to the script directory
+        self.btn_open_work = tk.Button(self.root, text="📂 작업폴더 열기", 
+                                      command=lambda: os.startfile(current_dir),
+                                      bg="#e0e0e0", font=("Arial", 9))
+        self.btn_open_work.place(relx=0.99, y=5, anchor="ne")
 
         # Menu
         menubar = tk.Menu(self.root)

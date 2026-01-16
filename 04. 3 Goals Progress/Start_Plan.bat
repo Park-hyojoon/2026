@@ -12,10 +12,7 @@ echo.
 :: 프로젝트 폴더로 이동
 cd /d "d:\00. WorkSpace\02. Creat\01. Antigravity\2026\04. 3 Goals Progress\amir-learning-planner"
 
-:: 브라우저 먼저 열기 (서버가 뜨는 시간을 고려해 3초 뒤에 열거나 바로 엶)
-start http://localhost:5173
-
-:: 개발 서버 실행
-npm run dev
+:: 개발 서버 실행 (서버 준비 완료 시 브라우저 자동 실행)
+npm run dev -- --open
 
 pause

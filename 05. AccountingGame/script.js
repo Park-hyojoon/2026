@@ -52,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     ];
 
+
     // Navigation Buttons
     const btnMap = document.getElementById('btn-map');
     const btnHome = document.getElementById('btn-home');
@@ -66,17 +67,58 @@ document.addEventListener('DOMContentLoaded', () => {
     if (locTailor) locTailor.onclick = () => switchScreen('shop-screen');
     if (locDiner) locDiner.onclick = () => alert('준비 중입니다! (Coming Soon)');
 
+    // Add Reset Button for debugging/testing
+    const resetBtn = document.createElement('button');
+    resetBtn.textContent = '🔄 RESET DATA';
+    resetBtn.style.position = 'fixed';
+    resetBtn.style.bottom = '10px';
+    resetBtn.style.right = '10px';
+    resetBtn.style.opacity = '0.5';
+    resetBtn.onclick = () => {
+        if (confirm('모든 데이터를 초기화하시겠습니까?')) {
+            localStorage.clear();
+            location.reload();
+        }
+    };
+    document.body.appendChild(resetBtn);
+
+    // Load Data
+    loadGame();
+
     // Wait for Start Button
     if (startBtn) {
         startBtn.addEventListener('click', () => {
             introScreen.classList.add('hidden');
             gameContainer.classList.remove('hidden');
-            startGame();
+            if (gameState.currentQuestionIndex === 0) {
+                startGame();
+            } else {
+                // Resume
+                updateStats();
+                renderQuestion();
+            }
         });
     } else {
         startGame();
     }
 });
+
+/* Persistence */
+function saveGame() {
+    localStorage.setItem('accGame_save', JSON.stringify({
+        money: gameState.money,
+        currentQuestionIndex: gameState.currentQuestionIndex
+    }));
+}
+
+function loadGame() {
+    const savedData = localStorage.getItem('accGame_save');
+    if (savedData) {
+        const parsed = JSON.parse(savedData);
+        gameState.money = parsed.money;
+        gameState.currentQuestionIndex = parsed.currentQuestionIndex;
+    }
+}
 
 /* 
 async function loadQuestions() {
@@ -93,26 +135,21 @@ async function loadQuestions() {
 */
 
 function startGame() {
-    gameState.money = 0;
-    gameState.currentQuestionIndex = 0;
+    // If loading for the first time
+    if (!localStorage.getItem('accGame_save')) {
+        gameState.money = 0;
+        gameState.currentQuestionIndex = 0;
+    }
     updateStats();
     renderQuestion();
 }
 
 function updateStats() {
     moneyDisplay.textContent = `$${gameState.money.toLocaleString()}`;
+    saveGame(); // Auto-save on stat update
 }
 
-function renderQuestion() {
-    const currentQ = gameState.questions[gameState.currentQuestionIndex];
-
-    // Reset UI
-    explanationArea.classList.add('hidden');
-    optionsArea.innerHTML = '';
-
-    // Set Question Text
-    questionText.textContent = `Q${gameState.currentQuestionIndex + 1}. ${currentQ.question}`;
-
+function showOptions(currentQ) {
     // Create Buttons
     currentQ.options.forEach((option, index) => {
         const button = document.createElement('button');
@@ -121,6 +158,40 @@ function renderQuestion() {
         button.onclick = () => checkAnswer(index, currentQ.answer, currentQ.explanation);
         optionsArea.appendChild(button);
     });
+}
+
+function renderQuestion() {
+    if (gameState.currentQuestionIndex >= gameState.questions.length) {
+        questionText.textContent = "오늘의 업무 끝! (All Tasks Completed)";
+        optionsArea.innerHTML = "<h3>정산 완료. 퇴근하십시오.</h3>";
+        explanationArea.classList.add('hidden');
+        return;
+    }
+
+    const currentQ = gameState.questions[gameState.currentQuestionIndex];
+
+    // Reset UI
+    explanationArea.classList.add('hidden');
+    optionsArea.innerHTML = '';
+
+    // Typewriter Effect
+    questionText.innerHTML = '<span class="typewriter-cursor"></span>';
+    let charIndex = 0;
+    const text = `Q${gameState.currentQuestionIndex + 1}. ${currentQ.question}`;
+
+    function typeChar() {
+        if (charIndex < text.length) {
+            questionText.textContent = text.substring(0, charIndex + 1);
+            questionText.innerHTML += '<span class="typewriter-cursor"></span>';
+            charIndex++;
+            setTimeout(typeChar, 30); // Typing speed
+        } else {
+            // Remove cursor after typing
+            questionText.innerHTML = text;
+            showOptions(currentQ);
+        }
+    }
+    typeChar();
 }
 
 function checkAnswer(selectedIndex, correctIndex, explanation) {

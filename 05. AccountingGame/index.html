@@ -26,34 +26,71 @@
     </div>
 
     <div id="game-container" class="hidden">
-        <!-- Header: Stats -->
-        <header id="stats-bar">
-            <div class="stat-box">
-                <span class="label">DATE:</span>
-                <span id="date-display">OCT 12, 1955</span>
-            </div>
-            <div class="stat-box">
-                <span class="label">CAPITAL:</span>
-                <span id="money-display">$0</span>
-            </div>
-            <div class="stat-box">
-                <span class="label">TITLE:</span>
-                <span id="level-display">JANITOR (청소부)</span>
-            </div>
-        </header>
+        <!-- Screen: Office (Main Gameplay) -->
+        <div id="office-screen">
+            <!-- Header: Stats -->
+            <header id="stats-bar">
+                <div class="stat-box">
+                    <span class="label">DATE:</span>
+                    <span id="date-display">OCT 12, 1955</span>
+                </div>
+                <div class="stat-box">
+                    <span class="label">CAPITAL:</span>
+                    <span id="money-display">$0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="label">TITLE:</span>
+                    <span id="level-display">JANITOR (청소부)</span>
+                </div>
+            </header>
 
-        <!-- Main Content -->
-        <main id="workspace">
-            <!-- Paper Sheet for Question -->
-            <div id="paper-sheet">
-                <div id="stamp-mark">CONFIDENTIAL</div>
-                <h2 id="question-text">문제를 불러오는 중...</h2>
-                <div id="explanation-area" class="hidden"></div>
-            </div>
+            <!-- Main Content -->
+            <main id="workspace">
+                <!-- Navigation Buttons -->
+                <div id="nav-buttons">
+                    <button id="btn-map" class="nav-btn">🗺️ CITY MAP</button>
+                    <button id="btn-home" class="nav-btn">🏠 MY ROOM</button>
+                </div>
 
-            <!-- Typewriter Keys for Options -->
-            <div id="options-area"></div>
-        </main>
+                <!-- Paper Sheet for Question -->
+                <div id="paper-sheet">
+                    <div id="stamp-mark">CONFIDENTIAL</div>
+                    <h2 id="question-text">문제를 불러오는 중...</h2>
+                    <div id="explanation-area" class="hidden"></div>
+                </div>
+
+                <!-- Typewriter Keys for Options -->
+                <div id="options-area"></div>
+            </main>
+        </div>
+
+        <!-- Screen: City Map -->
+        <div id="city-screen" class="hidden screen">
+            <h1 class="screen-title">NEW YORK CITY - 1955</h1>
+            <div class="map-location" id="loc-office" style="top: 20%; left: 30%;">🏢 OFFICE</div>
+            <div class="map-location" id="loc-tailor" style="top: 20%; left: 70%;">👔 TAILOR</div>
+            <div class="map-location" id="loc-diner" style="top: 60%; left: 50%;">🍔 DINER</div>
+            <button class="back-btn" onclick="switchScreen('office-screen')">🔙 BACK TO WORK</button>
+        </div>
+
+        <!-- Screen: Tailor Shop -->
+        <div id="shop-screen" class="hidden screen">
+            <h1 class="screen-title">TAILOR SHOP</h1>
+            <div class="shop-items">
+                <div class="shop-item" onclick="buyItem('suit', 5000)">
+                    <span>👔 Cool Suit</span>
+                    <span>$5,000</span>
+                </div>
+            </div>
+            <button class="back-btn" onclick="switchScreen('city-screen')">🔙 BACK TO CITY</button>
+        </div>
+
+        <!-- Screen: My Room -->
+        <div id="home-screen" class="hidden screen">
+            <h1 class="screen-title">MY SWEET HOME</h1>
+            <div id="room-decor-area"></div>
+            <button class="back-btn" onclick="switchScreen('office-screen')">🔙 BACK TO WORK</button>
+        </div>
 
         <!-- Feedback Overlay -->
         <div id="feedback-overlay" class="hidden">

@@ -39,6 +39,10 @@
                     <span id="money-display">$0</span>
                 </div>
                 <div class="stat-box">
+                    <span class="label">ENERGY:</span>
+                    <span id="energy-display">⚡ 100%</span>
+                </div>
+                <div class="stat-box">
                     <span class="label">TITLE:</span>
                     <span id="level-display">JANITOR (청소부)</span>
                 </div>
@@ -74,12 +78,38 @@
         </div>
 
         <!-- Screen: Tailor Shop -->
+        <!-- Screen: Tailor Shop (Unified Shop) -->
         <div id="shop-screen" class="hidden screen">
-            <h1 class="screen-title">TAILOR SHOP</h1>
+            <h1 class="screen-title">TAILOR & BOOKS</h1>
             <div class="shop-items">
+                <!-- Cool Suit -->
                 <div class="shop-item" onclick="buyItem('suit', 5000)">
                     <span>👔 Cool Suit</span>
                     <span>$5,000</span>
+                </div>
+                <!-- Textbook (Unlock Level 2) -->
+                <div class="shop-item" onclick="buyItem('textbook_2', 500)">
+                    <span>📖 회계 입문서</span>
+                    <span>$500</span>
+                    <span class="item-desc">Unlock Lv.2</span>
+                </div>
+            </div>
+            <button class="back-btn" onclick="switchScreen('city-screen')">🔙 BACK TO CITY</button>
+        </div>
+
+        <!-- Screen: Diner -->
+        <div id="diner-screen" class="hidden screen">
+            <h1 class="screen-title">THE FLICKER CAFE</h1>
+            <div class="shop-items">
+                <div class="shop-item" onclick="buyItem('coffee', 5)">
+                    <span>☕ Black Coffee</span>
+                    <span>$5</span>
+                    <span class="item-desc">Energy +10</span>
+                </div>
+                <div class="shop-item" onclick="buyItem('sandwich', 10)">
+                    <span>🥪 Ham Sandwich</span>
+                    <span>$10</span>
+                    <span class="item-desc">Energy +30</span>
                 </div>
             </div>
             <button class="back-btn" onclick="switchScreen('city-screen')">🔙 BACK TO CITY</button>

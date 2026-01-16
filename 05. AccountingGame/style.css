@@ -197,6 +197,7 @@ body {
         opacity: 1;
     }
 }
+
 /* Intro Screen styles */
 #intro-screen {
     text-align: center;
@@ -222,7 +223,7 @@ body {
 }
 
 .intro-story {
-    background: rgba(0,0,0,0.6);
+    background: rgba(0, 0, 0, 0.6);
     padding: 20px;
     border: 1px solid #555;
     margin-bottom: 30px;
@@ -271,7 +272,7 @@ body {
 }
 
 .screen-title {
-    background: rgba(0,0,0,0.7);
+    background: rgba(0, 0, 0, 0.7);
     color: #fff;
     padding: 10px 20px;
     border: 2px solid #fff;
@@ -293,65 +294,108 @@ body {
 /* City Screen */
 #city-screen {
     background-image: url('assets/city_map.png');
-    background-color: #2c2c2c; /* Fallback */
+    background-color: #2c2c2c;
+    /* Fallback */
+    background-size: cover;
+    background-position: center;
+    /* Static Background: No Animation */
 }
 
+/* Map Map Location Pins */
 .map-location {
     position: absolute;
-    background: rgba(255, 255, 255, 0.9);
+    background: #fff;
+    color: #000;
     padding: 5px 10px;
     border: 2px solid #000;
-    border-radius: 5px;
     cursor: pointer;
+    font-family: 'Courier Prime', monospace;
     font-weight: bold;
-    color: #000;
+    box-shadow: 4px 4px 0 #000;
     transform: translate(-50%, -50%);
-    transition: transform 0.2s;
+    transition: transform 0.1s;
+    z-index: 50;
+    /* Ensure it is clickable */
+    /* Static Pins: No Animation */
 }
 
 .map-location:hover {
-    transform: translate(-50%, -50%) scale(1.2);
-    background: #fff;
-    z-index: 10;
+    transform: translate(-50%, -50%) scale(1.1) !important;
+    background: #ffeb3b;
+    z-index: 100;
 }
 
-#loc-office { top: 20%; left: 30%; }
-#loc-tailor { top: 20%; left: 70%; }
-#loc-diner { top: 60%; left: 50%; }
+#loc-office {
+    top: 20%;
+    left: 30%;
+}
 
-/* Shop Screen */
+#loc-tailor {
+    top: 20%;
+    left: 70%;
+}
+
+#loc-diner {
+    top: 60%;
+    left: 50%;
+}
+
+
+/* Shop Styles */
+.shop-items {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 30px;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+.shop-item {
+    background: white;
+    border: 2px solid #000;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    width: 150px;
+}
+
+.shop-item span:first-child {
+    font-size: 3rem;
+    /* Larger icon */
+}
+
+.shop-item:hover {
+    transform: scale(1.05);
+    background: #e3f2fd;
+}
+
+/* Screen Specific Backgrounds */
 #shop-screen {
     background-image: url('assets/shop_tailor.png');
     background-color: #3e2723;
 }
 
-.shop-items {
-    display: flex;
-    gap: 20px;
-    background: rgba(0,0,0,0.8);
-    padding: 20px;
-    border-radius: 10px;
+#diner-screen {
+    background-image: url('assets/diner_interior.png');
+    background-size: cover;
+    background-color: #ff9800;
 }
 
-.shop-item {
-    background: #fff;
-    padding: 15px;
-    border: 2px solid #ccc;
-    cursor: pointer;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.shop-item:hover {
-    background: #e0e0e0;
-    transform: scale(1.05);
-}
-
-/* Home Screen */
 #home-screen {
     background-image: url('assets/my_room.png');
     background-color: #5d4037;
 }
 
+/* Item Description */
+.item-desc {
+    font-size: 0.8rem;
+    color: #555;
+    margin-top: 5px;
+    font-weight: bold;
+}

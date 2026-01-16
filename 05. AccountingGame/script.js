@@ -1,6 +1,9 @@
 
 const gameState = {
     money: 0,
+    energy: 100, // [NEW] Energy System
+    level: 1,    // [NEW] Level (Title)
+    unlockedChapters: ["01. 회계 기초"], // [NEW] Unlocked Progress
     currentQuestionIndex: 0,
     questions: []
 };
@@ -10,6 +13,8 @@ const introScreen = document.getElementById('intro-screen');
 const gameContainer = document.getElementById('game-container');
 const startBtn = document.getElementById('start-btn');
 const moneyDisplay = document.getElementById('money-display');
+const energyDisplay = document.getElementById('energy-display'); // [NEW]
+const levelDisplay = document.getElementById('level-display');   // [NEW]
 const questionText = document.getElementById('question-text');
 const optionsArea = document.getElementById('options-area');
 const explanationArea = document.getElementById('explanation-area');
@@ -19,26 +24,16 @@ const feedbackText = document.getElementById('feedback-text');
 
 // Initialize Game
 document.addEventListener('DOMContentLoaded', () => {
-    // [FIX] Security Clearance: Data embedded directly to bypass browser restrictions
-    // [FIX] Load Data from Parser
+    // Load Data from Parser
     if (window.generatedQuestions && window.generatedQuestions.length > 0) {
         gameState.questions = window.generatedQuestions;
         console.log(`Loaded ${gameState.questions.length} questions from parser.`);
     } else {
-        // Fallback or Alert
         console.warn("No generated questions found. Using default.");
         gameState.questions = [
-            {
-                "id": 0,
-                "type": "theory",
-                "question": "데이터를 불러오지 못했습니다. 'python data_parser.py'를 실행했는지 확인하세요.",
-                "options": ["확인", "취소", "재시도", "문의"],
-                "answer": 0,
-                "explanation": "00.Data 폴더에 텍스트 파일이 있는지 확인해주세요."
-            }
+            { "id": 0, "type": "theory", "question": "데이터 로드 실패. 관리자에게 문의하세요.", "options": ["확인"], "answer": 0, "explanation": "시스템 오류" }
         ];
     }
-
 
     // Navigation Buttons
     const btnMap = document.getElementById('btn-map');
@@ -52,9 +47,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const locDiner = document.getElementById('loc-diner');
     if (locOffice) locOffice.onclick = () => switchScreen('office-screen');
     if (locTailor) locTailor.onclick = () => switchScreen('shop-screen');
-    if (locDiner) locDiner.onclick = () => alert('준비 중입니다! (Coming Soon)');
+    if (locDiner) locDiner.onclick = () => switchScreen('diner-screen'); // [NEW] Open Diner
 
-    // Add Reset Button for debugging/testing
+    // Add Reset Button
     const resetBtn = document.createElement('button');
     resetBtn.textContent = '🔄 RESET DATA';
     resetBtn.style.position = 'fixed';
@@ -62,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resetBtn.style.right = '10px';
     resetBtn.style.opacity = '0.5';
     resetBtn.onclick = () => {
-        if (confirm('모든 데이터를 초기화하시겠습니까?')) {
+        if (confirm('모든 데이터를 초기화하시겠습니까? (Return to Poverty)')) {
             localStorage.clear();
             location.reload();
         }
@@ -77,13 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
         startBtn.addEventListener('click', () => {
             introScreen.classList.add('hidden');
             gameContainer.classList.remove('hidden');
-            if (gameState.currentQuestionIndex === 0) {
-                startGame();
-            } else {
-                // Resume
-                updateStats();
-                renderQuestion();
-            }
+            startGame();
         });
     } else {
         startGame();
@@ -92,70 +81,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* Persistence */
 function saveGame() {
-    localStorage.setItem('accGame_save', JSON.stringify({
+    localStorage.setItem('accGame_save_v2', JSON.stringify({
         money: gameState.money,
-        currentQuestionIndex: gameState.currentQuestionIndex
+        energy: gameState.energy,
+        level: gameState.level,
+        unlockedChapters: gameState.unlockedChapters
     }));
 }
 
 function loadGame() {
-    const savedData = localStorage.getItem('accGame_save');
+    const savedData = localStorage.getItem('accGame_save_v2');
     if (savedData) {
         const parsed = JSON.parse(savedData);
-        gameState.money = parsed.money;
-        gameState.currentQuestionIndex = parsed.currentQuestionIndex;
+        gameState.money = parsed.money || 0;
+        gameState.energy = parsed.energy !== undefined ? parsed.energy : 100;
+        gameState.level = parsed.level || 1;
+        gameState.unlockedChapters = parsed.unlockedChapters || ["01. 회계 기초"];
     }
 }
-
-/* 
-async function loadQuestions() {
-    try {
-        const response = await fetch('data/questions.json');
-        const data = await response.json();
-        gameState.questions = data;
-        startGame();
-    } catch (error) {
-        console.error('Error loading questions:', error);
-        questionText.textContent = "Error: 서류를 찾을 수 없습니다. (questions.json)";
-    }
-}
-*/
 
 function startGame() {
-    // If loading for the first time
-    if (!localStorage.getItem('accGame_save')) {
-        gameState.money = 0;
-        gameState.currentQuestionIndex = 0;
-    }
     updateStats();
     renderQuestion();
 }
 
 function updateStats() {
-    moneyDisplay.textContent = `$${gameState.money.toLocaleString()}`;
-    saveGame(); // Auto-save on stat update
+    if (moneyDisplay) moneyDisplay.textContent = `$${gameState.money.toLocaleString()}`;
+    if (energyDisplay) energyDisplay.textContent = `⚡ ${gameState.energy}%`;
+
+    // Update Title based on Level
+    const titles = { 1: "JANITOR (청소부)", 2: "INTERN (수습)", 3: "STAFF (정직원)" };
+    if (levelDisplay) levelDisplay.textContent = titles[gameState.level] || "CPA (회계사)";
+
+    saveGame();
 }
 
-function showOptions(currentQ) {
-    // Create Buttons
-    currentQ.options.forEach((option, index) => {
-        const button = document.createElement('button');
-        button.className = 'option-btn';
-        button.textContent = option;
-        button.onclick = () => checkAnswer(index, currentQ.answer, currentQ.explanation);
-        optionsArea.appendChild(button);
-    });
-}
-
+/* Question Logic */
 function renderQuestion() {
-    if (gameState.currentQuestionIndex >= gameState.questions.length) {
-        questionText.textContent = "오늘의 업무 끝! (All Tasks Completed)";
-        optionsArea.innerHTML = "<h3>정산 완료. 퇴근하십시오.</h3>";
+    // [NEW] Energy Check
+    if (gameState.energy <= 0) {
+        questionText.textContent = "배가 너무 고파서 글씨가 안 보입니다... (Energy Depleted)";
+        optionsArea.innerHTML = "<button class='option-btn' onclick=\"switchScreen('diner-screen')\">🍔 식당으로 기어가기</button>";
         explanationArea.classList.add('hidden');
         return;
     }
 
-    const currentQ = gameState.questions[gameState.currentQuestionIndex];
+    // [NEW] Filter Questions by Unlocked Chapters
+    const availableQuestions = gameState.questions.filter(q => {
+        // Check if question category starts with any unlocked chapter string
+        return gameState.unlockedChapters.some(chap => q.category && q.category.includes(chap));
+    });
+
+    if (availableQuestions.length === 0) {
+        questionText.textContent = "풀 수 있는 문제가 없습니다. (No Questions Available)";
+        return;
+    }
+
+    // Pick Random Question from pool
+    const randIdx = Math.floor(Math.random() * availableQuestions.length);
+    const currentQ = availableQuestions[randIdx];
 
     // Reset UI
     explanationArea.classList.add('hidden');
@@ -164,16 +148,15 @@ function renderQuestion() {
     // Typewriter Effect
     questionText.innerHTML = '<span class="typewriter-cursor"></span>';
     let charIndex = 0;
-    const text = `Q${gameState.currentQuestionIndex + 1}. ${currentQ.question}`;
+    const text = currentQ.question;
 
     function typeChar() {
         if (charIndex < text.length) {
             questionText.textContent = text.substring(0, charIndex + 1);
             questionText.innerHTML += '<span class="typewriter-cursor"></span>';
             charIndex++;
-            setTimeout(typeChar, 30); // Typing speed
+            setTimeout(typeChar, 20);
         } else {
-            // Remove cursor after typing
             questionText.innerHTML = text;
             showOptions(currentQ);
         }
@@ -181,19 +164,34 @@ function renderQuestion() {
     typeChar();
 }
 
+function showOptions(currentQ) {
+    currentQ.options.forEach((option, index) => {
+        const button = document.createElement('button');
+        button.className = 'option-btn';
+        button.textContent = option;
+        // Use 1-based index matching for answer checking if data uses 1-4
+        button.onclick = () => checkAnswer(index + 1, currentQ.answer, currentQ.explanation);
+        optionsArea.appendChild(button);
+    });
+}
+
 function checkAnswer(selectedIndex, correctIndex, explanation) {
-    // Disable all buttons
+    // Deduct Energy
+    gameState.energy = Math.max(0, gameState.energy - 10); // cost 10 energy
+
+    // Disable buttons
     const buttons = document.querySelectorAll('.option-btn');
     buttons.forEach(btn => btn.disabled = true);
 
     if (selectedIndex === correctIndex) {
-        // Correct
         showFeedback("PROFIT!!", true);
-        gameState.money += 1000;
+        // Reward based on level
+        const reward = gameState.level * 100; // Lv1: $100, Lv2: $200
+        gameState.money += reward;
     } else {
-        // Wrong
         showFeedback("AUDIT!!", false);
-        gameState.money -= 500; // Penalty
+        // Penalty
+        gameState.money = Math.max(0, gameState.money - 50);
     }
 
     updateStats();
@@ -202,14 +200,16 @@ function checkAnswer(selectedIndex, correctIndex, explanation) {
     explanationArea.textContent = explanation;
     explanationArea.classList.remove('hidden');
 
-    // Next Question Button
+    // Next Button
     const nextBtn = document.createElement('button');
     nextBtn.className = 'option-btn';
     nextBtn.style.marginTop = '20px';
     nextBtn.style.background = '#4caf50';
     nextBtn.style.color = 'white';
-    nextBtn.textContent = 'NEXT FILE >>';
-    nextBtn.onclick = nextQuestion;
+    nextBtn.textContent = 'NEXT TASK >>';
+    nextBtn.onclick = () => {
+        renderQuestion(); // Load next random question
+    };
     explanationArea.appendChild(nextBtn);
 }
 
@@ -223,21 +223,10 @@ function showFeedback(text, isSuccess) {
     }, 1000);
 }
 
-function nextQuestion() {
-    gameState.currentQuestionIndex++;
-    if (gameState.currentQuestionIndex >= gameState.questions.length) {
-        // Game Over / Win
-        questionText.textContent = "오늘의 업무 끝! (All Tasks Completed)";
-        optionsArea.innerHTML = "<h3>정산 완료. 퇴근하십시오.</h3>";
-        explanationArea.classList.add('hidden');
-    } else {
-        renderQuestion();
-    }
-}
 
 /* Screen Management */
 function switchScreen(screenId) {
-    const screens = ['office-screen', 'city-screen', 'shop-screen', 'home-screen'];
+    const screens = ['office-screen', 'city-screen', 'shop-screen', 'diner-screen', 'home-screen'];
 
     screens.forEach(id => {
         const el = document.getElementById(id);
@@ -254,11 +243,31 @@ function switchScreen(screenId) {
 /* Shop Logic */
 function buyItem(item, price) {
     if (gameState.money >= price) {
-        if (confirm(`'${item}'을(를) 구매하시겠습니까? (-$${price})`)) {
-            gameState.money -= price;
+        if (confirm(`Purchase this item for -$${price}?`)) {
+
+            // Execute Effect
+            if (item === 'suit') {
+                alert('명품 양복을 샀습니다! (Swag +100)');
+            } else if (item === 'coffee') {
+                gameState.energy = Math.min(100, gameState.energy + 10);
+                gameState.money -= price;
+                alert('커피를 마셨습니다. (Energy +10)');
+            } else if (item === 'sandwich') {
+                gameState.energy = Math.min(100, gameState.energy + 30);
+                gameState.money -= price;
+                alert('샌드위치를 먹었습니다. (Energy +30)');
+            } else if (item === 'textbook_2') {
+                if (gameState.level >= 2) {
+                    alert("이미 구매한 책입니다.");
+                    return;
+                }
+                gameState.money -= price;
+                gameState.level = 2;
+                gameState.unlockedChapters.push("01. 유동(당좌자신)_현금 및 현금성자산"); // Unlock Ch.2
+                alert('승진했습니다! (Level Up: Intern!)\n이제 [현금 및 현금성자산] 업무를 처리합니다.');
+            }
+
             updateStats();
-            alert('구매 완료! (Purchased!)');
-            // Effect logic here (e.g. change outfit)
         }
     } else {
         alert('잔고가 부족합니다! (Not enough cash!)');

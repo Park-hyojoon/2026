@@ -12,6 +12,7 @@
 *.pptx
 *.ppt
 
+*.pdf
 # Python cache
 __pycache__/
 *.py[cod]

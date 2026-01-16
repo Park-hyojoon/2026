@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trash to Treasurer: 회계왕</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&family=Dokdo&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="game-bg"></div>
+
+    <!-- Intro Screen -->
+    <div id="intro-screen">
+        <h1 class="intro-title">Trash to Treasurer</h1>
+        <p class="intro-subtitle">The Accounting Tycoon</p>
+        <div class="intro-story">
+            1955년 뉴욕.<br>
+            당신은 오늘부터 낡은 회계 법인의 청소부로 일하게 되었습니다.<br>
+            쓰레기통 속에서 '부자의 비밀'을 찾아보세요!
+        </div>
+        <button id="start-btn" class="option-btn" style="width: auto; padding: 20px 40px; font-size: 2rem;">GAME
+            START</button>
+    </div>
+
+    <div id="game-container" class="hidden">
+        <!-- Header: Stats -->
+        <header id="stats-bar">
+            <div class="stat-box">
+                <span class="label">DATE:</span>
+                <span id="date-display">OCT 12, 1955</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">CAPITAL:</span>
+                <span id="money-display">$0</span>
+            </div>
+            <div class="stat-box">
+                <span class="label">TITLE:</span>
+                <span id="level-display">JANITOR (청소부)</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main id="workspace">
+            <!-- Paper Sheet for Question -->
+            <div id="paper-sheet">
+                <div id="stamp-mark">CONFIDENTIAL</div>
+                <h2 id="question-text">문제를 불러오는 중...</h2>
+                <div id="explanation-area" class="hidden"></div>
+            </div>
+
+            <!-- Typewriter Keys for Options -->
+            <div id="options-area"></div>
+        </main>
+
+        <!-- Feedback Overlay -->
+        <div id="feedback-overlay" class="hidden">
+            <h1 id="feedback-text">CORRECT!</h1>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

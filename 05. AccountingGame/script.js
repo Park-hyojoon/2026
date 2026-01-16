@@ -52,6 +52,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     ];
 
+    // Navigation Buttons
+    const btnMap = document.getElementById('btn-map');
+    const btnHome = document.getElementById('btn-home');
+    if (btnMap) btnMap.onclick = () => switchScreen('city-screen');
+    if (btnHome) btnHome.onclick = () => switchScreen('home-screen');
+
+    // Map Locations
+    const locOffice = document.getElementById('loc-office');
+    const locTailor = document.getElementById('loc-tailor');
+    const locDiner = document.getElementById('loc-diner');
+    if (locOffice) locOffice.onclick = () => switchScreen('office-screen');
+    if (locTailor) locTailor.onclick = () => switchScreen('shop-screen');
+    if (locDiner) locDiner.onclick = () => alert('준비 중입니다! (Coming Soon)');
+
     // Wait for Start Button
     if (startBtn) {
         startBtn.addEventListener('click', () => {
@@ -160,5 +174,35 @@ function nextQuestion() {
         explanationArea.classList.add('hidden');
     } else {
         renderQuestion();
+    }
+}
+
+/* Screen Management */
+function switchScreen(screenId) {
+    const screens = ['office-screen', 'city-screen', 'shop-screen', 'home-screen'];
+
+    screens.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (id === screenId) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+    });
+}
+
+/* Shop Logic */
+function buyItem(item, price) {
+    if (gameState.money >= price) {
+        if (confirm(`'${item}'을(를) 구매하시겠습니까? (-$${price})`)) {
+            gameState.money -= price;
+            updateStats();
+            alert('구매 완료! (Purchased!)');
+            // Effect logic here (e.g. change outfit)
+        }
+    } else {
+        alert('잔고가 부족합니다! (Not enough cash!)');
     }
 }

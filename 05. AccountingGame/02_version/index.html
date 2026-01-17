@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounting Tycoon: 02_version</title>
+    <link rel="stylesheet" href="style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&family=Courier+Prime&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div id="game-viewport">
+        <!-- Room Background -->
+        <div id="room-container">
+            <img id="room-bg" src="../assets/my_room00.png" alt="Room Background">
+
+            <!-- Interactive Hitboxes -->
+            <div id="hitbox-theory" class="hitbox" title="이론 학습 (Stage 1)"></div>
+            <div id="hitbox-quiz" class="hitbox" title="퀴즈 도전 (Stage 2)"></div>
+            <div id="hitbox-journal" class="hitbox" title="분개 훈련 (Stage 3)"></div>
+        </div>
+
+        <!-- UI Overlay Layer -->
+        <div id="ui-layer">
+            <header id="top-bar">
+                <div class="stat">LVL: <span id="val-level">0</span></div>
+                <div class="stat">MONEY: <span id="val-money">$0</span></div>
+            </header>
+
+            <!-- Content Modal -->
+            <div id="modal" class="hidden">
+                <div class="modal-content">
+                    <button id="close-modal">✖</button>
+                    <div id="modal-body">
+                        <!-- Dynamic Content Goes Here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="00.Data/data.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

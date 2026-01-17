@@ -102,20 +102,21 @@ function updateBackground() {
     const bgImg = document.getElementById('room-bg');
     let imgPath = "";
 
-    if (level === 1) {
-        imgPath = "../assets/my_room00.png";
-    } else if (level <= 6) {
-        // Levels 2-6: my_room01 to my_room05
-        imgPath = `../_my_opinion/design_concept/my_room0${level - 1}.png`;
-    } else if (level <= 10) {
-        // Levels 7-10: my_room6 to my_room9
-        imgPath = `../_my_opinion/design_concept/my_room${level - 1}.png`;
+    // Mapping Levels 1-10 to User Backgrounds
+    if (level <= 5) {
+        // Levels 1-5: my_room01 to my_room05
+        imgPath = `../_my_opinion/design_concept/my_room0${level}.png`;
+    } else if (level <= 9) {
+        // Levels 6-9: my_room6 to my_room9 (Note: No leading zero for these files)
+        imgPath = `../_my_opinion/design_concept/my_room${level}.png`;
     } else {
-        // Level 11+: my_room10
+        // Level 10+: my_room10
         imgPath = "../_my_opinion/design_concept/my_room10.png";
     }
 
-    if (bgImg.src.indexOf(imgPath) === -1) {
+    // Direct check to see if the current src is already correct
+    // (Using inclusive check because src property returns full URI)
+    if (!bgImg.src.includes(imgPath)) {
         console.log(`Upgrading room to Level ${level}: ${imgPath}`);
         bgImg.style.opacity = 0; // Fade out
         setTimeout(() => {

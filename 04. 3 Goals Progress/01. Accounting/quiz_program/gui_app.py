@@ -9,12 +9,16 @@ from weakness_analyzer import WeaknessAnalyzer
 from datetime import datetime, timedelta
 import calendar
 from statistics_dashboard import StatisticsDashboard
+from weakness_dashboard import WeaknessDashboard
 
 class AccountingQuizApp:
     def __init__(self, root):
         self.root = root
         self.root.title("AI 회계 학습 도우미")
         self.root.geometry("900x850")
+        
+        # 화면 중앙 배치
+        self.center_window(900, 850)
 
         # 데이터 저장 경로 (스크립트 위치 기준 절대 경로)
         base_path = os.path.dirname(os.path.abspath(__file__))
@@ -35,7 +39,14 @@ class AccountingQuizApp:
         self.load_history()
 
         # 초기 화면 표시
+        # 초기 화면 표시
         self.show_setup_screen()
+
+    def center_window(self, width, height):
+        self.root.update_idletasks()
+        x = (self.root.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.root.winfo_screenheight() // 2) - (height // 2)
+        self.root.geometry(f'{width}x{height}+{x}+{y}')
 
     def load_config(self):
         """설정 파일 로드"""
@@ -62,6 +73,27 @@ class AccountingQuizApp:
         }
         with open(self.config_file, 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
+
+    def export_data(self):
+        """데이터 내보내기 (백업)"""
+        if not self.history:
+            messagebox.showinfo("알림", "내보낼 학습 기록이 없습니다.")
+            return
+            
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".json",
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")],
+            initialfile=f"learning_history_backup_{datetime.now().strftime('%Y%m%d')}.json",
+            title="학습 기록 내보내기"
+        )
+        
+        if file_path:
+            try:
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    json.dump(self.history, f, ensure_ascii=False, indent=2)
+                messagebox.showinfo("성공", "학습 기록이 성공적으로 저장되었습니다.")
+            except Exception as e:
+                messagebox.showerror("오류", f"저장 중 오류가 발생했습니다: {str(e)}")
 
     def load_history(self):
         """학습 기록 로드"""
@@ -94,9 +126,8 @@ class AccountingQuizApp:
                         font=("맑은 고딕", 24, "bold"), fg="#2c3e50")
         title.pack(pady=30)
 
-        subtitle = tk.Label(self.root, text="Ollama 기반 로컬 AI 학습 프로그램",
-                           font=("맑은 고딕", 12), fg="#7f8c8d")
-        subtitle.pack(pady=10)
+
+        # Subtitle removed as requested
 
         # Ollama 상태 프레임
         ollama_frame = tk.Frame(self.root, bg="#e8f5e9")
@@ -116,14 +147,7 @@ class AccountingQuizApp:
                              font=("맑은 고딕", 9), bg="#e8f5e9", fg="#7f8c8d")
         info_label.pack(anchor='w', padx=10, pady=5)
 
-        # PDF 선택 프레임
-        pdf_frame = tk.Frame(self.root)
-        pdf_frame.pack(pady=20, padx=50, fill='x')
-
-        tk.Label(pdf_frame, text="학습할 PDF 파일:",
-                font=("맑은 고딕", 11)).pack(anchor='w', pady=5)
-
-        info_label.pack(anchor='w', padx=10, pady=(0, 10))
+        # Old PDF frame removed
 
         # === 메인 컨테이너 (그리드 스타일 레이아웃) ===
         main_container = tk.Frame(self.root, bg="#f5f5f5")
@@ -172,10 +196,10 @@ class AccountingQuizApp:
         
         # 1.2 문제 수 설정 섹션
         tk.Label(left_panel, text="학습 설정", 
-                 font=("맑은 고딕", 12, "bold"), bg="white", fg="#2c3e50").pack(anchor='w', padx=20, pady=(0, 10))
+                 font=("맑은 고딕", 12, "bold"), bg="white", fg="#2c3e50").pack(anchor='w', padx=20, pady=(10, 10))
         
         setting_frame = tk.Frame(left_panel, bg="white")
-        setting_frame.pack(fill='x', padx=20)
+        setting_frame.pack(fill='x', padx=20, pady=(0, 20)) # Added bottom padding
         
         tk.Label(setting_frame, text="한 번에 풀 문제 수:", font=("맑은 고딕", 10), bg="white").pack(side='left')
         
@@ -183,6 +207,13 @@ class AccountingQuizApp:
         tk.Spinbox(setting_frame, from_=3, to=10, 
                    textvariable=self.num_questions_var, 
                    font=("맑은 고딕", 10), width=5).pack(side='left', padx=10)
+
+        # 데이터 백업 버튼
+        backup_btn = tk.Button(setting_frame, text="💾 데이터 내보내기",
+                             command=self.export_data,
+                             bg="#95a5a6", fg="white", font=("맑은 고딕", 9),
+                             relief='flat', padx=10, pady=2)
+        backup_btn.pack(side='right')
 
         # 2. 오른쪽 패널 (액션 영역)
         right_panel = tk.Frame(main_container, bg="white", bd=1, relief="solid")
@@ -859,11 +890,23 @@ class AccountingQuizApp:
         """취약점 분석 화면"""
         self.clear_screen()
 
-        title = tk.Label(self.root,
+        # 상단 헤더 (타이틀 + 홈 버튼)
+        header_frame = tk.Frame(self.root)
+        header_frame.pack(fill='x', padx=20, pady=20)
+        
+        title = tk.Label(header_frame,
                         text="취약점 분석",
                         font=("맑은 고딕", 20, "bold"),
                         fg="#2c3e50")
-        title.pack(pady=20)
+        title.pack(side='left')
+        
+        # 홈 버튼
+        home_btn = tk.Button(header_frame, text="🏠 메인으로",
+                           command=self.show_setup_screen,
+                           bg="#95a5a6", fg="white",
+                           font=("맑은 고딕", 10),
+                           relief='flat', padx=15, pady=5)
+        home_btn.pack(side='right')
 
         if not self.history:
             no_data = tk.Label(self.root,
@@ -872,6 +915,12 @@ class AccountingQuizApp:
                              fg="#7f8c8d",
                              justify='center')
             no_data.pack(pady=40)
+            
+            # 돌아가기 버튼 (데이터 없을 때도 필요)
+            tk.Button(self.root, text="돌아가기",
+                    command=self.show_setup_screen,
+                    bg="#95a5a6", fg="white", font=("맑은 고딕", 10),
+                    relief='flat', padx=20, pady=10).pack()
         else:
             # 분석기 초기화
             analyzer = WeaknessAnalyzer(self.history)
@@ -881,153 +930,11 @@ class AccountingQuizApp:
 
             # 전체 통계
             stats_frame = tk.Frame(self.root, bg="#ecf0f1")
-            stats_frame.pack(pady=10, padx=50, fill='x')
+            messagebox.showinfo("알림", "아직 학습 기록이 없습니다.\n문제를 풀고 나면 취약점 분석이 가능합니다.")
+            return
 
-            tk.Label(stats_frame,
-                    text="전체 통계",
-                    font=("맑은 고딕", 14, "bold"),
-                    bg="#ecf0f1", fg="#2c3e50").pack(anchor='w', padx=20, pady=10)
-
-            stats_info = tk.Frame(stats_frame, bg="#ecf0f1")
-            stats_info.pack(fill='x', padx=20, pady=10)
-
-            stats_text = f"""
-총 학습 횟수: {stats['total_sessions']}회
-총 문제 수: {stats['total_questions']}문제
-정답: {stats['total_correct']}문제 | 오답: {stats['total_incorrect']}문제
-평균 정답률: {stats['avg_percentage']:.1f}%
-            """.strip()
-
-            tk.Label(stats_info,
-                    text=stats_text,
-                    font=("맑은 고딕", 11),
-                    bg="#ecf0f1", fg="#34495e",
-                    justify='left').pack(anchor='w')
-
-            # 취약 영역 + 학습 추천 (2열 레이아웃)
-            two_col_frame = tk.Frame(self.root)
-            two_col_frame.pack(pady=10, padx=50, fill='x')
-
-            # 왼쪽: 취약 영역
-            weak_frame = tk.Frame(two_col_frame, bg="#ffe6e6", bd=1, relief="solid")
-            weak_frame.pack(side='left', fill='both', expand=True, padx=(0, 5))
-
-            tk.Label(weak_frame,
-                    text="취약한 영역",
-                    font=("맑은 고딕", 14, "bold"),
-                    bg="#ffe6e6", fg="#e74c3c").pack(anchor='w', padx=20, pady=10)
-
-            if weak_areas['total_incorrect'] > 0:
-                tk.Label(weak_frame,
-                        text=f"총 {weak_areas['total_incorrect']}개의 오답이 있습니다.",
-                        font=("맑은 고딕", 11),
-                        bg="#ffe6e6", fg="#c0392b").pack(anchor='w', padx=20, pady=5)
-
-                if weak_areas['weak_keywords']:
-                    tk.Label(weak_frame,
-                            text="자주 틀리는 주제:",
-                            font=("맑은 고딕", 11, "bold"),
-                            bg="#ffe6e6", fg="#2c3e50").pack(anchor='w', padx=20, pady=5)
-
-                    for keyword, count in weak_areas['weak_keywords']:
-                        tk.Label(weak_frame,
-                                text=f"  • {keyword} ({count}회)",
-                                font=("맑은 고딕", 10),
-                                bg="#ffe6e6", fg="#34495e").pack(anchor='w', padx=40, pady=2)
-            else:
-                tk.Label(weak_frame,
-                        text="모든 문제를 정확하게 풀었습니다!",
-                        font=("맑은 고딕", 11),
-                        bg="#ffe6e6", fg="#27ae60").pack(anchor='w', padx=20, pady=10)
-
-            # 하단 여백
-            tk.Frame(weak_frame, bg="#ffe6e6", height=10).pack()
-
-            # 오른쪽: 학습 추천
-            recommend_frame = tk.Frame(two_col_frame, bg="#e6f7ff", bd=1, relief="solid")
-            recommend_frame.pack(side='right', fill='both', expand=True, padx=(5, 0))
-
-            tk.Label(recommend_frame,
-                    text="학습 추천",
-                    font=("맑은 고딕", 14, "bold"),
-                    bg="#e6f7ff", fg="#2980b9").pack(anchor='w', padx=20, pady=10)
-
-            for rec in recommendations:
-                tk.Label(recommend_frame,
-                        text=f"• {rec}",
-                        font=("맑은 고딕", 11),
-                        bg="#e6f7ff", fg="#34495e",
-                        wraplength=350,
-                        justify='left').pack(anchor='w', padx=20, pady=5)
-
-            # 하단 여백
-            tk.Frame(recommend_frame, bg="#e6f7ff", height=10).pack()
-
-            # 최근 오답 노트
-            if weak_areas['recent_incorrect']:
-                recent_frame = tk.Frame(self.root, bg="white", bd=1, relief="solid")
-                recent_frame.pack(pady=10, padx=50, fill='both', expand=True)
-
-                tk.Label(recent_frame,
-                        text="최근 오답 노트",
-                        font=("맑은 고딕", 14, "bold"),
-                        bg="white", fg="#2c3e50").pack(anchor='w', padx=20, pady=10)
-
-                # 스크롤 가능한 영역 (높이 증가)
-                canvas_container = tk.Frame(recent_frame, bg="white")
-                canvas_container.pack(fill='both', expand=True, padx=10, pady=(0, 10))
-
-                canvas = tk.Canvas(canvas_container, bg="white", highlightthickness=0)
-                scrollbar = ttk.Scrollbar(canvas_container, orient="vertical", command=canvas.yview)
-                scrollable_frame = tk.Frame(canvas, bg="white")
-
-                scrollable_frame.bind(
-                    "<Configure>",
-                    lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-                )
-
-                # 캔버스 너비를 프레임에 맞춤
-                canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-                canvas.configure(yscrollcommand=scrollbar.set)
-
-                # 캔버스 크기에 맞게 내부 프레임 조절
-                def on_canvas_configure(event):
-                    canvas.itemconfig(canvas_window, width=event.width)
-                canvas.bind('<Configure>', on_canvas_configure)
-
-                # 마우스 휠 스크롤 지원
-                def on_mousewheel(event):
-                    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-                canvas.bind_all("<MouseWheel>", on_mousewheel)
-
-                for idx, item in enumerate(weak_areas['recent_incorrect'][:5], 1):
-                    item_frame = tk.Frame(scrollable_frame, bg="#fff9e6", relief='solid', borderwidth=1)
-                    item_frame.pack(fill='x', pady=5, padx=5)
-
-                    tk.Label(item_frame,
-                            text=f"{idx}. {item['question']}",
-                            font=("맑은 고딕", 10, "bold"),
-                            bg="#fff9e6", fg="#2c3e50",
-                            wraplength=750,
-                            justify='left').pack(anchor='w', padx=15, pady=8)
-
-                    tk.Label(item_frame,
-                            text=f"해설: {item['explanation']}",
-                            font=("맑은 고딕", 9),
-                            bg="#fff9e6", fg="#7f8c8d",
-                            wraplength=750,
-                            justify='left').pack(anchor='w', padx=15, pady=(0, 8))
-
-                canvas.pack(side="left", fill="both", expand=True)
-                scrollbar.pack(side="right", fill="y")
-
-        # 돌아가기 버튼
-        back_btn = tk.Button(self.root, text="돌아가기",
-                           command=self.show_setup_screen,
-                           bg="#95a5a6", fg="white",
-                           font=("맑은 고딕", 12),
-                           relief='flat', padx=30, pady=10)
-        back_btn.pack(pady=20)
+        # 팝업 대시보드 열기
+        WeaknessDashboard(self.root, self.history)
 
 def main():
     root = tk.Tk()

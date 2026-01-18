@@ -202,3 +202,8 @@ class StatisticsDashboard(tk.Toplevel):
         tk.Label(advice_frame, text=msg, font=("맑은 고딕", 11), 
                  bg="#fff3cd", fg="#856404", padx=20, pady=15).pack()
 
+        # 닫기 버튼
+        tk.Button(self, text="닫기", command=self.destroy,
+                 bg="#7f8c8d", fg="white", font=("맑은 고딕", 10),
+                 relief='flat', padx=30, pady=8).pack(pady=20)
+

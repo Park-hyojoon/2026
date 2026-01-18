@@ -1,4 +1,7 @@
 {
   "api_key": "AIzaSyB9FfzBwOWuyXSASdxZfvr04FN-asQh24I",
-  "last_pdf_path": "D:/00. WorkSpace/02. Creat/01. Antigravity/2026/PDF(ocr)/RawData_02. _01.유동(당좌자산)-현금및현금성자산 회계처리.pdf"
+  "pdf_paths": [
+    "D:/00. WorkSpace/02. Creat/01. Antigravity/2026/PDF(ocr)/RawData_02. _01.유동(당좌자산)-현금및현금성자산 회계처리.pdf",
+    "D:/00. WorkSpace/02. Creat/01. Antigravity/2026/PDF(ocr)/RawData_회계 기초.pdf"
+  ]
 }

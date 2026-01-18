@@ -14,6 +14,17 @@ def configure_gemini(api_key=None):
         response = requests.get("http://localhost:11434/api/tags", timeout=5)
         if response.status_code == 200:
             print("✓ Ollama 서버 연결 성공!")
+            
+            # 모델 미리 로딩 (Keep-Alive)
+            try:
+                print(f"⏳ 모델({OLLAMA_MODEL}) 로딩 중... (최대 60초 소요)")
+                requests.post(OLLAMA_URL, 
+                            json={"model": OLLAMA_MODEL, "prompt": "", "keep_alive": "5m"}, 
+                            timeout=60)
+                print("✓ 모델 로딩 완료")
+            except:
+                print("⚠ 모델 미리 로딩 실패 (무시하고 진행)")
+                
             return True
     except:
         pass
@@ -96,6 +107,9 @@ answer는 정답의 인덱스입니다 (0, 1, 2, 3 중 하나).
     except json.JSONDecodeError as e:
         print(f"JSON 파싱 오류: {e}")
         print(f"응답 내용: {text_response[:500]}")
+        return []
+    except requests.exceptions.ReadTimeout:
+        print("⏳ 시간 초과: Ollama 응답이 너무 늦습니다. (모델 로딩 문제일 수 있음)")
         return []
     except requests.exceptions.ConnectionError:
         print("Ollama 서버에 연결할 수 없습니다.")

@@ -6,13 +6,14 @@ from pathlib import Path
 from pdf_handler import extract_text_from_pdf
 from quiz_engine import configure_gemini, generate_quiz_questions
 from weakness_analyzer import WeaknessAnalyzer
-from datetime import datetime
+from datetime import datetime, timedelta
+import calendar
 
 class AccountingQuizApp:
     def __init__(self, root):
         self.root = root
         self.root.title("AI 회계 학습 도우미")
-        self.root.geometry("900x700")
+        self.root.geometry("900x850")
 
         # 데이터 저장 경로
         self.config_file = "config.json"
@@ -163,6 +164,9 @@ class AccountingQuizApp:
                             relief='flat', padx=40, pady=15)
         start_btn.pack(pady=30)
 
+        # 기여 그래프 (잔디) 추가
+        self.add_contribution_graph()
+
         # 버튼 프레임
         menu_frame = tk.Frame(self.root)
         menu_frame.pack(pady=10)
@@ -182,6 +186,101 @@ class AccountingQuizApp:
                                font=("맑은 고딕", 10),
                                relief='flat', padx=20, pady=10)
         weakness_btn.pack(side='left', padx=5)
+        
+        weakness_btn.pack(side='left', padx=5)
+
+    def add_contribution_graph(self):
+        """학습 기여 그래프(잔디) 추가"""
+        graph_frame = tk.Frame(self.root, bg="white")
+        graph_frame.pack(pady=20, padx=50, fill='x')
+
+        tk.Label(graph_frame, text="학습 활동 (최근 1년)", 
+                 font=("맑은 고딕", 10, "bold"), bg="white", fg="#2c3e50").pack(anchor='w', pady=(0, 5))
+
+        # 데이터 집계
+        activity = {}
+        for session in self.history:
+            try:
+                date_str = session['date'].split(' ')[0]
+                solved = session.get('total_questions', 0)
+                activity[date_str] = activity.get(date_str, 0) + solved
+            except:
+                continue
+
+        # 캔버스 및 스크롤 설정 (너비가 넓을 수 있으므로)
+        canvas_width = 750
+        canvas_height = 130
+        
+        # 캔버스 상단 여백 보정 및 가이드라인
+        canvas = tk.Canvas(graph_frame, width=canvas_width, height=canvas_height, 
+                           bg="white", highlightthickness=0)
+        canvas.pack(fill='x', expand=True)
+
+        # 색상 세팅
+        colors = ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"]
+        
+        # 오늘 날짜 기준으로 역산
+        today = datetime.now()
+        start_date = today - timedelta(days=364)
+        
+        # 시작일을 해당 주의 첫 날(일요일)로 맞춤
+        # start_date.weekday()는 월(0)~일(6)이므로 일요일을 0으로 맞추기 위해 조정
+        # Tkinter/Python 기준 일요일을 한 주의 시작으로 배치
+        start_offset = (start_date.weekday() + 1) % 7
+        actual_start = start_date - timedelta(days=start_offset)
+        
+        cell_size = 11
+        spacing = 3
+        
+        # 요일 라벨 (월, 수, 금)
+        days_labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        for i, day in enumerate([1, 3, 5]): # 요일 중 일부만 표시
+            canvas.create_text(15, 25 + day * (cell_size + spacing), 
+                               text=days_labels[day], font=("맑은 고딕", 7), anchor='e')
+
+        # 월 라벨을 위한 변수
+        last_month = -1
+
+        # 53주 그리기
+        for week in range(53):
+            for day in range(7):
+                current_date = actual_start + timedelta(days=week * 7 + day)
+                
+                # 오늘 이후는 그리지 않음
+                if current_date > today:
+                    continue
+                
+                date_key = current_date.strftime("%Y-%m-%d")
+                count = activity.get(date_key, 0)
+                
+                # 활동 레벨 결정
+                if count == 0: level = 0
+                elif count < 5: level = 1
+                elif count < 10: level = 2
+                elif count < 15: level = 3
+                else: level = 4
+                
+                x1 = 25 + week * (cell_size + spacing)
+                y1 = 15 + day * (cell_size + spacing)
+                x2 = x1 + cell_size
+                y2 = y1 + cell_size
+                
+                # 월 표시
+                if current_date.day == 1 or (week == 0 and day == 0):
+                    if current_date.month != last_month:
+                        month_name = current_date.strftime("%b")
+                        canvas.create_text(x1, 5, text=month_name, 
+                                           font=("맑은 고딕", 7), anchor='nw')
+                        last_month = current_date.month
+
+                # 사각형(잔디) 그리기
+                rect = canvas.create_rectangle(x1, y1, x2, y2, 
+                                               fill=colors[level], outline="#e1e4e8", width=1)
+                
+                # 간단한 툴팁 효과용 아이템 데이터 (필요시 확장)
+                canvas.tag_bind(rect, "<Enter>", lambda e, c=count, d=date_key: 
+                                self.root.title(f"AI 회계 학습 도우미 - {d}: {c}문제 풀이"))
+                canvas.tag_bind(rect, "<Leave>", lambda e: self.root.title("AI 회계 학습 도우미"))
 
     def select_pdf_file(self):
         """PDF 파일 선택"""
@@ -422,7 +521,7 @@ class AccountingQuizApp:
                            text=question['explanation'],
                            font=("맑은 고딕", 11),
                            bg="#ecf0f1", fg="#34495e",
-                           wraplength=800,
+                           wraplength=650,
                            justify='left')
         exp_text.pack(anchor='w', padx=20, pady=10)
 

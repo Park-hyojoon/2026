@@ -23,7 +23,7 @@ class AccountingQuizApp:
 
         # 상태 변수
         self.api_key = None
-        self.pdf_path = None
+        self.pdf_paths = []  # 여러 PDF 파일 지원 (최대 5개)
         self.pdf_text = None
         self.questions = []
         self.current_question_idx = 0
@@ -44,10 +44,13 @@ class AccountingQuizApp:
                 with open(self.config_file, 'r', encoding='utf-8') as f:
                     config = json.load(f)
                     self.api_key = config.get('api_key', '')
-                    # 저장된 PDF 경로 로드
-                    saved_pdf = config.get('last_pdf_path', '')
-                    if saved_pdf and os.path.exists(saved_pdf):
-                        self.pdf_path = saved_pdf
+                    # 저장된 PDF 경로 로드 (여러 파일 지원)
+                    saved_pdfs = config.get('pdf_paths', [])
+                    # 기존 단일 파일 호환성
+                    if not saved_pdfs and config.get('last_pdf_path'):
+                        saved_pdfs = [config.get('last_pdf_path')]
+                    # 존재하는 파일만 로드
+                    self.pdf_paths = [p for p in saved_pdfs if os.path.exists(p)]
             except:
                 pass
 
@@ -55,7 +58,7 @@ class AccountingQuizApp:
         """설정 파일 저장"""
         config = {
             'api_key': self.api_key,
-            'last_pdf_path': self.pdf_path or ''
+            'pdf_paths': self.pdf_paths
         }
         with open(self.config_file, 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
@@ -131,23 +134,39 @@ class AccountingQuizApp:
         left_panel.pack(side='left', fill='both', expand=True, padx=(0, 10))
         
         # 1.1 파일 선택 섹션
-        tk.Label(left_panel, text="학습 자료 선택", 
-                 font=("맑은 고딕", 12, "bold"), bg="white", fg="#2c3e50").pack(anchor='w', padx=20, pady=(20, 10))
-        
+        file_header = tk.Frame(left_panel, bg="white")
+        file_header.pack(fill='x', padx=20, pady=(20, 10))
+
+        tk.Label(file_header, text="학습 자료 선택",
+                 font=("맑은 고딕", 12, "bold"), bg="white", fg="#2c3e50").pack(side='left')
+
+        tk.Label(file_header, text=f"(최대 5개)",
+                 font=("맑은 고딕", 9), bg="white", fg="#7f8c8d").pack(side='left', padx=5)
+
         file_frame = tk.Frame(left_panel, bg="white")
         file_frame.pack(fill='x', padx=20)
-        
-        self.file_label = tk.Label(file_frame, 
-                                 text=f"선택됨: {os.path.basename(self.pdf_path)}" if self.pdf_path else "선택된 파일 없음",
-                                 font=("맑은 고딕", 10), bg="white", fg="#27ae60" if self.pdf_path else "#e74c3c",
-                                 wraplength=350, justify='left')
-        self.file_label.pack(anchor='w', pady=(0, 10))
-        
-        file_btn = tk.Button(file_frame, text="PDF 파일 변경", 
-                           command=self.select_pdf_file,
-                           bg="#3498db", fg="white", font=("맑은 고딕", 9),
+
+        # PDF 파일 리스트 표시 영역
+        self.pdf_list_frame = tk.Frame(file_frame, bg="#f8f9fa")
+        self.pdf_list_frame.pack(fill='x', pady=(0, 10))
+
+        self.update_pdf_list_display()
+
+        # 버튼 영역
+        btn_area = tk.Frame(file_frame, bg="white")
+        btn_area.pack(anchor='w')
+
+        add_btn = tk.Button(btn_area, text="+ PDF 추가",
+                           command=self.add_pdf_file,
+                           bg="#27ae60", fg="white", font=("맑은 고딕", 9),
                            relief='flat', padx=10, pady=5)
-        file_btn.pack(anchor='w')
+        add_btn.pack(side='left', padx=(0, 5))
+
+        clear_btn = tk.Button(btn_area, text="전체 삭제",
+                             command=self.clear_all_pdfs,
+                             bg="#e74c3c", fg="white", font=("맑은 고딕", 9),
+                             relief='flat', padx=10, pady=5)
+        clear_btn.pack(side='left')
         
         tk.Frame(left_panel, height=2, bg="#f5f5f5").pack(fill='x', padx=20, pady=20) # 구분선
         
@@ -303,8 +322,38 @@ class AccountingQuizApp:
                                 self.root.title(f"AI 회계 학습 도우미 - {d}: {c}문제 풀이"))
                 canvas.tag_bind(rect, "<Leave>", lambda e: self.root.title("AI 회계 학습 도우미"))
 
-    def select_pdf_file(self):
-        """PDF 파일 선택"""
+    def update_pdf_list_display(self):
+        """PDF 리스트 UI 업데이트"""
+        # 기존 위젯 삭제
+        for widget in self.pdf_list_frame.winfo_children():
+            widget.destroy()
+
+        if not self.pdf_paths:
+            tk.Label(self.pdf_list_frame, text="선택된 파일 없음",
+                    font=("맑은 고딕", 10), bg="#f8f9fa", fg="#e74c3c",
+                    pady=10).pack(anchor='w', padx=10)
+        else:
+            for idx, path in enumerate(self.pdf_paths):
+                item_frame = tk.Frame(self.pdf_list_frame, bg="#f8f9fa")
+                item_frame.pack(fill='x', pady=2)
+
+                # 파일명 표시
+                tk.Label(item_frame, text=f"{idx+1}. {os.path.basename(path)}",
+                        font=("맑은 고딕", 9), bg="#f8f9fa", fg="#27ae60").pack(side='left', padx=10)
+
+                # 삭제 버튼
+                del_btn = tk.Button(item_frame, text="×",
+                                   command=lambda i=idx: self.remove_pdf_file(i),
+                                   bg="#f8f9fa", fg="#e74c3c", font=("맑은 고딕", 9, "bold"),
+                                   relief='flat', padx=5, cursor="hand2")
+                del_btn.pack(side='right', padx=5)
+
+    def add_pdf_file(self):
+        """PDF 파일 추가"""
+        if len(self.pdf_paths) >= 5:
+            messagebox.showwarning("경고", "최대 5개의 PDF 파일만 추가할 수 있습니다.")
+            return
+
         initial_dir = os.path.join(os.getcwd(), "PDF(ocr)")
         if not os.path.exists(initial_dir):
             initial_dir = os.getcwd()
@@ -316,11 +365,27 @@ class AccountingQuizApp:
         )
 
         if file_path:
-            self.pdf_path = file_path
-            file_name = os.path.basename(file_path)
-            self.pdf_label.config(text=f"선택됨: {file_name}", fg="#27ae60")
-            # PDF 경로 저장
+            if file_path in self.pdf_paths:
+                messagebox.showwarning("경고", "이미 추가된 파일입니다.")
+                return
+            self.pdf_paths.append(file_path)
+            self.update_pdf_list_display()
             self.save_config()
+
+    def remove_pdf_file(self, index):
+        """특정 PDF 파일 삭제"""
+        if 0 <= index < len(self.pdf_paths):
+            del self.pdf_paths[index]
+            self.update_pdf_list_display()
+            self.save_config()
+
+    def clear_all_pdfs(self):
+        """모든 PDF 파일 삭제"""
+        if self.pdf_paths:
+            if messagebox.askyesno("확인", "모든 PDF 파일을 삭제하시겠습니까?"):
+                self.pdf_paths = []
+                self.update_pdf_list_display()
+                self.save_config()
 
     def check_ollama_status(self):
         """Ollama 연결 상태 확인"""
@@ -357,8 +422,8 @@ class AccountingQuizApp:
             return
 
         # PDF 파일 확인
-        if not self.pdf_path:
-            messagebox.showerror("오류", "학습할 PDF 파일을 선택해주세요.")
+        if not self.pdf_paths:
+            messagebox.showerror("오류", "학습할 PDF 파일을 추가해주세요.")
             return
 
         # 로딩 화면 표시
@@ -387,8 +452,17 @@ class AccountingQuizApp:
             # Ollama 연결 확인
             configure_gemini()
 
-            # PDF 텍스트 추출
-            self.pdf_text = extract_text_from_pdf(self.pdf_path)
+            # 여러 PDF에서 텍스트 추출 및 결합
+            all_texts = []
+            char_limit_per_pdf = 5000 // len(self.pdf_paths)  # 총 5000자를 PDF 개수로 분배
+
+            for pdf_path in self.pdf_paths:
+                text = extract_text_from_pdf(pdf_path)
+                if text:
+                    # 각 PDF에서 균등하게 텍스트 추출
+                    all_texts.append(text[:char_limit_per_pdf])
+
+            self.pdf_text = "\n\n---\n\n".join(all_texts)
 
             if not self.pdf_text:
                 messagebox.showerror("오류", "PDF에서 텍스트를 추출하지 못했습니다.")
@@ -616,7 +690,7 @@ class AccountingQuizApp:
         # 학습 기록 저장
         session_data = {
             'date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'pdf_file': os.path.basename(self.pdf_path),
+            'pdf_file': ', '.join([os.path.basename(p) for p in self.pdf_paths]),
             'total_questions': total,
             'correct_answers': self.score,
             'percentage': percentage,
@@ -830,9 +904,13 @@ class AccountingQuizApp:
                     bg="#ecf0f1", fg="#34495e",
                     justify='left').pack(anchor='w')
 
-            # 취약 영역
-            weak_frame = tk.Frame(self.root, bg="#ffe6e6")
-            weak_frame.pack(pady=10, padx=50, fill='x')
+            # 취약 영역 + 학습 추천 (2열 레이아웃)
+            two_col_frame = tk.Frame(self.root)
+            two_col_frame.pack(pady=10, padx=50, fill='x')
+
+            # 왼쪽: 취약 영역
+            weak_frame = tk.Frame(two_col_frame, bg="#ffe6e6", bd=1, relief="solid")
+            weak_frame.pack(side='left', fill='both', expand=True, padx=(0, 5))
 
             tk.Label(weak_frame,
                     text="취약한 영역",
@@ -862,11 +940,12 @@ class AccountingQuizApp:
                         font=("맑은 고딕", 11),
                         bg="#ffe6e6", fg="#27ae60").pack(anchor='w', padx=20, pady=10)
 
-            weak_frame.pack_configure(pady=(10, 5))
+            # 하단 여백
+            tk.Frame(weak_frame, bg="#ffe6e6", height=10).pack()
 
-            # 학습 추천
-            recommend_frame = tk.Frame(self.root, bg="#e6f7ff")
-            recommend_frame.pack(pady=10, padx=50, fill='x')
+            # 오른쪽: 학습 추천
+            recommend_frame = tk.Frame(two_col_frame, bg="#e6f7ff", bd=1, relief="solid")
+            recommend_frame.pack(side='right', fill='both', expand=True, padx=(5, 0))
 
             tk.Label(recommend_frame,
                     text="학습 추천",
@@ -878,24 +957,28 @@ class AccountingQuizApp:
                         text=f"• {rec}",
                         font=("맑은 고딕", 11),
                         bg="#e6f7ff", fg="#34495e",
-                        wraplength=800,
-                        justify='left').pack(anchor='w', padx=30, pady=5)
+                        wraplength=350,
+                        justify='left').pack(anchor='w', padx=20, pady=5)
 
-            recommend_frame.pack_configure(pady=(5, 10))
+            # 하단 여백
+            tk.Frame(recommend_frame, bg="#e6f7ff", height=10).pack()
 
             # 최근 오답 노트
             if weak_areas['recent_incorrect']:
-                recent_frame = tk.Frame(self.root)
+                recent_frame = tk.Frame(self.root, bg="white", bd=1, relief="solid")
                 recent_frame.pack(pady=10, padx=50, fill='both', expand=True)
 
                 tk.Label(recent_frame,
                         text="최근 오답 노트",
                         font=("맑은 고딕", 14, "bold"),
-                        fg="#2c3e50").pack(anchor='w', pady=10)
+                        bg="white", fg="#2c3e50").pack(anchor='w', padx=20, pady=10)
 
-                # 스크롤 가능한 영역
-                canvas = tk.Canvas(recent_frame, bg="white", height=200)
-                scrollbar = ttk.Scrollbar(recent_frame, orient="vertical", command=canvas.yview)
+                # 스크롤 가능한 영역 (높이 증가)
+                canvas_container = tk.Frame(recent_frame, bg="white")
+                canvas_container.pack(fill='both', expand=True, padx=10, pady=(0, 10))
+
+                canvas = tk.Canvas(canvas_container, bg="white", highlightthickness=0)
+                scrollbar = ttk.Scrollbar(canvas_container, orient="vertical", command=canvas.yview)
                 scrollable_frame = tk.Frame(canvas, bg="white")
 
                 scrollable_frame.bind(
@@ -903,8 +986,19 @@ class AccountingQuizApp:
                     lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
                 )
 
-                canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+                # 캔버스 너비를 프레임에 맞춤
+                canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
                 canvas.configure(yscrollcommand=scrollbar.set)
+
+                # 캔버스 크기에 맞게 내부 프레임 조절
+                def on_canvas_configure(event):
+                    canvas.itemconfig(canvas_window, width=event.width)
+                canvas.bind('<Configure>', on_canvas_configure)
+
+                # 마우스 휠 스크롤 지원
+                def on_mousewheel(event):
+                    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+                canvas.bind_all("<MouseWheel>", on_mousewheel)
 
                 for idx, item in enumerate(weak_areas['recent_incorrect'][:5], 1):
                     item_frame = tk.Frame(scrollable_frame, bg="#fff9e6", relief='solid', borderwidth=1)
@@ -914,15 +1008,15 @@ class AccountingQuizApp:
                             text=f"{idx}. {item['question']}",
                             font=("맑은 고딕", 10, "bold"),
                             bg="#fff9e6", fg="#2c3e50",
-                            wraplength=700,
-                            justify='left').pack(anchor='w', padx=10, pady=5)
+                            wraplength=750,
+                            justify='left').pack(anchor='w', padx=15, pady=8)
 
                     tk.Label(item_frame,
                             text=f"해설: {item['explanation']}",
                             font=("맑은 고딕", 9),
                             bg="#fff9e6", fg="#7f8c8d",
-                            wraplength=700,
-                            justify='left').pack(anchor='w', padx=10, pady=5)
+                            wraplength=750,
+                            justify='left').pack(anchor='w', padx=15, pady=(0, 8))
 
                 canvas.pack(side="left", fill="both", expand=True)
                 scrollbar.pack(side="right", fill="y")

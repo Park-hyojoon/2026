@@ -145,8 +145,8 @@ class StatisticsDashboard(tk.Toplevel):
         else:
             estimated_theory_score = 0
             
-        # 목표: 이론에서 최소 21점 (70%) 획득 목표
-        target_score = 21 
+        # 목표: 이론에서 최소 24점 (80%) 획득 목표 - "확실한 합격"을 위해
+        target_score = 24 
         
         # 프로그레스 바 캔버스
         canvas = tk.Canvas(parent, width=250, height=300, bg="white", highlightthickness=0)
@@ -158,10 +158,10 @@ class StatisticsDashboard(tk.Toplevel):
         x_start = 85
         y_bottom = 250
         
-        # 1. 목표 점수 라인 (21점)
+        # 1. 목표 점수 라인 (24점)
         target_y = y_bottom - (target_score / 30 * max_height)
         canvas.create_line(40, target_y, 210, target_y, dash=(4, 2), fill="#e74c3c", width=2)
-        canvas.create_text(220, target_y, text="목표(21점)", fill="#e74c3c", anchor='w', font=("맑은 고딕", 8))
+        canvas.create_text(220, target_y, text="목표(24점)", fill="#e74c3c", anchor='w', font=("맑은 고딕", 8))
         
         # 2. 현재 점수 바
         current_height = (estimated_theory_score / 30) * max_height
@@ -197,7 +197,7 @@ class StatisticsDashboard(tk.Toplevel):
         elif self.stats_count['learning'] > self.stats_count['mature']:
             msg = "💡 조금만 더 노력하면 '마스터' 단계로 넘어갈 수 있습니다!"
         elif self.stats_count['mature'] > 50: # 임의 기준
-            msg = "🎉 아주 훌륭합니다! 실기 연습도 병행하고 계신가요?"
+            msg = "🎉 아주 훌륭합니다! 이론 시험 합격이 가시권에 들어왔습니다!"
             
         tk.Label(advice_frame, text=msg, font=("맑은 고딕", 11), 
                  bg="#fff3cd", fg="#856404", padx=20, pady=15).pack()

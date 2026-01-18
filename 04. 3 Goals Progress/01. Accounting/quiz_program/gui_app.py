@@ -1,13 +1,12 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
-import json
 import os
-from pathlib import Path
+from datetime import datetime
+from config_manager import ConfigManager
+from ui_components import center_window, ContributionGraph
 from pdf_handler import extract_text_from_pdf
 from quiz_engine import configure_gemini, generate_quiz_questions, generate_review_questions
 from weakness_analyzer import WeaknessAnalyzer
-from datetime import datetime, timedelta
-import calendar
 from statistics_dashboard import StatisticsDashboard
 from weakness_dashboard import WeaknessDashboard
 
@@ -18,99 +17,33 @@ class AccountingQuizApp:
         self.root.geometry("900x850")
         
         # 화면 중앙 배치
-        self.center_window(900, 850)
+        center_window(self.root, 900, 850)
 
-        # 데이터 저장 경로 (스크립트 위치 기준 절대 경로)
+        # Config Manager 초기화
         base_path = os.path.dirname(os.path.abspath(__file__))
-        self.config_file = os.path.join(base_path, "config.json")
-        self.history_file = os.path.join(base_path, "learning_history.json")
+        self.config_manager = ConfigManager(base_path)
+        self.config_manager.load_config()
+        self.config_manager.load_history()
+        
+        # 메서드 및 데이터 별칭 설정 (호환성 유지)
+        self.save_config = self.config_manager.save_config
+        self.export_data = self.config_manager.export_data
+        self.save_history = self.config_manager.save_history
+        self.pdf_paths = self.config_manager.pdf_paths
+        self.history = self.config_manager.history
+        self.api_key = self.config_manager.api_key
 
         # 상태 변수
-        self.api_key = None
-        self.pdf_paths = []  # 여러 PDF 파일 지원 (최대 5개)
         self.pdf_text = None
         self.questions = []
         self.current_question_idx = 0
         self.score = 0
         self.user_answers = []
 
-        # 설정 및 기록 로드
-        self.load_config()
-        self.load_history()
-
-        # 초기 화면 표시
         # 초기 화면 표시
         self.show_setup_screen()
 
-    def center_window(self, width, height):
-        self.root.update_idletasks()
-        x = (self.root.winfo_screenwidth() // 2) - (width // 2)
-        y = (self.root.winfo_screenheight() // 2) - (height // 2)
-        self.root.geometry(f'{width}x{height}+{x}+{y}')
 
-    def load_config(self):
-        """설정 파일 로드"""
-        if os.path.exists(self.config_file):
-            try:
-                with open(self.config_file, 'r', encoding='utf-8') as f:
-                    config = json.load(f)
-                    self.api_key = config.get('api_key', '')
-                    # 저장된 PDF 경로 로드 (여러 파일 지원)
-                    saved_pdfs = config.get('pdf_paths', [])
-                    # 기존 단일 파일 호환성
-                    if not saved_pdfs and config.get('last_pdf_path'):
-                        saved_pdfs = [config.get('last_pdf_path')]
-                    # 존재하는 파일만 로드
-                    self.pdf_paths = [p for p in saved_pdfs if os.path.exists(p)]
-            except:
-                pass
-
-    def save_config(self):
-        """설정 파일 저장"""
-        config = {
-            'api_key': self.api_key,
-            'pdf_paths': self.pdf_paths
-        }
-        with open(self.config_file, 'w', encoding='utf-8') as f:
-            json.dump(config, f, ensure_ascii=False, indent=2)
-
-    def export_data(self):
-        """데이터 내보내기 (백업)"""
-        if not self.history:
-            messagebox.showinfo("알림", "내보낼 학습 기록이 없습니다.")
-            return
-            
-        file_path = filedialog.asksaveasfilename(
-            defaultextension=".json",
-            filetypes=[("JSON files", "*.json"), ("All files", "*.*")],
-            initialfile=f"learning_history_backup_{datetime.now().strftime('%Y%m%d')}.json",
-            title="학습 기록 내보내기"
-        )
-        
-        if file_path:
-            try:
-                with open(file_path, 'w', encoding='utf-8') as f:
-                    json.dump(self.history, f, ensure_ascii=False, indent=2)
-                messagebox.showinfo("성공", "학습 기록이 성공적으로 저장되었습니다.")
-            except Exception as e:
-                messagebox.showerror("오류", f"저장 중 오류가 발생했습니다: {str(e)}")
-
-    def load_history(self):
-        """학습 기록 로드"""
-        if os.path.exists(self.history_file):
-            try:
-                with open(self.history_file, 'r', encoding='utf-8') as f:
-                    self.history = json.load(f)
-            except:
-                self.history = []
-        else:
-            self.history = []
-
-    def save_history(self, session_data):
-        """학습 기록 저장"""
-        self.history.append(session_data)
-        with open(self.history_file, 'w', encoding='utf-8') as f:
-            json.dump(self.history, f, ensure_ascii=False, indent=2)
 
     def clear_screen(self):
         """화면 클리어"""
@@ -253,105 +186,14 @@ class AccountingQuizApp:
         weakness_btn.pack(side='left', padx=5)
 
         # 기여 그래프 (잔디) 추가 (맨 아래 배치)
-        self.add_contribution_graph()
+        ContributionGraph(self.root, self.history).draw()
 
     def confirm_home(self):
         """홈으로 이동 확인"""
         if messagebox.askyesno("확인", "풀고 있는 문제가 저장되지 않습니다.\n첫 화면으로 돌아가시겠습니까?"):
             self.show_setup_screen()
 
-    def add_contribution_graph(self):
-        """학습 기여 그래프(잔디) 추가"""
-        graph_frame = tk.Frame(self.root, bg="white")
-        graph_frame.pack(pady=20, padx=50, fill='x')
 
-        tk.Label(graph_frame, text="학습 활동 (최근 1년)", 
-                 font=("맑은 고딕", 10, "bold"), bg="white", fg="#2c3e50").pack(anchor='w', pady=(0, 5))
-
-        # 데이터 집계
-        activity = {}
-        for session in self.history:
-            try:
-                date_str = session['date'].split(' ')[0]
-                solved = session.get('total_questions', 0)
-                activity[date_str] = activity.get(date_str, 0) + solved
-            except:
-                continue
-
-        # 캔버스 및 스크롤 설정 (너비가 넓을 수 있으므로)
-        canvas_width = 750
-        canvas_height = 130
-        
-        # 캔버스 상단 여백 보정 및 가이드라인
-        canvas = tk.Canvas(graph_frame, width=canvas_width, height=canvas_height, 
-                           bg="white", highlightthickness=0)
-        canvas.pack(fill='x', expand=True)
-
-        # 색상 세팅
-        colors = ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"]
-        
-        # 오늘 날짜 기준으로 역산
-        today = datetime.now()
-        start_date = today - timedelta(days=364)
-        
-        # 시작일을 해당 주의 첫 날(일요일)로 맞춤
-        # start_date.weekday()는 월(0)~일(6)이므로 일요일을 0으로 맞추기 위해 조정
-        # Tkinter/Python 기준 일요일을 한 주의 시작으로 배치
-        start_offset = (start_date.weekday() + 1) % 7
-        actual_start = start_date - timedelta(days=start_offset)
-        
-        cell_size = 11
-        spacing = 3
-        
-        # 요일 라벨 (월, 수, 금)
-        days_labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-        for i, day in enumerate([1, 3, 5]): # 요일 중 일부만 표시
-            canvas.create_text(15, 25 + day * (cell_size + spacing), 
-                               text=days_labels[day], font=("맑은 고딕", 7), anchor='e')
-
-        # 월 라벨을 위한 변수
-        last_month = -1
-
-        # 53주 그리기
-        for week in range(53):
-            for day in range(7):
-                current_date = actual_start + timedelta(days=week * 7 + day)
-                
-                # 오늘 이후는 그리지 않음
-                if current_date > today:
-                    continue
-                
-                date_key = current_date.strftime("%Y-%m-%d")
-                count = activity.get(date_key, 0)
-                
-                # 활동 레벨 결정
-                if count == 0: level = 0
-                elif count < 5: level = 1
-                elif count < 10: level = 2
-                elif count < 15: level = 3
-                else: level = 4
-                
-                x1 = 25 + week * (cell_size + spacing)
-                y1 = 15 + day * (cell_size + spacing)
-                x2 = x1 + cell_size
-                y2 = y1 + cell_size
-                
-                # 월 표시
-                if current_date.day == 1 or (week == 0 and day == 0):
-                    if current_date.month != last_month:
-                        month_name = current_date.strftime("%b")
-                        canvas.create_text(x1, 5, text=month_name, 
-                                           font=("맑은 고딕", 7), anchor='nw')
-                        last_month = current_date.month
-
-                # 사각형(잔디) 그리기
-                rect = canvas.create_rectangle(x1, y1, x2, y2, 
-                                               fill=colors[level], outline="#e1e4e8", width=1)
-                
-                # 간단한 툴팁 효과용 아이템 데이터 (필요시 확장)
-                canvas.tag_bind(rect, "<Enter>", lambda e, c=count, d=date_key: 
-                                self.root.title(f"AI 회계 학습 도우미 - {d}: {c}문제 풀이"))
-                canvas.tag_bind(rect, "<Leave>", lambda e: self.root.title("AI 회계 학습 도우미"))
 
     def update_pdf_list_display(self):
         """PDF 리스트 UI 업데이트"""
@@ -758,100 +600,16 @@ class AccountingQuizApp:
             review_btn.pack(side='left', padx=10)
 
         # 기여 그래프 (잔디) 추가 (맨 아래 배치)
-        self.add_contribution_graph()
+        ContributionGraph(self.root, self.history).draw()
 
-    def add_contribution_graph(self):
-        """학습 기여 그래프(잔디) 추가"""
-        graph_frame = tk.Frame(self.root, bg="white")
-        graph_frame.pack(pady=20, padx=50, fill='x')
 
-        tk.Label(graph_frame, text="2026 학습 활동", 
-                 font=("맑은 고딕", 10, "bold"), bg="white", fg="#2c3e50").pack(anchor='w', pady=(0, 5))
 
-        # 데이터 집계
-        activity = {}
-        for session in self.history:
-            try:
-                date_str = session['date'].split(' ')[0]
-                solved = session.get('total_questions', 0)
-                activity[date_str] = activity.get(date_str, 0) + solved
-            except:
-                continue
-
-        # 캔버스 및 스크롤 설정
-        canvas_width = 750
-        canvas_height = 150 # 높이 약간 증가
-        
-        canvas = tk.Canvas(graph_frame, width=canvas_width, height=canvas_height, 
-                           bg="white", highlightthickness=0)
-        canvas.pack(fill='x', expand=True)
-
-        colors = ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"]
-        
-        # 2026년 1월 1일 ~ 2026년 12월 31일
-        start_date = datetime(2026, 1, 1)
-        end_date = datetime(2026, 12, 31)
-        
-        # 시작 요일 오프셋 (일요일=0 기준)
-        # start_date.weekday()는 월(0)~일(6). 
-        # 우리의 그리기는 일(0)~토(6) 세로 배치.
-        # 1월 1일이 무슨 요일인지 확인하여 첫 주의 시작 위치 잡기
-        # datetime.weekday() -> Mon=0, Sun=6.
-        # (day_of_week + 1) % 7 -> Sun=0, Mon=1 ... Sat=6
-        
-        start_weekday = (start_date.weekday() + 1) % 7
-        
-        cell_size = 11
-        spacing = 3
-        
-        # 요일 라벨
-        days_labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-        for i, day in enumerate([1, 3, 5]): 
-            canvas.create_text(15, 25 + day * (cell_size + spacing), 
-                               text=days_labels[day], font=("맑은 고딕", 7), anchor='e')
-
-        last_month = -1
-        
-        # 2026년 전체 일수 순회
-        current_date = start_date
-        week_idx = 0
-        
-        while current_date <= end_date:
-            day_of_week = (current_date.weekday() + 1) % 7
-            
-            # 주차 계산 (단순히 1월 1일이 속한 주를 0으로 시작)
-            # 날짜 차이(days) + 시작요일 보정 / 7
-            days_passed = (current_date - start_date).days
-            week_idx = (days_passed + start_weekday) // 7
-            
-            date_key = current_date.strftime("%Y-%m-%d")
-            count = activity.get(date_key, 0)
-            
-            if count == 0: level = 0
-            elif count < 5: level = 1
-            elif count < 10: level = 2
-            elif count < 15: level = 3
-            else: level = 4
-            
-            x1 = 25 + week_idx * (cell_size + spacing)
-            y1 = 15 + day_of_week * (cell_size + spacing)
-            x2 = x1 + cell_size
-            y2 = y1 + cell_size
-            
-            # 월 표시 (매월 1일이거나, 첫 주의 첫 날일 때)
-            if current_date.day == 1:
-                month_name = current_date.strftime("%b")
-                canvas.create_text(x1, 5, text=month_name, 
-                                   font=("맑은 고딕", 7), anchor='nw')
-
-            rect = canvas.create_rectangle(x1, y1, x2, y2, 
-                                           fill=colors[level], outline="#e1e4e8", width=1)
-            
-            canvas.tag_bind(rect, "<Enter>", lambda e, c=count, d=date_key: 
-                            self.root.title(f"2026 학습 활동 - {d}: {c}문제"))
-            canvas.tag_bind(rect, "<Leave>", lambda e: self.root.title("AI 회계 학습 도우미"))
-            
-            current_date += timedelta(days=1)
+    def start_review_session(self, incorrect_questions):
+        """틀린 문제 복습 세션 시작"""
+        # 로딩 화면 표시
+        self.show_loading_screen()
+        # 복습 문제 생성 (비동기)
+        self.root.after(100, lambda: self._generate_and_start_review(incorrect_questions))
 
     def _generate_and_start_review(self, incorrect_questions):
         try:
@@ -887,49 +645,8 @@ class AccountingQuizApp:
             pass
 
     def show_weakness_analysis(self):
-        """취약점 분석 화면"""
-        self.clear_screen()
-
-        # 상단 헤더 (타이틀 + 홈 버튼)
-        header_frame = tk.Frame(self.root)
-        header_frame.pack(fill='x', padx=20, pady=20)
-        
-        title = tk.Label(header_frame,
-                        text="취약점 분석",
-                        font=("맑은 고딕", 20, "bold"),
-                        fg="#2c3e50")
-        title.pack(side='left')
-        
-        # 홈 버튼
-        home_btn = tk.Button(header_frame, text="🏠 메인으로",
-                           command=self.show_setup_screen,
-                           bg="#95a5a6", fg="white",
-                           font=("맑은 고딕", 10),
-                           relief='flat', padx=15, pady=5)
-        home_btn.pack(side='right')
-
+        """취약점 분석 화면 - 팝업 대시보드로 표시"""
         if not self.history:
-            no_data = tk.Label(self.root,
-                             text="아직 학습 기록이 없습니다.\n문제를 풀고 나면 취약점 분석이 가능합니다.",
-                             font=("맑은 고딕", 14),
-                             fg="#7f8c8d",
-                             justify='center')
-            no_data.pack(pady=40)
-            
-            # 돌아가기 버튼 (데이터 없을 때도 필요)
-            tk.Button(self.root, text="돌아가기",
-                    command=self.show_setup_screen,
-                    bg="#95a5a6", fg="white", font=("맑은 고딕", 10),
-                    relief='flat', padx=20, pady=10).pack()
-        else:
-            # 분석기 초기화
-            analyzer = WeaknessAnalyzer(self.history)
-            stats = analyzer.get_overall_stats()
-            weak_areas = analyzer.get_weak_areas()
-            recommendations = analyzer.get_recommendations()
-
-            # 전체 통계
-            stats_frame = tk.Frame(self.root, bg="#ecf0f1")
             messagebox.showinfo("알림", "아직 학습 기록이 없습니다.\n문제를 풀고 나면 취약점 분석이 가능합니다.")
             return
 

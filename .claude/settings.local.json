@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(echo $env:USERPROFILE)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(powershell:*)"
     ]
   }
 }

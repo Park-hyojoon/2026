@@ -8,6 +8,7 @@ from quiz_engine import configure_gemini, generate_quiz_questions, generate_revi
 from weakness_analyzer import WeaknessAnalyzer
 from datetime import datetime, timedelta
 import calendar
+from statistics_dashboard import StatisticsDashboard
 
 class AccountingQuizApp:
     def __init__(self, root):
@@ -119,81 +120,95 @@ class AccountingQuizApp:
         tk.Label(pdf_frame, text="학습할 PDF 파일:",
                 font=("맑은 고딕", 11)).pack(anchor='w', pady=5)
 
-        pdf_select_frame = tk.Frame(pdf_frame)
-        pdf_select_frame.pack(fill='x', pady=5)
+        info_label.pack(anchor='w', padx=10, pady=(0, 10))
 
-        # 저장된 PDF 경로가 있으면 표시
-        if self.pdf_path:
-            pdf_display_text = f"선택됨: {os.path.basename(self.pdf_path)}"
-            pdf_display_color = "#27ae60"
-        else:
-            pdf_display_text = "PDF 파일을 선택해주세요"
-            pdf_display_color = "#7f8c8d"
-
-        self.pdf_label = tk.Label(pdf_select_frame,
-                                 text=pdf_display_text,
-                                 font=("맑은 고딕", 9),
-                                 fg=pdf_display_color,
-                                 anchor='w')
-        self.pdf_label.pack(side='left', fill='x', expand=True)
-
-        select_btn = tk.Button(pdf_select_frame, text="파일 선택",
-                              command=self.select_pdf_file,
-                              bg="#3498db", fg="white",
-                              font=("맑은 고딕", 10),
-                              relief='flat', padx=20, pady=5)
-        select_btn.pack(side='right', padx=5)
-
-        # 문제 수 설정
-        num_frame = tk.Frame(self.root)
-        num_frame.pack(pady=20, padx=50, fill='x')
-
-        tk.Label(num_frame, text="생성할 문제 수:",
-                font=("맑은 고딕", 11)).pack(anchor='w', pady=5)
-
+        # === 메인 컨테이너 (그리드 스타일 레이아웃) ===
+        main_container = tk.Frame(self.root, bg="#f5f5f5")
+        main_container.pack(fill='both', expand=True, padx=40, pady=20)
+        
+        # 1. 왼쪽 패널 (설정 영역)
+        left_panel = tk.Frame(main_container, bg="white", bd=1, relief="solid")
+        left_panel.pack(side='left', fill='both', expand=True, padx=(0, 10))
+        
+        # 1.1 파일 선택 섹션
+        tk.Label(left_panel, text="학습 자료 선택", 
+                 font=("맑은 고딕", 12, "bold"), bg="white", fg="#2c3e50").pack(anchor='w', padx=20, pady=(20, 10))
+        
+        file_frame = tk.Frame(left_panel, bg="white")
+        file_frame.pack(fill='x', padx=20)
+        
+        self.file_label = tk.Label(file_frame, 
+                                 text=f"선택됨: {os.path.basename(self.pdf_path)}" if self.pdf_path else "선택된 파일 없음",
+                                 font=("맑은 고딕", 10), bg="white", fg="#27ae60" if self.pdf_path else "#e74c3c",
+                                 wraplength=350, justify='left')
+        self.file_label.pack(anchor='w', pady=(0, 10))
+        
+        file_btn = tk.Button(file_frame, text="PDF 파일 변경", 
+                           command=self.select_pdf_file,
+                           bg="#3498db", fg="white", font=("맑은 고딕", 9),
+                           relief='flat', padx=10, pady=5)
+        file_btn.pack(anchor='w')
+        
+        tk.Frame(left_panel, height=2, bg="#f5f5f5").pack(fill='x', padx=20, pady=20) # 구분선
+        
+        # 1.2 문제 수 설정 섹션
+        tk.Label(left_panel, text="학습 설정", 
+                 font=("맑은 고딕", 12, "bold"), bg="white", fg="#2c3e50").pack(anchor='w', padx=20, pady=(0, 10))
+        
+        setting_frame = tk.Frame(left_panel, bg="white")
+        setting_frame.pack(fill='x', padx=20)
+        
+        tk.Label(setting_frame, text="한 번에 풀 문제 수:", font=("맑은 고딕", 10), bg="white").pack(side='left')
+        
         self.num_questions_var = tk.IntVar(value=5)
-        num_spinbox = tk.Spinbox(num_frame, from_=3, to=10,
-                                textvariable=self.num_questions_var,
-                                font=("맑은 고딕", 10), width=10)
-        num_spinbox.pack(anchor='w', pady=5)
+        tk.Spinbox(setting_frame, from_=3, to=10, 
+                   textvariable=self.num_questions_var, 
+                   font=("맑은 고딕", 10), width=5).pack(side='left', padx=10)
 
-        # 시작 버튼
-        start_btn = tk.Button(self.root, text="학습 시작",
+        # 2. 오른쪽 패널 (액션 영역)
+        right_panel = tk.Frame(main_container, bg="white", bd=1, relief="solid")
+        right_panel.pack(side='right', fill='both', expand=True, padx=(10, 0))
+        
+        # 2.1 학습 시작 버튼 (크게)
+        start_frame = tk.Frame(right_panel, bg="white")
+        start_frame.pack(expand=True)
+        
+        tk.Label(start_frame, text="준비 되셨나요?", font=("맑은 고딕", 14), bg="white", fg="#7f8c8d").pack(pady=(0, 10))
+        
+        start_btn = tk.Button(start_frame, text="학습 시작하기",
                             command=self.start_quiz,
                             bg="#27ae60", fg="white",
-                            font=("맑은 고딕", 14, "bold"),
-                            relief='flat', padx=40, pady=15)
-        start_btn.pack(pady=30)
+                            font=("맑은 고딕", 16, "bold"),
+                            relief='flat', padx=30, pady=15, cursor="hand2")
+        start_btn.pack()
+        
+        # 2.2 메뉴 버튼들
+        menu_frame = tk.Frame(right_panel, bg="white")
+        menu_frame.pack(pady=20, fill='x')
+        
+        # 버튼들을 중앙 정렬하기 위한 컨테이너
+        btn_center = tk.Frame(menu_frame, bg="white")
+        btn_center.pack()
+        
+        stats_btn = tk.Button(btn_center, text="📊 학습 통계",
+                            command=self.show_statistics,
+                            bg="#9b59b6", fg="white", font=("맑은 고딕", 10),
+                            relief='flat', padx=15, pady=8)
+        stats_btn.pack(side='left', padx=5)
+        
+        weakness_btn = tk.Button(btn_center, text="🛡️ 취약점 분석",
+                               command=self.show_weakness_analysis,
+                               bg="#e67e22", fg="white", font=("맑은 고딕", 10),
+                               relief='flat', padx=15, pady=8)
+        weakness_btn.pack(side='left', padx=5)
 
-        # 기여 그래프 (잔디) 추가
+        # 기여 그래프 (잔디) 추가 (맨 아래 배치)
         self.add_contribution_graph()
 
     def confirm_home(self):
         """홈으로 이동 확인"""
         if messagebox.askyesno("확인", "풀고 있는 문제가 저장되지 않습니다.\n첫 화면으로 돌아가시겠습니까?"):
             self.show_setup_screen()
-
-        # 버튼 프레임
-        menu_frame = tk.Frame(self.root)
-        menu_frame.pack(pady=10)
-
-        # 통계 버튼
-        stats_btn = tk.Button(menu_frame, text="학습 통계 보기",
-                            command=self.show_statistics,
-                            bg="#95a5a6", fg="white",
-                            font=("맑은 고딕", 10),
-                            relief='flat', padx=20, pady=10)
-        stats_btn.pack(side='left', padx=5)
-
-        # 취약점 분석 버튼
-        weakness_btn = tk.Button(menu_frame, text="취약점 분석",
-                               command=self.show_weakness_analysis,
-                               bg="#e67e22", fg="white",
-                               font=("맑은 고딕", 10),
-                               relief='flat', padx=20, pady=10)
-        weakness_btn.pack(side='left', padx=5)
-        
-        weakness_btn.pack(side='left', padx=5)
 
     def add_contribution_graph(self):
         """학습 기여 그래프(잔디) 추가"""
@@ -637,13 +652,101 @@ class AccountingQuizApp:
                                  relief='flat', padx=20, pady=10)
             review_btn.pack(side='left', padx=10)
 
-    def start_review_session(self, incorrect_questions):
-        """복습 세션 시작"""
-        # 로딩 화면
-        self.show_loading_screen()
+        # 기여 그래프 (잔디) 추가 (맨 아래 배치)
+        self.add_contribution_graph()
+
+    def add_contribution_graph(self):
+        """학습 기여 그래프(잔디) 추가"""
+        graph_frame = tk.Frame(self.root, bg="white")
+        graph_frame.pack(pady=20, padx=50, fill='x')
+
+        tk.Label(graph_frame, text="2026 학습 활동", 
+                 font=("맑은 고딕", 10, "bold"), bg="white", fg="#2c3e50").pack(anchor='w', pady=(0, 5))
+
+        # 데이터 집계
+        activity = {}
+        for session in self.history:
+            try:
+                date_str = session['date'].split(' ')[0]
+                solved = session.get('total_questions', 0)
+                activity[date_str] = activity.get(date_str, 0) + solved
+            except:
+                continue
+
+        # 캔버스 및 스크롤 설정
+        canvas_width = 750
+        canvas_height = 150 # 높이 약간 증가
         
-        # 별도 스레드 대신 간단히 after 사용 (복잡도 낮음)
-        self.root.after(100, lambda: self._generate_and_start_review(incorrect_questions))
+        canvas = tk.Canvas(graph_frame, width=canvas_width, height=canvas_height, 
+                           bg="white", highlightthickness=0)
+        canvas.pack(fill='x', expand=True)
+
+        colors = ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"]
+        
+        # 2026년 1월 1일 ~ 2026년 12월 31일
+        start_date = datetime(2026, 1, 1)
+        end_date = datetime(2026, 12, 31)
+        
+        # 시작 요일 오프셋 (일요일=0 기준)
+        # start_date.weekday()는 월(0)~일(6). 
+        # 우리의 그리기는 일(0)~토(6) 세로 배치.
+        # 1월 1일이 무슨 요일인지 확인하여 첫 주의 시작 위치 잡기
+        # datetime.weekday() -> Mon=0, Sun=6.
+        # (day_of_week + 1) % 7 -> Sun=0, Mon=1 ... Sat=6
+        
+        start_weekday = (start_date.weekday() + 1) % 7
+        
+        cell_size = 11
+        spacing = 3
+        
+        # 요일 라벨
+        days_labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        for i, day in enumerate([1, 3, 5]): 
+            canvas.create_text(15, 25 + day * (cell_size + spacing), 
+                               text=days_labels[day], font=("맑은 고딕", 7), anchor='e')
+
+        last_month = -1
+        
+        # 2026년 전체 일수 순회
+        current_date = start_date
+        week_idx = 0
+        
+        while current_date <= end_date:
+            day_of_week = (current_date.weekday() + 1) % 7
+            
+            # 주차 계산 (단순히 1월 1일이 속한 주를 0으로 시작)
+            # 날짜 차이(days) + 시작요일 보정 / 7
+            days_passed = (current_date - start_date).days
+            week_idx = (days_passed + start_weekday) // 7
+            
+            date_key = current_date.strftime("%Y-%m-%d")
+            count = activity.get(date_key, 0)
+            
+            if count == 0: level = 0
+            elif count < 5: level = 1
+            elif count < 10: level = 2
+            elif count < 15: level = 3
+            else: level = 4
+            
+            x1 = 25 + week_idx * (cell_size + spacing)
+            y1 = 15 + day_of_week * (cell_size + spacing)
+            x2 = x1 + cell_size
+            y2 = y1 + cell_size
+            
+            # 월 표시 (매월 1일이거나, 첫 주의 첫 날일 때)
+            if current_date.day == 1:
+                month_name = current_date.strftime("%b")
+                canvas.create_text(x1, 5, text=month_name, 
+                                   font=("맑은 고딕", 7), anchor='nw')
+
+            rect = canvas.create_rectangle(x1, y1, x2, y2, 
+                                           fill=colors[level], outline="#e1e4e8", width=1)
+            
+            canvas.tag_bind(rect, "<Enter>", lambda e, c=count, d=date_key: 
+                            self.root.title(f"2026 학습 활동 - {d}: {c}문제"))
+            canvas.tag_bind(rect, "<Leave>", lambda e: self.root.title("AI 회계 학습 도우미"))
+            
+            current_date += timedelta(days=1)
 
     def _generate_and_start_review(self, incorrect_questions):
         try:
@@ -670,104 +773,13 @@ class AccountingQuizApp:
 
     def show_statistics(self):
         """통계 화면"""
-        self.clear_screen()
-
-        title = tk.Label(self.root,
-                        text="학습 통계",
-                        font=("맑은 고딕", 20, "bold"),
-                        fg="#2c3e50")
-        title.pack(pady=20)
-
-        if not self.history:
-            no_data = tk.Label(self.root,
-                             text="아직 학습 기록이 없습니다.",
-                             font=("맑은 고딕", 14),
-                             fg="#7f8c8d")
-            no_data.pack(pady=40)
-        else:
-            # 통계 정보
-            total_sessions = len(self.history)
-            total_questions = sum(s['total_questions'] for s in self.history)
-            total_correct = sum(s['correct_answers'] for s in self.history)
-            avg_percentage = sum(s['percentage'] for s in self.history) / total_sessions
-
-            stats_frame = tk.Frame(self.root)
-            stats_frame.pack(pady=20, padx=50, fill='x')
-
-            stats_data = [
-                ("총 학습 세션", f"{total_sessions}회"),
-                ("총 풀이 문제", f"{total_questions}문제"),
-                ("총 정답 수", f"{total_correct}문제"),
-                ("평균 정답률", f"{avg_percentage:.1f}%")
-            ]
-
-            for label, value in stats_data:
-                row = tk.Frame(stats_frame)
-                row.pack(fill='x', pady=5)
-
-                tk.Label(row, text=label,
-                        font=("맑은 고딕", 12),
-                        fg="#34495e").pack(side='left')
-
-                tk.Label(row, text=value,
-                        font=("맑은 고딕", 12, "bold"),
-                        fg="#3498db").pack(side='right')
-
-            # 최근 학습 기록
-            history_frame = tk.Frame(self.root)
-            history_frame.pack(pady=20, padx=50, fill='both', expand=True)
-
-            tk.Label(history_frame,
-                    text="최근 학습 기록",
-                    font=("맑은 고딕", 14, "bold"),
-                    fg="#2c3e50").pack(anchor='w', pady=10)
-
-            # 스크롤바가 있는 프레임
-            canvas = tk.Canvas(history_frame, bg="white")
-            scrollbar = ttk.Scrollbar(history_frame, orient="vertical", command=canvas.yview)
-            scrollable_frame = tk.Frame(canvas, bg="white")
-
-            scrollable_frame.bind(
-                "<Configure>",
-                lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-            )
-
-            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-            canvas.configure(yscrollcommand=scrollbar.set)
-
-            # 최근 10개 기록 표시
-            for session in reversed(self.history[-10:]):
-                record = tk.Frame(scrollable_frame, bg="#ecf0f1", relief='solid', borderwidth=1)
-                record.pack(fill='x', pady=5, padx=5)
-
-                date_label = tk.Label(record,
-                                     text=session['date'],
-                                     font=("맑은 고딕", 10),
-                                     bg="#ecf0f1", fg="#7f8c8d")
-                date_label.pack(anchor='w', padx=10, pady=5)
-
-                file_label = tk.Label(record,
-                                     text=session['pdf_file'],
-                                     font=("맑은 고딕", 10, "bold"),
-                                     bg="#ecf0f1", fg="#2c3e50")
-                file_label.pack(anchor='w', padx=10)
-
-                score_label = tk.Label(record,
-                                      text=f"{session['correct_answers']}/{session['total_questions']} ({session['percentage']:.1f}%)",
-                                      font=("맑은 고딕", 10),
-                                      bg="#ecf0f1", fg="#3498db")
-                score_label.pack(anchor='w', padx=10, pady=5)
-
-            canvas.pack(side="left", fill="both", expand=True)
-            scrollbar.pack(side="right", fill="y")
-
-        # 돌아가기 버튼
-        back_btn = tk.Button(self.root, text="돌아가기",
-                           command=self.show_setup_screen,
-                           bg="#95a5a6", fg="white",
-                           font=("맑은 고딕", 12),
-                           relief='flat', padx=30, pady=10)
-        back_btn.pack(pady=20)
+        # 기존 통계 화면 대신 새로운 대시보드 띄우기 (모달 창 아님, 독립 창)
+        try:
+            dashboard = StatisticsDashboard(self.root, self.history)
+        except Exception as e:
+            messagebox.showerror("오류", f"통계 대시보드를 여는 중 오류가 발생했습니다:\n{str(e)}")
+            # 오류 시 기존 방식으로 폴백 (혹은 이 부분 삭제 가능)
+            pass
 
     def show_weakness_analysis(self):
         """취약점 분석 화면"""

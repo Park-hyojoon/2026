@@ -106,6 +106,86 @@ answer는 정답의 인덱스입니다 (0, 1, 2, 3 중 하나).
         traceback.print_exc()
         return []
 
+def generate_review_questions(incorrect_questions):
+    """
+    틀린 문제를 바탕으로 유사/응용 문제 생성
+    """
+    # 틀린 문제 정보 요약
+    context = ""
+    for idx, q in enumerate(incorrect_questions):
+        context += f"Q{idx+1}: {q['question']}\n(정답 해설: {q['explanation']})\n\n"
+
+    num_questions = len(incorrect_questions)
+    
+    prompt = f"""당신은 회계 전문 튜터입니다. 학생이 아래 문제들을 틀렸습니다. 
+틀린 문제의 핵심 개념을 파악하여, 확실히 이해할 수 있도록 '유사하지만 살짝 응용된' 새로운 문제를 {num_questions}개 만들어주세요.
+
+[틀린 문제 목록]
+{context}
+
+반드시 아래 JSON 형식으로만 응답하세요. 다른 텍스트 없이 JSON만 출력하세요:
+[
+  {{
+    "id": 1,
+    "question": "문제 내용 (한국어)",
+    "options": ["선택지1", "선택지2", "선택지3", "선택지4"],
+    "answer": 0,
+    "explanation": "정답 해설 (한국어)"
+  }}
+]
+
+answer는 정답의 인덱스입니다 (0, 1, 2, 3 중 하나).
+위 자료를 바탕으로 {num_questions}개의 응용 문제를 JSON 형식으로 생성하세요:"""
+
+    try:
+        print(f"Ollama ({OLLAMA_MODEL}) 복습 문제 생성 호출 중...")
+
+        response = requests.post(
+            OLLAMA_URL,
+            json={
+                "model": OLLAMA_MODEL,
+                "prompt": prompt,
+                "stream": False,
+                "options": {
+                    "temperature": 0.7,
+                    "num_predict": 2000
+                }
+            },
+            timeout=120
+        )
+
+        if response.status_code != 200:
+            print(f"Ollama 오류: {response.status_code}")
+            return []
+
+        result = response.json()
+        text_response = result.get("response", "")
+        
+        # JSON 추출
+        text_response = text_response.strip()
+        if "```json" in text_response:
+            start = text_response.find("```json") + 7
+            end = text_response.find("```", start)
+            text_response = text_response[start:end].strip()
+        elif "```" in text_response:
+            start = text_response.find("```") + 3
+            end = text_response.find("```", start)
+            text_response = text_response[start:end].strip()
+            
+        if "[" in text_response:
+            start_idx = text_response.find("[")
+            end_idx = text_response.rfind("]") + 1
+            text_response = text_response[start_idx:end_idx]
+
+        questions = json.loads(text_response)
+        print(f"복습 문제 생성 완료: {len(questions)}개")
+        return questions
+
+    except Exception as e:
+        print(f"복습 문제 생성 오류: {e}")
+        traceback.print_exc()
+        return []
+
 if __name__ == "__main__":
     print("Ollama 연결 테스트...")
     configure_gemini()

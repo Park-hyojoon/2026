@@ -4,7 +4,7 @@ import json
 import os
 from pathlib import Path
 from pdf_handler import extract_text_from_pdf
-from quiz_engine import configure_gemini, generate_quiz_questions
+from quiz_engine import configure_gemini, generate_quiz_questions, generate_review_questions
 from weakness_analyzer import WeaknessAnalyzer
 from datetime import datetime, timedelta
 import calendar
@@ -15,9 +15,10 @@ class AccountingQuizApp:
         self.root.title("AI 회계 학습 도우미")
         self.root.geometry("900x850")
 
-        # 데이터 저장 경로
-        self.config_file = "config.json"
-        self.history_file = "learning_history.json"
+        # 데이터 저장 경로 (스크립트 위치 기준 절대 경로)
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        self.config_file = os.path.join(base_path, "config.json")
+        self.history_file = os.path.join(base_path, "learning_history.json")
 
         # 상태 변수
         self.api_key = None
@@ -166,6 +167,11 @@ class AccountingQuizApp:
 
         # 기여 그래프 (잔디) 추가
         self.add_contribution_graph()
+
+    def confirm_home(self):
+        """홈으로 이동 확인"""
+        if messagebox.askyesno("확인", "풀고 있는 문제가 저장되지 않습니다.\n첫 화면으로 돌아가시겠습니까?"):
+            self.show_setup_screen()
 
         # 버튼 프레임
         menu_frame = tk.Frame(self.root)
@@ -416,6 +422,14 @@ class AccountingQuizApp:
                                 bg="#ecf0f1", fg="#2c3e50")
         progress_text.pack(pady=10)
 
+        # 홈 버튼 (오른쪽 상단)
+        home_btn = tk.Button(progress_frame, text="처음으로",
+                           command=self.confirm_home,
+                           bg="#95a5a6", fg="white",
+                           font=("맑은 고딕", 9),
+                           relief='flat', padx=10, pady=2)
+        home_btn.place(relx=0.95, rely=0.5, anchor='e')
+
         # 문제
         question_frame = tk.Frame(self.root)
         question_frame.pack(pady=20, padx=50, fill='both', expand=True)
@@ -606,12 +620,53 @@ class AccountingQuizApp:
                             relief='flat', padx=20, pady=10)
         retry_btn.pack(side='left', padx=10)
 
-        stats_btn = tk.Button(btn_frame, text="통계 보기",
+        stats_btn = tk.Button(btn_frame, text="학습 통계",
                             command=self.show_statistics,
-                            bg="#95a5a6", fg="white",
+                            bg="#9b59b6", fg="white",
                             font=("맑은 고딕", 12),
                             relief='flat', padx=20, pady=10)
         stats_btn.pack(side='left', padx=10)
+
+        # 오답이 있는 경우 스마트 복습 버튼 표시
+        incorrect_questions = [a for a in self.user_answers if not a['is_correct']]
+        if incorrect_questions:
+            review_btn = tk.Button(btn_frame, text="틀린 문제 복습하기 (유사 유형)",
+                                 command=lambda: self.start_review_session(incorrect_questions),
+                                 bg="#e67e22", fg="white",
+                                 font=("맑은 고딕", 12),
+                                 relief='flat', padx=20, pady=10)
+            review_btn.pack(side='left', padx=10)
+
+    def start_review_session(self, incorrect_questions):
+        """복습 세션 시작"""
+        # 로딩 화면
+        self.show_loading_screen()
+        
+        # 별도 스레드 대신 간단히 after 사용 (복잡도 낮음)
+        self.root.after(100, lambda: self._generate_and_start_review(incorrect_questions))
+
+    def _generate_and_start_review(self, incorrect_questions):
+        try:
+            # 복습 문제 생성
+            review_questions = generate_review_questions(incorrect_questions)
+            
+            if not review_questions:
+                messagebox.showerror("오류", "복습 문제 생성에 실패했습니다.")
+                self.show_result()
+                return
+                
+            # 퀴즈 상태 초기화 및 문제 설정
+            self.questions = review_questions
+            self.current_question_idx = 0
+            self.score = 0
+            self.user_answers = []
+            
+            # 문제 풀이 시작
+            self.show_question()
+            
+        except Exception as e:
+            messagebox.showerror("오류", f"오류가 발생했습니다: {str(e)}")
+            self.show_result()
 
     def show_statistics(self):
         """통계 화면"""

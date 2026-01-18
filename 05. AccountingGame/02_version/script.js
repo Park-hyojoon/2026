@@ -4,6 +4,8 @@
  */
 
 const gameData = {
+    units: [],
+    currentUnitIndex: 0,
     theory: null,
     quiz: null,
     journal: null,
@@ -36,12 +38,11 @@ const valMoney = document.getElementById('val-money');
 function init() {
     try {
         // 1. Data Loading
-        if (window.ACCOUNTING_GAME_DATA) {
-            gameData.theory = window.ACCOUNTING_GAME_DATA.theory;
-            gameData.quiz = window.ACCOUNTING_GAME_DATA.quiz;
-            gameData.journal = window.ACCOUNTING_GAME_DATA.journal;
+        if (window.ACCOUNTING_GAME_DATA && window.ACCOUNTING_GAME_DATA.units) {
+            gameData.units = window.ACCOUNTING_GAME_DATA.units;
+            setUnit(0); // Default to first unit
         } else {
-            throw new Error("ACCOUNTING_GAME_DATA not found.");
+            throw new Error("ACCOUNTING_GAME_DATA not found or invalid format.");
         }
 
         // 2. Persistence Loading
@@ -137,6 +138,26 @@ function setupEventListeners() {
 }
 
 /**
+ * UI: Set Current Unit
+ */
+window.setUnit = (index) => {
+    gameData.currentUnitIndex = index;
+    const unit = gameData.units[index];
+    gameData.theory = unit.theory;
+    gameData.quiz = unit.quiz;
+    gameData.journal = unit.journal;
+
+    // Update Topic Display in Top Bar
+    const topicEl = document.getElementById('val-topic');
+    if (topicEl) topicEl.innerText = unit.title;
+
+    // If modal is open during setup, refresh it
+    if (!modal.classList.contains('hidden')) {
+        openStageSetup(gameData.currentSession.type || 'theory');
+    }
+};
+
+/**
  * Stage Flow: Setup Screen
  */
 function openStageSetup(type) {
@@ -147,14 +168,22 @@ function openStageSetup(type) {
     const data = gameData[type];
     const totalAvailable = type === 'theory' ? 1 : (type === 'quiz' ? data.questions.length : data.practice.length);
 
-    // Update Topic Display
-    document.getElementById('val-topic').innerText = `${gameData.theory.chapter} - ${gameData.theory.topic}`;
+    // Topic Selection UI
+    let unitOptions = gameData.units.map((u, i) =>
+        `<option value="${i}" ${i === gameData.currentUnitIndex ? 'selected' : ''}>${u.title}</option>`
+    ).join('');
 
     let html = `
         <div class="setup-screen">
+            <div class="topic-selector-container">
+                <label for="topic-select">📑 학습 주제 선택:</label>
+                <select id="topic-select" onchange="setUnit(parseInt(this.value))">
+                    ${unitOptions}
+                </select>
+            </div>
+            <hr>
             <h2>${data.title}</h2>
             <p class="tutor-tip">"학습은 꾸준함이 생명입니다. 오늘 몇 가지 과제를 해결해 보시겠습니까?"</p>
-            <hr>
             <div class="setup-options">
                 ${type === 'theory' ?
             `<button class="start-btn" onclick="startStage('theory', 1)">이론 학습 시작</button>` :
@@ -247,6 +276,12 @@ function renderCurrentQuestion() {
                     <span>차변1)</span> <input type="text" placeholder="계정과목" id="db-acc-1"> 
                     <input type="number" placeholder="금액" id="db-amt-1">
                 </div>
+                ${q.solution.debit.additional ? `
+                <div class="input-row">
+                    <span>차변2)</span> <input type="text" placeholder="계정과목" id="db-acc-2"> 
+                    <input type="number" placeholder="금액" id="db-amt-2">
+                </div>
+                ` : ''}
                 <div class="input-row">
                     <span>대변1)</span> <input type="text" placeholder="계정과목" id="cr-acc-1"> 
                     <input type="number" placeholder="금액" id="cr-amt-1">
@@ -309,6 +344,15 @@ window.checkJournal = () => {
         dbAmt1 === q.solution.debit.amount &&
         crAcc1 === q.solution.credit.account &&
         crAmt1 === q.solution.credit.amount;
+
+    // Check additional debit if it exists
+    if (q.solution.debit.additional) {
+        const dbAcc2 = document.getElementById('db-acc-2').value.trim();
+        const dbAmt2 = parseInt(document.getElementById('db-amt-2').value);
+        isCorrect = isCorrect &&
+            dbAcc2 === q.solution.debit.additional &&
+            dbAmt2 === q.solution.debit.additional_amount;
+    }
 
     // Check additional credit if it exists
     if (q.solution.credit.additional) {

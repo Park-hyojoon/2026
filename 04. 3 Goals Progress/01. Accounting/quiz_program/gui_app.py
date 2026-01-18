@@ -410,7 +410,7 @@ class AccountingQuizApp:
 
         # 해설
         explanation_frame = tk.Frame(self.root, bg="#ecf0f1")
-        explanation_frame.pack(pady=20, padx=50, fill='both', expand=True)
+        explanation_frame.pack(pady=20, padx=100, fill='both', expand=True)
 
         exp_title = tk.Label(explanation_frame,
                             text="해설",

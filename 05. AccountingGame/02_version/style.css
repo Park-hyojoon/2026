@@ -46,15 +46,16 @@ body {
 }
 
 /* Hitboxes - Debug mode (border: 1px solid red) */
+/* 공통 호버 설정 (부드러운 전환) */
 .hitbox {
     position: absolute;
     cursor: pointer;
     background: rgba(255, 215, 0, 0.05);
-    /* Very subtle visibility */
-    transition: all 0.3s ease;
     border: 1px solid rgba(255, 215, 0, 0.2);
     border-radius: 8px;
     animation: glow-pulse 2s infinite alternate;
+    transition: all 0.3s ease;
+    /* 효과를 부드럽게 */
 }
 
 @keyframes glow-pulse {
@@ -69,10 +70,25 @@ body {
     }
 }
 
-.hitbox:hover {
-    background: rgba(255, 215, 0, 0.4);
-    box-shadow: 0 0 20px var(--accent-color);
-    transform: scale(1.05);
+/* 1. 확대 효과 (Scale) - 이론 학습 */
+#hitbox-theory:hover {
+    transform: scale(1.08);
+    background: rgba(255, 215, 0, 0.3);
+    z-index: 10;
+}
+
+/* 2. 네온 광채 효과 (Glow) - 퀴즈 도전 */
+#hitbox-quiz:hover {
+    box-shadow: 0 0 30px rgba(255, 215, 0, 1), inset 0 0 15px rgba(255, 215, 0, 0.5);
+    background: rgba(255, 215, 0, 0.2);
+    z-index: 10;
+}
+
+/* 3. 밝기 강조 효과 (Brightness) - 분개 훈련 */
+#hitbox-journal:hover {
+    filter: brightness(2.0);
+    background: rgba(255, 255, 255, 0.3);
+    border-color: #fff;
     z-index: 10;
 }
 
@@ -85,10 +101,10 @@ body {
 }
 
 #hitbox-quiz {
-    top: 45%;
-    left: 40%;
-    width: 25%;
-    height: 35%;
+    top: 52%;
+    left: 38%;
+    width: 35%;
+    height: 42%;
 }
 
 #hitbox-journal {
@@ -297,6 +313,34 @@ ul {
     justify-content: center;
     gap: 15px;
     margin-top: 20px;
+}
+
+.topic-selector-container {
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.topic-selector-container label {
+    font-size: 0.9rem;
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+.topic-selector-container select {
+    padding: 8px 15px;
+    background: #2a2a2a;
+    border: 1px solid var(--glass-border);
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1rem;
 }
 
 .count-btn,

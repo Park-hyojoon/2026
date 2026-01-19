@@ -84,143 +84,149 @@ const ExpressionManager = () => {
 
     const getMasteryColor = (level) => {
         const colors = {
-            0: '#ef4444', // red - new
-            1: '#f59e0b', // yellow - learning
-            2: '#3b82f6', // blue - familiar
-            3: '#22c55e'  // green - mastered
+            0: 'bg-red-50 text-red-500',
+            1: 'bg-yellow-50 text-yellow-600',
+            2: 'bg-blue-50 text-blue-600',
+            3: 'bg-green-50 text-green-600'
         };
-        return colors[level] || '#6b7280';
-    };
-
-    const getMasteryLabel = (level) => {
-        const labels = { 0: 'New', 1: 'Learning', 2: 'Familiar', 3: 'Mastered' };
-        return labels[level] || 'Unknown';
-    };
-
-    const getCategoryLabel = (cat) => {
-        const labels = {
-            idiom: 'Idiom',
-            phrasal_verb: 'Phrasal Verb',
-            expression: 'Expression'
-        };
-        return labels[cat] || cat;
+        return colors[level] || 'bg-gray-50 text-gray-500';
     };
 
     return (
-        <div className="glass-panel p-6 h-full flex flex-col">
-            <h2 className="text-xl font-bold mb-4 gradient-text">My Expressions</h2>
+        <div className="h-full flex flex-col animate-fade-in">
+            <div className="flex justify-between items-center mb-8">
+                <div>
+                    <h3 className="text-xl font-bold text-gray-800">Expression Bank</h3>
+                    <p className="text-xs text-gray-400 font-medium mt-1">Manage your active vocabulary and idioms</p>
+                </div>
+                {!isAdding && (
+                    <button onClick={() => setIsAdding(true)} className="btn-premium btn-yellow shadow-md">
+                        + New Expression
+                    </button>
+                )}
+            </div>
 
-            {/* Stats Bar */}
-            <div className="grid grid-cols-5 gap-2 mb-4 text-center text-xs">
-                <div className="bg-gray-800 rounded p-2">
-                    <div className="text-lg font-bold">{stats.total}</div>
-                    <div className="text-gray-400">Total</div>
-                </div>
-                <div className="bg-gray-800 rounded p-2">
-                    <div className="text-lg font-bold text-red-400">{stats.new}</div>
-                    <div className="text-gray-400">New</div>
-                </div>
-                <div className="bg-gray-800 rounded p-2">
-                    <div className="text-lg font-bold text-yellow-400">{stats.learning}</div>
-                    <div className="text-gray-400">Learning</div>
-                </div>
-                <div className="bg-gray-800 rounded p-2">
-                    <div className="text-lg font-bold text-green-400">{stats.mastered}</div>
-                    <div className="text-gray-400">Mastered</div>
-                </div>
-                <div className="bg-gray-800 rounded p-2">
-                    <div className="text-lg font-bold text-accent-primary">{stats.due_today}</div>
-                    <div className="text-gray-400">Due</div>
-                </div>
+            {/* Stats Dashboard */}
+            <div className="grid grid-cols-5 gap-4 mb-10">
+                <StatBox label="Total" count={stats.total} />
+                <StatBox label="New" count={stats.new} color="red" />
+                <StatBox label="Learning" count={stats.learning} color="orange" />
+                <StatBox label="Mastered" count={stats.mastered} color="green" />
+                <StatBox label="Due Today" count={stats.due_today} color="yellow" />
             </div>
 
             {!isAdding ? (
-                <>
-                    <button onClick={() => setIsAdding(true)} className="btn btn-secondary mb-4 w-full">
-                        + Add Expression
-                    </button>
-                    <div className="flex-1 overflow-y-auto space-y-2">
-                        {expressions.map(expr => (
-                            <div key={expr.id} className="p-3 bg-gray-800 rounded hover:bg-gray-700 transition">
-                                <div className="flex justify-between items-start">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <h3 className="font-bold text-white">{expr.expression}</h3>
-                                            <span
-                                                className="text-xs px-2 py-0.5 rounded"
-                                                style={{ backgroundColor: getMasteryColor(expr.mastery_level), color: 'white' }}
-                                            >
-                                                {getMasteryLabel(expr.mastery_level)}
-                                            </span>
-                                        </div>
-                                        <p className="text-sm text-gray-300">{expr.meaning}</p>
-                                        {expr.example && (
-                                            <p className="text-xs text-gray-500 mt-1 italic">"{expr.example}"</p>
-                                        )}
-                                        <div className="flex gap-2 mt-2 text-xs text-gray-500">
-                                            <span>{getCategoryLabel(expr.category)}</span>
-                                            <span>|</span>
-                                            <span>Next: {expr.next_review}</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-1">
-                                        <button
-                                            onClick={() => handleEdit(expr)}
-                                            className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(expr.id)}
-                                            className="text-xs px-2 py-1 bg-red-900 hover:bg-red-800 rounded"
-                                        >
-                                            X
-                                        </button>
-                                    </div>
+                <div className="flex-1 overflow-y-auto pr-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
+                    {expressions.map(expr => (
+                        <div key={expr.id} className="card-premium p-6 flex flex-col group">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full ${getMasteryColor(expr.mastery_level)}`}>
+                                    Level {expr.mastery_level}
+                                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={() => handleEdit(expr)} className="text-gray-300 hover:text-blue-500 transition">✏️</button>
+                                    <button onClick={() => handleDelete(expr.id)} className="text-gray-300 hover:text-red-500 transition">✕</button>
                                 </div>
                             </div>
-                        ))}
-                        {expressions.length === 0 && (
-                            <p className="text-gray-500 text-center py-8">
-                                No expressions yet. Add your first expression!
-                            </p>
-                        )}
-                    </div>
-                </>
+
+                            <h3 className="text-xl font-extrabold text-gray-900 mb-2 truncate">{expr.expression}</h3>
+                            <p className="text-sm font-medium text-gray-500 mb-4 line-clamp-2">{expr.meaning}</p>
+
+                            {expr.example && (
+                                <div className="bg-gray-50 p-4 rounded-2xl mb-4 border border-gray-100/50">
+                                    <p className="text-xs text-gray-400 italic">"{expr.example}"</p>
+                                </div>
+                            )}
+
+                            <div className="mt-auto pt-4 border-t border-gray-50 flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                <span>{expr.category}</span>
+                                <span>Next: {expr.next_review}</span>
+                            </div>
+                        </div>
+                    ))}
+                    {expressions.length === 0 && (
+                        <div className="col-span-full py-20 text-center opacity-30 italic font-medium">
+                            No expressions found. Start building your bank!
+                        </div>
+                    )}
+                </div>
             ) : (
-                <div className="flex flex-col gap-4 h-full">
-                    <input
-                        placeholder="Expression (e.g., break the ice)"
-                        value={form.expression}
-                        onChange={e => setForm({...form, expression: e.target.value})}
-                    />
-                    <input
-                        placeholder="Meaning"
-                        value={form.meaning}
-                        onChange={e => setForm({...form, meaning: e.target.value})}
-                    />
-                    <input
-                        placeholder="Example sentence (optional)"
-                        value={form.example}
-                        onChange={e => setForm({...form, example: e.target.value})}
-                    />
-                    <select
-                        value={form.category}
-                        onChange={e => setForm({...form, category: e.target.value})}
-                        className="bg-gray-800 border border-gray-600 rounded p-2"
-                    >
-                        <option value="expression">Expression</option>
-                        <option value="idiom">Idiom</option>
-                        <option value="phrasal_verb">Phrasal Verb</option>
-                    </select>
-                    <div className="flex gap-2 mt-auto">
-                        <button onClick={handleSubmit} className="btn btn-primary flex-1">
-                            {editingId ? 'Update' : 'Save'}
-                        </button>
-                        <button onClick={resetForm} className="btn btn-secondary">Cancel</button>
+                <div className="flex-1 overflow-y-auto">
+                    <div className="max-w-xl mx-auto bg-white p-10 rounded-[2.5rem] shadow-2xl border border-gray-100 animate-fade-in mt-4">
+                        <h3 className="text-2xl font-black text-gray-900 mb-10 border-b border-gray-50 pb-6">
+                            {editingId ? 'Edit Expression' : 'Add to Bank'}
+                        </h3>
+
+                        <div className="space-y-8">
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Expression / Phrase</label>
+                                <input
+                                    className="premium-input w-full font-bold text-lg"
+                                    placeholder="e.g., Get the ball rolling"
+                                    value={form.expression}
+                                    onChange={e => setForm({ ...form, expression: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Meaning (Korean/Simple English)</label>
+                                <input
+                                    className="premium-input w-full"
+                                    placeholder="e.g., 일을 시작하다"
+                                    value={form.meaning}
+                                    onChange={e => setForm({ ...form, meaning: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Context Example</label>
+                                <textarea
+                                    className="premium-input w-full h-24 resize-none"
+                                    placeholder="Use it in a sentence..."
+                                    value={form.example}
+                                    onChange={e => setForm({ ...form, example: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">Category</label>
+                                <select
+                                    value={form.category}
+                                    onChange={e => setForm({ ...form, category: e.target.value })}
+                                    className="premium-input w-full appearance-none bg-gray-50 border-none cursor-pointer"
+                                >
+                                    <option value="expression">Conversation Expression</option>
+                                    <option value="idiom">Idiomatic Phrase</option>
+                                    <option value="phrasal_verb">Phrasal Verb</option>
+                                </select>
+                            </div>
+
+                            <div className="flex gap-4 pt-6">
+                                <button onClick={handleSubmit} className="btn-premium btn-yellow flex-1 py-4 text-lg">
+                                    {editingId ? 'Update & Save' : 'Add to Bank'}
+                                </button>
+                                <button onClick={resetForm} className="btn-premium btn-ghost px-10">Cancel</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
+        </div>
+    );
+};
+
+const StatBox = ({ label, count, color }) => {
+    const colors = {
+        red: 'text-red-500 bg-red-50',
+        orange: 'text-orange-500 bg-orange-50',
+        green: 'text-green-500 bg-green-50',
+        yellow: 'text-yellow-600 bg-yellow-50',
+        default: 'text-gray-400 bg-gray-50'
+    };
+    return (
+        <div className={`p-4 rounded-[1.5rem] border border-gray-100/50 flex flex-col items-center justify-center transition-transform hover:scale-105 ${colors[color] || colors.default}`}>
+            <div className="text-2xl font-black mb-1">{count}</div>
+            <div className="text-[10px] font-black uppercase tracking-widest opacity-60">{label}</div>
         </div>
     );
 };

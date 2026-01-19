@@ -43,9 +43,7 @@ const MaterialManager = ({ onSelectMaterial, activeMaterial }) => {
                 })
             });
 
-            if (!res.ok) {
-                throw new Error(`Server error: ${res.status}`);
-            }
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
             setNewTitle('');
             setNewContent('');
@@ -55,7 +53,6 @@ const MaterialManager = ({ onSelectMaterial, activeMaterial }) => {
             setIsAdding(false);
             fetchMaterials();
         } catch (e) {
-            console.error("Failed to add material", e);
             alert(`Failed to save material: ${e.message}`);
         }
     };
@@ -67,133 +64,146 @@ const MaterialManager = ({ onSelectMaterial, activeMaterial }) => {
             await fetch(`http://localhost:8000/materials/${id}`, { method: 'DELETE' });
             fetchMaterials();
         } catch (e) {
-            console.error("Failed to delete material", e);
             alert("Failed to delete material");
         }
     };
 
     return (
-        <div className="h-full flex flex-col relative overflow-hidden">
-            <div className="flex justify-between items-center mb-6 z-10">
-                <h3 className="font-bold text-gray-800 text-lg">Available Scenarios</h3>
+        <div className="h-full flex flex-col animate-fade-in">
+            <div className="flex justify-between items-center mb-8">
+                <div className="flex items-center gap-4">
+                    <h3 className="text-xl font-bold text-gray-800">Available Scenarios</h3>
+                    <span className="bg-gray-100 text-gray-500 text-xs px-3 py-1 rounded-full font-bold">{materials.length} courses</span>
+                </div>
                 {!isAdding && (
-                    <button onClick={() => setIsAdding(true)} className="btn btn-primary">
-                        + New
+                    <button onClick={() => setIsAdding(true)} className="btn-premium btn-yellow shadow-md">
+                        + Create New
                     </button>
                 )}
             </div>
 
             {!isAdding ? (
-                <div className="flex-1 overflow-y-auto pr-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-4">
+                <div className="flex-1 overflow-y-auto pr-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-10">
                     {materials.map(m => (
                         <div
                             key={m.id}
                             onClick={() => onSelectMaterial(m)}
-                            className={`p-6 rounded-3xl cursor-pointer transition-all duration-300 border relative flex flex-col gap-3 shadow-sm hover:shadow-md ${activeMaterial && activeMaterial.id === m.id
-                                    ? 'bg-yellow-50 border-yellow-400 ring-2 ring-yellow-200'
-                                    : 'bg-gray-50 border-gray-100 hover:bg-white'
+                            className={`card-premium p-8 cursor-pointer relative flex flex-col gap-5 ${activeMaterial && activeMaterial.id === m.id
+                                    ? 'ring-4 ring-yellow-400 ring-offset-4 bg-yellow-50/30'
+                                    : ''
                                 }`}
                         >
                             <div className="flex justify-between items-start">
-                                <div className="p-3 rounded-2xl bg-white shadow-sm text-2xl">
+                                <div className="p-4 rounded-2xl bg-gray-50 text-3xl shadow-inner group-hover:scale-110 transition">
                                     🎭
                                 </div>
                                 <button
                                     onClick={(e) => handleDelete(e, m.id)}
-                                    className="p-2 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
+                                    className="p-2 rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 transition"
                                 >
                                     ✕
                                 </button>
                             </div>
 
                             <div>
-                                <h3 className="font-bold text-lg text-gray-800 mb-1 font-display truncate">{m.title}</h3>
-                                <div className="flex gap-2 text-xs text-gray-500 mb-3">
-                                    <span className="bg-white px-2 py-1 rounded border border-gray-100">🤖 {m.ai_role || 'Tutor'}</span>
-                                    <span className="bg-white px-2 py-1 rounded border border-gray-100">👤 {m.user_role || 'User'}</span>
+                                <p className="text-yellow-600 text-xs font-bold uppercase tracking-widest mb-2">{m.ai_role || 'Tutor'} Role</p>
+                                <h3 className="font-extrabold text-xl text-gray-900 mb-3 leading-tight truncate">{m.title}</h3>
+                                <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed mb-4">{m.content}</p>
+
+                                <div className="flex items-center gap-2">
+                                    <div className="flex-1 bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                                        <div className="bg-blue-400 h-full rounded-full" style={{ width: '30%' }}></div>
+                                    </div>
+                                    <span className="text-[10px] font-black text-gray-400">30%</span>
                                 </div>
-                                <p className="text-sm text-gray-500 line-clamp-2">{m.content}</p>
                             </div>
 
-                            {m.target_phrases && m.target_phrases.length > 0 && (
-                                <div className="mt-auto pt-3 border-t border-gray-100 flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full bg-yellow-400"></span>
-                                    <div className="text-xs text-gray-600 font-medium">
-                                        {m.target_phrases.length} Missions
-                                    </div>
+                            <div className="mt-auto pt-5 border-t border-gray-50 flex justify-between items-center">
+                                <div className="text-xs font-bold text-gray-400 flex items-center gap-1.5">
+                                    🎯 {m.target_phrases?.length || 0} Missions
                                 </div>
-                            )}
+                                <div className="text-xs font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-full">
+                                    Advanced level
+                                </div>
+                            </div>
                         </div>
                     ))}
                     {materials.length === 0 && (
-                        <div className="col-span-full flex flex-col items-center justify-center text-gray-400 py-20">
-                            <div className="text-4xl mb-4 opacity-30">📝</div>
-                            <p>No scenarios yet.</p>
+                        <div className="col-span-full py-32 text-center">
+                            <div className="text-6xl mb-6 opacity-20">📂</div>
+                            <h3 className="text-xl font-bold text-gray-400">No scenarios found</h3>
+                            <p className="text-gray-300">Start by creating your first role-play scenario!</p>
                         </div>
                     )}
                 </div>
             ) : (
-                <div className="flex-1 overflow-y-auto pr-4 z-10">
-                    <div className="max-w-2xl mx-auto flex flex-col gap-6 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-                        <div>
-                            <h3 className="text-xl font-bold text-gray-800 mb-4">Create New Scenario</h3>
-                            <input
-                                placeholder="Scenario Title (e.g., Salary Negotiation)"
-                                value={newTitle}
-                                onChange={e => setNewTitle(e.target.value)}
-                                className="text-lg font-bold bg-gray-50"
-                            />
-                        </div>
+                <div className="flex-1 overflow-y-auto pr-4">
+                    <div className="max-w-2xl mx-auto bg-white p-10 rounded-[2.5rem] shadow-2xl border border-gray-100 mb-10">
+                        <h3 className="text-2xl font-black text-gray-900 mb-8 border-b border-gray-50 pb-6">Create New Scenario</h3>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-6">
                             <div>
-                                <label className="text-xs text-gray-500 mb-2 block ml-1 font-bold">AI Role</label>
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 block">Scenario Title</label>
                                 <input
-                                    placeholder="e.g., Strict Boss"
-                                    value={newAiRole}
-                                    onChange={e => setNewAiRole(e.target.value)}
+                                    placeholder="e.g., Job Interview at Google"
+                                    value={newTitle}
+                                    onChange={e => setNewTitle(e.target.value)}
+                                    className="premium-input w-full font-bold text-lg"
                                 />
                             </div>
+
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 block">AI Role</label>
+                                    <input
+                                        placeholder="e.g., Hiring Manager"
+                                        value={newAiRole}
+                                        onChange={e => setNewAiRole(e.target.value)}
+                                        className="premium-input w-full"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 block">User Role</label>
+                                    <input
+                                        placeholder="e.g., Candidate"
+                                        value={newUserRole}
+                                        onChange={e => setNewUserRole(e.target.value)}
+                                        className="premium-input w-full"
+                                    />
+                                </div>
+                            </div>
+
                             <div>
-                                <label className="text-xs text-gray-500 mb-2 block ml-1 font-bold">User Role</label>
-                                <input
-                                    placeholder="e.g., Employee"
-                                    value={newUserRole}
-                                    onChange={e => setNewUserRole(e.target.value)}
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 block">Context & Situation</label>
+                                <textarea
+                                    className="premium-input w-full h-32 resize-none"
+                                    placeholder="Describe the setting, the mood, and the objective..."
+                                    value={newContent}
+                                    onChange={e => setNewContent(e.target.value)}
                                 />
                             </div>
-                        </div>
 
-                        <div>
-                            <label className="text-xs text-gray-500 mb-2 block ml-1 font-bold">Scenario Description</label>
-                            <textarea
-                                className="resize-none h-32"
-                                placeholder="Describe the situation..."
-                                value={newContent}
-                                onChange={e => setNewContent(e.target.value)}
-                            />
-                        </div>
+                            <div className="bg-yellow-50/50 p-6 rounded-3xl border border-yellow-100">
+                                <label className="text-xs font-black text-yellow-700 uppercase tracking-widest mb-3 flex justify-between">
+                                    <span>🎯 Target Phrases (Missions)</span>
+                                    <span className="text-[10px] normal-case opacity-60">One phrase per line</span>
+                                </label>
+                                <textarea
+                                    className="premium-input w-full h-40 resize-none font-mono text-sm bg-white border-yellow-200"
+                                    placeholder={"I'm looking forward to...\nMy greatest strength is...\n..."}
+                                    value={newTargetPhrases}
+                                    onChange={e => setNewTargetPhrases(e.target.value)}
+                                />
+                            </div>
 
-                        <div>
-                            <label className="text-xs text-gray-500 mb-2 block ml-1 flex justify-between font-bold">
-                                <span>🎯 Target Phrases (Missions)</span>
-                                <span>One phrase per line</span>
-                            </label>
-                            <textarea
-                                className="resize-none h-40 font-mono text-sm bg-yellow-50 border-yellow-200"
-                                placeholder={"I'll have it done by Friday...\nCan we reschedule..."}
-                                value={newTargetPhrases}
-                                onChange={e => setNewTargetPhrases(e.target.value)}
-                            />
-                        </div>
-
-                        <div className="flex gap-3 pt-6">
-                            <button onClick={handleAdd} className="btn btn-primary flex-1 py-3 text-lg">
-                                Save Scenario
-                            </button>
-                            <button onClick={() => setIsAdding(false)} className="btn btn-secondary px-8">
-                                Cancel
-                            </button>
+                            <div className="flex gap-4 pt-4">
+                                <button onClick={handleAdd} className="btn-premium btn-yellow flex-1 py-4 text-lg">
+                                    Save & Launch
+                                </button>
+                                <button onClick={() => setIsAdding(false)} className="btn-premium btn-ghost px-10">
+                                    Cancel
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

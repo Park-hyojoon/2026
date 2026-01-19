@@ -1,15 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useVoice } from '../hooks/useVoice';
 
 const TutorInterface = ({ activeMaterial }) => {
     const { isListening, transcript, isSpeaking, startListening, stopListening, speak } = useVoice();
     const [messages, setMessages] = useState([
-        { role: 'assistant', content: "Hello! I'm your AI English Tutor. Ready to practice?" }
+        { role: 'assistant', content: "Hello! I'm your AI English Tutor. I've prepared a great session for you. Ready to start?" }
     ]);
     const [status, setStatus] = useState('idle');
     const [inputText, setInputText] = useState('');
     const [abortController, setAbortController] = useState(null);
     const [completedMissions, setCompletedMissions] = useState([]);
+
+    const messagesEndRef = useRef(null);
+    const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    useEffect(scrollToBottom, [messages]);
 
     useEffect(() => {
         if (isListening) setStatus('listening');
@@ -18,62 +22,23 @@ const TutorInterface = ({ activeMaterial }) => {
     }, [isListening, isSpeaking]);
 
     useEffect(() => {
-        if (!activeMaterial || !activeMaterial.target_phrases) return;
+        if (!activeMaterial?.target_phrases) return;
         const normalize = (text) => text.toLowerCase().replace(/[.,!?;:'"]/g, '').trim();
 
         if (isListening && transcript) checkMissions(transcript);
         const lastMsg = messages[messages.length - 1];
-        if (lastMsg && lastMsg.role === 'user') checkMissions(lastMsg.content);
+        if (lastMsg?.role === 'user') checkMissions(lastMsg.content);
 
         function checkMissions(text) {
             const normalizedText = normalize(text);
             activeMaterial.target_phrases.forEach(phrase => {
                 if (completedMissions.includes(phrase)) return;
-                const normalizedPhrase = normalize(phrase);
-                if (normalizedText.includes(normalizedPhrase)) {
+                if (normalizedText.includes(normalize(phrase))) {
                     setCompletedMissions(prev => [...prev, phrase]);
                 }
             });
         }
     }, [transcript, messages, activeMaterial, isListening]);
-
-    const handleStop = () => {
-        if (abortController) {
-            abortController.abort();
-            setAbortController(null);
-            setStatus('idle');
-        }
-    };
-
-    const handleTranslate = async (index) => {
-        const msg = messages[index];
-        if (!msg || msg.role !== 'assistant') return;
-        try {
-            const res = await fetch('http://localhost:8000/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: 'llama3',
-                    messages: [
-                        { role: 'system', content: "Translate to Korean. Output ONLY Korean." },
-                        { role: 'user', content: msg.content }
-                    ]
-                })
-            });
-            const data = await res.json();
-            const translation = data.message?.content || data.response;
-            const newMessages = [...messages];
-            newMessages[index] = { ...msg, translation };
-            setMessages(newMessages);
-        } catch (e) { alert("Translation failed"); }
-    };
-
-    const handleTextSubmit = async () => {
-        if (!inputText.trim()) return;
-        const text = inputText;
-        setInputText('');
-        await handleSend(text);
-    };
 
     const handleMicClick = async () => {
         if (isListening) {
@@ -97,9 +62,9 @@ const TutorInterface = ({ activeMaterial }) => {
             if (activeMaterial) {
                 const remaining = activeMaterial.target_phrases.filter(p => !completedMissions.includes(p));
                 const missionText = remaining.length > 0
-                    ? `\n\n[USER MISSIONS]: The user must say these phrases: ${JSON.stringify(remaining)}.\nGuide the conversation so they say them.`
-                    : "\n\n[MISSIONS CLEARED]: Congratulate the user!";
-                systemPrompt = `Role: ${activeMaterial.ai_role}. User Role: ${activeMaterial.user_role}. Context: ${activeMaterial.content}. ${missionText}. Keep responses concise.`;
+                    ? `\n\n[USER MISSIONS]: The user must say these: ${JSON.stringify(remaining)}. Guide them to do so.`
+                    : "\n\n[MISSIONS CLEARED]: All goals met! Celebrate!";
+                systemPrompt = `Role: ${activeMaterial.ai_role}. User Role: ${activeMaterial.user_role}. Scenario: ${activeMaterial.content}. ${missionText}. Be highly conversational and concise.`;
             }
 
             const response = await fetch('http://localhost:8000/chat', {
@@ -123,134 +88,106 @@ const TutorInterface = ({ activeMaterial }) => {
             speak(aiText, () => setStatus('idle'));
         } catch (error) {
             if (error.name !== 'AbortError') {
-                setMessages(prev => [...prev, { role: 'system', content: "Error connecting to AI." }]);
+                setMessages(prev => [...prev, { role: 'system', content: "Connection lost. Try again." }]);
                 setStatus('idle');
             }
         } finally { setAbortController(null); }
     };
 
+    const handleTranslate = async (index) => {
+        const msg = messages[index];
+        try {
+            const res = await fetch('http://localhost:8000/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'llama3',
+                    messages: [{ role: 'system', content: "Translate to Korean. ONLY Korean." }, { role: 'user', content: msg.content }]
+                })
+            });
+            const data = await res.json();
+            const newMessages = [...messages];
+            newMessages[index] = { ...msg, translation: data.message?.content || data.response };
+            setMessages(newMessages);
+        } catch (e) { console.error(e); }
+    };
+
     return (
-        <div className="h-full flex gap-0 divide-x divide-gray-100">
-            {/* Main Chat Area */}
-            <div className="flex-1 flex flex-col min-w-0 bg-white">
-                {/* Chat Header */}
-                <div className="p-4 flex justify-between items-center border-b border-gray-100">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-xl">
-                            🤖
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-gray-800">AI Tutor</h3>
-                            <p className="text-xs text-gray-400">{status === 'processing' ? 'Thinking...' : 'Online'}</p>
-                        </div>
+        <div className="h-full flex flex-col pt-4 animate-fade-in relative">
+            {/* Header Info */}
+            <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-2xl bg-gray-100 shadow-inner">🤖</div>
+                    <div>
+                        <h4 className="font-bold text-gray-800">AI Tutor</h4>
+                        <p className="text-[10px] font-black text-green-500 uppercase tracking-widest">Active Voice Sync</p>
                     </div>
                 </div>
-
-                {/* Messages List */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                    {messages.map((msg, idx) => (
-                        <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`
-                                max-w-[80%] p-4 rounded-2xl relative shadow-sm
-                                ${msg.role === 'user'
-                                    ? 'bg-yellow-400 text-gray-900 rounded-tr-sm'
-                                    : msg.role === 'system'
-                                        ? 'bg-red-50 text-red-500'
-                                        : 'bg-gray-100 text-gray-800 rounded-tl-sm'
-                                }
-                            `}>
-                                <div className="leading-relaxed">{msg.content}</div>
-                                {msg.role === 'assistant' && (
-                                    <div className="mt-2 pt-2 border-t border-gray-200">
-                                        {msg.translation ? (
-                                            <p className="text-sm text-gray-600 font-medium bg-white p-2 rounded">
-                                                {msg.translation}
-                                            </p>
-                                        ) : (
-                                            <button
-                                                onClick={() => handleTranslate(idx)}
-                                                className="text-xs text-blue-500 hover:underline flex items-center gap-1"
-                                            >
-                                                🌐 Translate
-                                            </button>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+                {activeMaterial && (
+                    <div className="bg-yellow-50 px-4 py-2 rounded-2xl border border-yellow-100 flex items-center gap-3">
+                        <span className="text-xs font-bold text-yellow-800">Mission: {completedMissions.length}/{activeMaterial.target_phrases.length}</span>
+                        <div className="w-20 bg-yellow-200 h-1.5 rounded-full overflow-hidden">
+                            <div className="bg-yellow-500 h-full transition-all duration-500" style={{ width: `${(completedMissions.length / activeMaterial.target_phrases.length) * 100}%` }}></div>
                         </div>
-                    ))}
-                </div>
-
-                {/* Input Area */}
-                <div className="p-4 bg-gray-50 m-4 rounded-3xl border border-gray-100 flex gap-2 items-center">
-                    <button
-                        onClick={handleMicClick}
-                        className={`w-12 h-12 rounded-full flex items-center justify-center shadow-sm transition-all ${isListening
-                                ? 'bg-red-500 text-white recording-pulse'
-                                : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200'
-                            }`}
-                        disabled={status === 'processing' || isSpeaking}
-                    >
-                        <span className="text-xl">{isListening ? '⏹' : '🎤'}</span>
-                    </button>
-
-                    <input
-                        value={inputText}
-                        onChange={(e) => setInputText(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleTextSubmit()}
-                        placeholder={isListening ? "Listening..." : "Type your message..."}
-                        className="flex-1 bg-transparent border-none shadow-none focus:ring-0 p-2"
-                        disabled={status === 'processing'}
-                    />
-
-                    <button
-                        onClick={handleTextSubmit}
-                        disabled={!inputText.trim()}
-                        className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-gray-900 font-bold hover:bg-yellow-500 disabled:opacity-50 disabled:hover:bg-yellow-400"
-                    >
-                        ➤
-                    </button>
-                </div>
+                    </div>
+                )}
             </div>
 
-            {/* Mission Sidebar (Right Panel Style) */}
-            {activeMaterial?.target_phrases?.length > 0 && (
-                <div className="w-72 bg-gray-50 flex flex-col border-l border-gray-100">
-                    <div className="p-6">
-                        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <span>🎯 Missions</span>
-                            <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded-full">
-                                {completedMissions.length} / {activeMaterial.target_phrases.length}
-                            </span>
-                        </h3>
-
-                        <div className="space-y-3">
-                            {activeMaterial.target_phrases.map((phrase, idx) => {
-                                const isCompleted = completedMissions.includes(phrase);
-                                return (
-                                    <div
-                                        key={idx}
-                                        className={`p-4 rounded-2xl transition-all ${isCompleted
-                                                ? 'bg-green-100 text-green-800 border-l-4 border-green-500'
-                                                : 'bg-white border border-gray-100 text-gray-500'
-                                            }`}
-                                    >
-                                        <div className="flex gap-3 items-start">
-                                            <div className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-xs ${isCompleted ? 'bg-green-500 text-white' : 'bg-gray-200'
-                                                }`}>
-                                                {isCompleted ? '✓' : idx + 1}
-                                            </div>
-                                            <p className={`text-sm font-medium ${isCompleted ? 'line-through' : ''}`}>
-                                                {phrase}
-                                            </p>
-                                        </div>
-                                    </div>
-                                );
-                            })}
+            {/* Chat List */}
+            <div className="flex-1 overflow-y-auto px-4 pb-10 space-y-8 chat-container">
+                {messages.map((msg, idx) => (
+                    <div key={idx} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                        <div className={`message-bubble ${msg.role === 'user' ? 'message-user' : 'message-ai'}`}>
+                            {msg.content}
                         </div>
+                        {msg.role === 'assistant' && (
+                            <div className="mt-3 flex items-center gap-4 px-2">
+                                {msg.translation ? (
+                                    <p className="text-xs font-medium text-gray-400 italic bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                                        " {msg.translation} "
+                                    </p>
+                                ) : (
+                                    <button onClick={() => handleTranslate(idx)} className="text-[10px] font-black text-blue-400 uppercase tracking-widest hover:text-blue-600 transition">
+                                        🌐 Translation
+                                    </button>
+                                )}
+                                <button onClick={() => speak(msg.content)} className="text-[10px] font-black text-gray-300 uppercase tracking-widest hover:text-gray-500 transition">
+                                    🔊 Replay
+                                </button>
+                            </div>
+                        )}
                     </div>
-                </div>
-            )}
+                ))}
+                <div ref={messagesEndRef} />
+            </div>
+
+            {/* Float Input Action */}
+            <div className="sticky bottom-4 left-0 right-0 bg-white/80 backdrop-blur-md p-2 rounded-[2.5rem] border border-gray-100 shadow-2xl flex items-center gap-4 max-w-3xl mx-auto w-full">
+                <button
+                    onClick={handleMicClick}
+                    className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${isListening ? 'bg-red-500 scale-110 shadow-lg shadow-red-200' : 'bg-gray-900 text-white hover:bg-black'
+                        }`}
+                >
+                    <span className="text-2xl">{isListening ? '⏹' : '🎤'}</span>
+                </button>
+
+                <input
+                    className="flex-1 bg-transparent border-none outline-none font-medium text-gray-800 px-2"
+                    placeholder={isListening ? "Listening to your voice..." : "Type your message and press enter..."}
+                    value={inputText}
+                    onChange={e => setInputText(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && (setInputText(''), handleSend(inputText))}
+                    disabled={status === 'processing'}
+                />
+
+                <button
+                    onClick={() => (setInputText(''), handleSend(inputText))}
+                    disabled={!inputText.trim()}
+                    className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center font-bold text-gray-900 hover:bg-yellow-500 transition disabled:opacity-30"
+                >
+                    ➤
+                </button>
+            </div>
         </div>
     );
 };

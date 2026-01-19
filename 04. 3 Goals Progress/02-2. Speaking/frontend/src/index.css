@@ -1,206 +1,261 @@
 :root {
-  /* Art Academy Like - Light Theme Palette */
-  --bg-app: #f3f4f6;
-  /* Light Gray Background */
-  --bg-white: #ffffff;
-  /* Card Background */
+  /* High Fidelity - Art Academy Style */
+  --bg-app: #f8f9fa;
+  --bg-card: #ffffff;
+  --bg-sidebar: #f8f9fa;
 
-  /* Accents */
-  --accent-primary: #FDE047;
-  /* Bright Yellow */
-  --accent-text: #1F2937;
-  /* Dark Text on Yellow */
+  /* Primary Accent: Warm Yellow */
+  --accent-yellow: #fde047;
+  --accent-yellow-dark: #facc15;
+  --accent-blue: #60a5fa;
+  --accent-dark: #111827;
 
-  /* Text */
-  --text-primary: #111827;
-  /* Almost Black */
-  --text-secondary: #6B7280;
-  /* Gray */
-  --text-white: #ffffff;
+  /* Text System */
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+  --text-light: #9ca3af;
 
-  /* Borders & Shadows */
-  --border-color: #E5E7EB;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  /* Shadows: Soft and wide */
+  --shadow-soft: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -6px rgba(0, 0, 0, 0.06);
+
+  /* Borders */
+  --border-subtle: 1px solid rgba(0, 0, 0, 0.05);
 
   --font-display: 'Outfit', sans-serif;
   --font-body: 'Inter', sans-serif;
 }
 
-body {
-  margin: 0;
-  font-family: var(--font-body);
-  background-color: var(--bg-app);
-  color: var(--text-primary);
-  min-height: 100vh;
+* {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-#root {
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  font-family: var(--font-body);
   height: 100vh;
   overflow: hidden;
 }
 
-/* Typography */
+/* Typography Grid */
 h1,
 h2,
 h3,
-h4,
-h5,
-h6 {
+h4 {
   font-family: var(--font-display);
-  color: var(--text-primary);
-  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
-/* Component Utilities */
-.card {
-  background-color: var(--bg-white);
-  border-radius: 1.5rem;
-  /* Large rounded corners */
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
-  border: 1px solid transparent;
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
 }
 
-.card:hover {
-  box-shadow: var(--shadow-md);
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-/* Buttons */
-.btn {
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+/* Base Components */
+.card-premium {
+  background: var(--bg-card);
+  border-radius: 2rem;
+  box-shadow: var(--shadow-soft);
+  border: var(--border-subtle);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-premium:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+.btn-premium {
+  font-family: var(--font-display);
   font-weight: 600;
-  cursor: pointer;
+  padding: 0.8rem 1.8rem;
+  border-radius: 1rem;
   border: none;
-  font-family: var(--font-display);
+  cursor: pointer;
   transition: all 0.2s;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 0.5rem;
-  font-size: 0.95rem;
 }
 
-.btn-primary {
-  background-color: var(--accent-primary);
-  color: var(--accent-text);
-  /* Dark text on Yellow */
-  box-shadow: var(--shadow-sm);
+.btn-yellow {
+  background-color: var(--accent-yellow);
+  color: var(--accent-dark);
 }
 
-.btn-primary:hover {
-  background-color: #FACC15;
-  /* Darker Yellow */
-  transform: translateY(-1px);
+.btn-yellow:hover {
+  background-color: var(--accent-yellow-dark);
+  box-shadow: 0 4px 12px rgba(253, 224, 71, 0.4);
 }
 
-.btn-secondary {
-  background-color: white;
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
 }
 
-.btn-secondary:hover {
-  background-color: #F9FAFB;
+.btn-ghost:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-main);
 }
 
-.btn-danger {
-  background-color: #FEE2E2;
-  color: #EF4444;
+/* Layout System */
+.app-container {
+  display: flex;
+  height: 100vh;
+  padding: 1.25rem;
+  /* Padding around the whole app like the reference */
+  gap: 1.25rem;
+  background-color: #e5e7eb;
+  /* Slightly darker outer bg */
 }
 
-/* Sidebar Specifics */
-.nav-item {
+.inner-container {
+  flex: 1;
+  display: flex;
+  background-color: var(--bg-app);
+  border-radius: 2.5rem;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+}
+
+/* Navigation Sidebar */
+.nav-sidebar {
+  width: 280px;
+  background: var(--bg-sidebar);
+  border-right: var(--border-subtle);
+  padding: 2.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-link {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1rem;
-  border-radius: 1rem;
-  color: var(--text-secondary);
+  padding: 1rem 1.25rem;
+  border-radius: 1.25rem;
+  color: var(--text-muted);
+  text-decoration: none;
   font-weight: 500;
   transition: all 0.2s;
   cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  font-size: 1rem;
 }
 
-.nav-item:hover {
-  background-color: white;
-  color: var(--text-primary);
+.nav-link:hover {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-main);
 }
 
-.nav-item.active {
-  background-color: var(--accent-primary);
-  color: var(--accent-text);
+.nav-link.active {
+  background-color: var(--accent-yellow);
+  color: var(--accent-dark);
   font-weight: 700;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 15px rgba(253, 224, 71, 0.2);
 }
 
-/* Animations */
-@keyframes pulse-yellow {
-  0% {
-    box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.4);
-  }
-
-  70% {
-    box-shadow: 0 0 0 10px rgba(250, 204, 21, 0);
-  }
-
-  100% {
-    box-shadow: 0 0 0 0 rgba(250, 204, 21, 0);
-  }
-}
-
-.recording-pulse {
-  animation: pulse-yellow 2s infinite;
-}
-
-/* Layout Utilities */
-.dashboard-layout {
-  display: flex;
-  height: 100vh;
-  padding: 1.5rem;
-  gap: 1.5rem;
-}
-
-.sidebar {
-  width: 260px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.main-content {
+/* Main Content Area */
+.main-workspace {
   flex: 1;
   display: flex;
   flex-direction: column;
+  padding: 2.5rem;
+  background: white;
   min-width: 0;
 }
 
-.right-panel {
-  width: 300px;
-  flex-shrink: 0;
+/* Right Side Panel */
+.side-panel {
+  width: 320px;
+  background: #ffffff;
+  border-left: var(--border-subtle);
+  padding: 2.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Chat Specifically */
+.chat-container {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  overflow-y: auto;
+  padding-right: 0.5rem;
 }
 
-/* Inputs */
-input,
-textarea {
-  background: #F9FAFB;
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  padding: 0.8rem 1rem;
-  border-radius: 0.75rem;
-  width: 100%;
-  box-sizing: border-box;
+.message-bubble {
+  max-width: 85%;
+  padding: 1.25rem;
+  border-radius: 1.5rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  box-shadow: var(--shadow-soft);
 }
 
-input:focus,
-textarea:focus {
+.message-user {
+  align-self: flex-end;
+  background: var(--accent-dark);
+  color: white;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.message-ai {
+  align-self: flex-start;
+  background: #f3f4f6;
+  color: var(--text-main);
+  border-bottom-left-radius: 0.25rem;
+}
+
+/* Input Styles */
+.premium-input {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 1.25rem;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.premium-input:focus {
   outline: none;
-  border-color: #FBBF24;
+  border-color: var(--accent-yellow-dark);
   background: white;
-  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+  box-shadow: 0 0 0 4px rgba(253, 224, 71, 0.1);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeInUp 0.4s ease-out forwards;
 }

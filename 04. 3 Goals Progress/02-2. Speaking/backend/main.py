@@ -35,9 +35,19 @@ class ChatRequest(BaseModel):
 class MaterialCreate(BaseModel):
     title: str
     content: str
+    ai_role: str = "Tutor"
+    user_role: str = "Student"
+    target_phrases: List[str] = []
     
 class MaterialUpdate(BaseModel):
     progress: Dict
+
+class MaterialDetailsUpdate(BaseModel):
+    title: str
+    content: str
+    ai_role: str
+    user_role: str
+    target_phrases: List[str]
 
 class ExpressionCreate(BaseModel):
     expression: str
@@ -80,11 +90,31 @@ def get_materials():
 
 @app.post("/materials", response_model=Material)
 def create_material(material: MaterialCreate):
-    return material_service.add_material(material.title, material.content)
+    return material_service.add_material(
+        material.title, 
+        material.content,
+        material.ai_role,
+        material.user_role,
+        material.target_phrases
+    )
 
 @app.get("/materials/{material_id}", response_model=Material)
 def get_material(material_id: str):
     material = material_service.get_material(material_id)
+    if not material:
+        raise HTTPException(status_code=404, detail="Material not found")
+    return material
+
+@app.put("/materials/{material_id}")
+def update_material_details(material_id: str, update: MaterialDetailsUpdate):
+    material = material_service.update_material_details(
+        material_id,
+        update.title,
+        update.content,
+        update.ai_role,
+        update.user_role,
+        update.target_phrases
+    )
     if not material:
         raise HTTPException(status_code=404, detail="Material not found")
     return material

@@ -5,7 +5,9 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Dict
 from pydantic import BaseModel
 
-DATA_DIR = "data"
+# 현재 파일 위치를 기준으로 절대 경로 설정
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = os.path.join(BASE_DIR, "data")
 EXPRESSIONS_FILE = os.path.join(DATA_DIR, "expressions.json")
 
 class Expression(BaseModel):

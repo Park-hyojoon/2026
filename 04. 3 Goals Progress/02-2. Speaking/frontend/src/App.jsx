@@ -24,21 +24,19 @@ function App() {
           <div className="flex gap-1 mb-2">
             <button
               onClick={() => setActiveTab('materials')}
-              className={`flex-1 py-2 px-4 rounded-t text-sm font-medium transition ${
-                activeTab === 'materials'
+              className={`flex-1 py-2 px-4 rounded-t text-sm font-medium transition ${activeTab === 'materials'
                   ? 'bg-gray-800 text-white'
                   : 'bg-gray-900 text-gray-400 hover:text-white'
-              }`}
+                }`}
             >
               Materials
             </button>
             <button
               onClick={() => setActiveTab('expressions')}
-              className={`flex-1 py-2 px-4 rounded-t text-sm font-medium transition ${
-                activeTab === 'expressions'
+              className={`flex-1 py-2 px-4 rounded-t text-sm font-medium transition ${activeTab === 'expressions'
                   ? 'bg-gray-800 text-white'
                   : 'bg-gray-900 text-gray-400 hover:text-white'
-              }`}
+                }`}
             >
               Expressions
             </button>
@@ -70,7 +68,7 @@ function App() {
           )}
 
           <div className="flex-1 relative">
-            <TutorInterface />
+            <TutorInterface activeMaterial={activeMaterial} />
           </div>
         </div>
       </main>

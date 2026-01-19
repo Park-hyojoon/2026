@@ -21,19 +21,46 @@ const MaterialManager = ({ onSelectMaterial }) => {
     };
 
     const handleAdd = async () => {
-        if (!newTitle || !newContent) return;
+        if (!newTitle || !newContent) {
+            alert("Please fill in both title and content.");
+            return;
+        }
         try {
-            await fetch('http://localhost:8000/materials', {
+            const res = await fetch('http://localhost:8000/materials', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title: newTitle, content: newContent })
             });
+
+            if (!res.ok) {
+                throw new Error(`Server error: ${res.status}`);
+            }
+
             setNewTitle('');
             setNewContent('');
             setIsAdding(false);
             fetchMaterials();
+            alert("Material saved successfully!");
         } catch (e) {
             console.error("Failed to add material", e);
+            alert(`Failed to save material: ${e.message}`);
+        }
+    };
+
+    const handleDelete = async (e, id) => {
+        e.stopPropagation(); // Prevent selecting the material
+        if (!confirm('Delete this material?')) return;
+        try {
+            await fetch(`http://localhost:8000/materials/${id}`, { method: 'DELETE' });
+            fetchMaterials();
+            if (activeMaterial && activeMaterial.id === id) {
+                // Ideally cancel selection if the deleted one was selected
+                // For now, parent handles selection, so we can't easily deselect without parent prop
+                // But it's fine.
+            }
+        } catch (e) {
+            console.error("Failed to delete material", e);
+            alert("Failed to delete material");
         }
     };
 
@@ -51,10 +78,18 @@ const MaterialManager = ({ onSelectMaterial }) => {
                             <div
                                 key={m.id}
                                 onClick={() => onSelectMaterial(m)}
-                                className="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer transition"
+                                className="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer transition flex justify-between items-start"
                             >
-                                <h3 className="font-bold text-white">{m.title}</h3>
-                                <p className="text-xs text-gray-400 truncate">{m.content.substring(0, 50)}...</p>
+                                <div className="flex-1 min-w-0 mr-2">
+                                    <h3 className="font-bold text-white truncate">{m.title}</h3>
+                                    <p className="text-xs text-gray-400 truncate">{m.content.substring(0, 50)}...</p>
+                                </div>
+                                <button
+                                    onClick={(e) => handleDelete(e, m.id)}
+                                    className="text-gray-500 hover:text-red-400 px-2"
+                                >
+                                    X
+                                </button>
                             </div>
                         ))}
                         {materials.length === 0 && <p className="text-gray-500 text-center">No materials yet.</p>}

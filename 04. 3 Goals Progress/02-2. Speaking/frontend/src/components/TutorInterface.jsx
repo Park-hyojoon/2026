@@ -58,13 +58,46 @@ const TutorInterface = ({ activeMaterial }) => {
         setAbortController(controller);
 
         try {
-            let systemPrompt = "You are a helpful English speaking tutor.";
+            let systemPrompt = "You are a helpful English speaking tutor. Keep responses concise (1-2 sentences).";
+
             if (activeMaterial) {
+                // Scenario/Role-play 모드
                 const remaining = activeMaterial.target_phrases.filter(p => !completedMissions.includes(p));
                 const missionText = remaining.length > 0
-                    ? `\n\n[USER MISSIONS]: The user must say these: ${JSON.stringify(remaining)}. Guide them to do so.`
-                    : "\n\n[MISSIONS CLEARED]: All goals met! Celebrate!";
-                systemPrompt = `Role: ${activeMaterial.ai_role}. User Role: ${activeMaterial.user_role}. Scenario: ${activeMaterial.content}. ${missionText}. Be highly conversational and concise.`;
+                    ? `\n\n[USER MISSIONS - CRITICAL]: The user MUST practice these exact phrases: ${JSON.stringify(remaining)}.
+                       Your job is to PERSISTENTLY guide the conversation so the user naturally says these phrases.
+                       - Create situations where they need to use these expressions
+                       - If they struggle, give hints or rephrase the scenario
+                       - Don't give up until they say each phrase!`
+                    : "\n\n[ALL MISSIONS COMPLETE]: Congratulate them enthusiastically! Suggest practicing again or trying new expressions.";
+                systemPrompt = `You are playing the role of: ${activeMaterial.ai_role}
+The user is playing: ${activeMaterial.user_role}
+Scenario: ${activeMaterial.content}
+${missionText}
+Stay in character. Be conversational and concise (1-2 sentences max).`;
+            } else {
+                // Expression Bank 학습 모드 - 저장된 표현 가져오기
+                try {
+                    const res = await fetch('http://localhost:8000/expressions');
+                    const expressions = await res.json();
+                    if (expressions.length > 0) {
+                        const exprList = expressions.map(e => `• "${e.expression}" - ${e.meaning}`).join('\n');
+                        systemPrompt = `You are a PERSISTENT English tutor. Your mission is to help the user MASTER these saved expressions:
+
+${exprList}
+
+TEACHING METHOD:
+1. Pick ONE expression the user hasn't practiced yet
+2. Create a realistic conversation scenario where they MUST use it
+3. If they use it correctly: praise them, then move to the next expression
+4. If they struggle: give hints, break it down, but DON'T give up!
+5. Keep drilling until they can use each expression naturally
+
+Be encouraging but RELENTLESS. Keep responses short (1-2 sentences).`;
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch expressions for context", e);
+                }
             }
 
             const response = await fetch('http://localhost:8000/chat', {

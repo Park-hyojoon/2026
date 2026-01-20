@@ -9,6 +9,7 @@ from typing import List, Dict, Optional
 from services.ollama_client import ollama_service
 from services.material_service import material_service, Material
 from services.expression_service import expression_service, Expression
+from services.history_service import history_service
 
 # Create the app
 app = FastAPI(title="AI English Tutor Backend")
@@ -78,6 +79,7 @@ def health_check():
 # Chat Endpoint
 @app.post("/chat")
 def chat(request: ChatRequest):
+    history_service.log_activity() # Log study activity
     response = ollama_service.chat(request.model, request.messages)
     if not response:
         raise HTTPException(status_code=500, detail="Failed to communicate with Ollama")
@@ -195,6 +197,11 @@ def delete_expression(expr_id: str):
     if not success:
         raise HTTPException(status_code=404, detail="Expression not found")
     return {"status": "success"}
+
+# History Endpoint
+@app.get("/history")
+def get_history():
+    return history_service.get_history()
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

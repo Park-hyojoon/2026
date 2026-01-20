@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import MaterialManager from './components/MaterialManager';
 import ExpressionManager from './components/ExpressionManager';
 import TutorInterface from './components/TutorInterface';
+import TutorInterface from './components/TutorInterface';
 
 function App() {
   const [activeTab, setActiveTab] = useState('tutor');
@@ -26,12 +27,6 @@ function App() {
 
           <nav className="flex flex-col gap-2">
             <NavLink
-              label="Dashboard"
-              icon="🏠"
-              active={activeTab === 'dashboard'}
-              onClick={() => setActiveTab('dashboard')}
-            />
-            <NavLink
               label="Speaking Session"
               icon="💬"
               active={activeTab === 'tutor'}
@@ -51,17 +46,6 @@ function App() {
             />
           </nav>
 
-          <div className="mt-auto">
-            <div className="bg-gray-900 p-6 rounded-[2rem] text-white relative overflow-hidden group cursor-pointer">
-              <div className="relative z-10">
-                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-black font-bold mb-3 group-hover:scale-110 transition">?</div>
-                <h4 className="font-bold mb-1">Help center</h4>
-                <p className="text-xs text-gray-400 mb-4 leading-relaxed">Have a problem?<br />Send us a message!</p>
-                <button className="w-full bg-white text-black py-2.5 rounded-xl text-xs font-bold hover:bg-gray-100 transition">Go to help center</button>
-              </div>
-              <div className="absolute -bottom-8 -right-8 w-28 h-28 bg-yellow-400 rounded-full opacity-10 blur-xl"></div>
-            </div>
-          </div>
         </aside>
 
         {/* 2. Main Workspace */}
@@ -73,71 +57,24 @@ function App() {
                 {activeTab === 'tutor' && "Speaking Session"}
                 {activeTab === 'materials' && "My Scenarios"}
                 {activeTab === 'expressions' && "Expression Bank"}
-                {activeTab === 'dashboard' && "Skill Dashboard"}
               </h2>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-                <input
-                  type="text"
-                  placeholder="Search for lessons..."
-                  className="premium-input pl-11 w-64 bg-gray-50 border-none"
-                />
-              </div>
-              <button className="w-12 h-12 bg-white rounded-2xl border border-gray-100 flex items-center justify-center text-xl shadow-sm hover:bg-gray-50 transition relative">
-                🔔
-                <span className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-              </button>
             </div>
           </header>
 
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
             {activeTab === 'tutor' && <TutorInterface activeMaterial={activeMaterial} />}
             {activeTab === 'materials' && <MaterialManager onSelectMaterial={handleSelectMaterial} activeMaterial={activeMaterial} />}
             {activeTab === 'expressions' && <ExpressionManager />}
-            {activeTab === 'dashboard' && <div className="text-center py-20 text-gray-400">Dashboard statistics coming soon!</div>}
           </div>
         </main>
 
         {/* 3. Side Panel (Profile/Calendar) */}
         <aside className="side-panel">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-xl">Profile</h3>
-            <button className="text-gray-400 hover:text-black">✏️</button>
-          </div>
-
-          <div className="flex flex-col items-center py-6">
-            <div className="w-24 h-24 rounded-full bg-blue-50 flex items-center justify-center text-5xl shadow-inner border-4 border-white mb-4">
-              🎓
-            </div>
-            <h3 className="text-xl font-bold">Standard User</h3>
-            <p className="text-sm text-gray-400 font-medium">user@example.com</p>
-          </div>
-
           <div className="mt-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl">Schedule</h3>
-              <button className="text-xs font-bold text-gray-400 hover:text-black uppercase tracking-wider">See all</button>
-            </div>
-            <div className="space-y-4">
-              <ScheduleItem time="12:00" title="Business English" sub="Negotiation Practice" color="yellow" />
-              <ScheduleItem time="14:30" title="Daily Speaking" sub="At the Restaurant" color="blue" />
+            <div className="mt-4">
             </div>
           </div>
 
-          <div className="mt-10">
-            <h3 className="text-xl mb-4">Learning Progress</h3>
-            <div className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-bold">Overall Mastery</span>
-                <span className="text-sm font-bold text-yellow-600">75%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-yellow-400 h-full rounded-full" style={{ width: '75%' }}></div>
-              </div>
-            </div>
-          </div>
         </aside>
       </div>
     </div>

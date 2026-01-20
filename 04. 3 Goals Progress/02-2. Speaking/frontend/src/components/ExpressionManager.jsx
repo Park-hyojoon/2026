@@ -95,10 +95,7 @@ const ExpressionManager = () => {
     return (
         <div className="h-full flex flex-col animate-fade-in">
             <div className="flex justify-between items-center mb-8">
-                <div>
-                    <h3 className="text-xl font-bold text-gray-800">Expression Bank</h3>
-                    <p className="text-xs text-gray-400 font-medium mt-1">Manage your active vocabulary and idioms</p>
-                </div>
+                <div />
                 {!isAdding && (
                     <button onClick={() => setIsAdding(true)} className="btn-premium btn-yellow shadow-md">
                         + New Expression

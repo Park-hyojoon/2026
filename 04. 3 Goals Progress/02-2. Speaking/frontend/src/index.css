@@ -180,6 +180,7 @@ h4 {
   padding: 2.5rem;
   background: white;
   min-width: 0;
+  overflow: hidden;
 }
 
 /* Right Side Panel */
@@ -201,6 +202,7 @@ h4 {
   gap: 1.5rem;
   overflow-y: auto;
   padding-right: 0.5rem;
+  min-height: 0;
 }
 
 .message-bubble {

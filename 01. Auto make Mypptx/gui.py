@@ -111,11 +111,9 @@ class App:
         # 1) PPT Folder (Songs) -> D:\05. Download
         self.ppt_dir_var = tk.StringVar(value=r"D:\05. Download")
         
-        # 2) Template File -> D:\02. 열띰!\02. 교회\03. 금요기도회 PPT\004.pptx
-        # Assuming 004.pptx is the filename inside that folder
-        # 2) Template File -> D:\02. 열띰!\02. 교회\03. 금요기도회 PPT\friday.pptx
+        # 2) Template File -> D:\00. WorkSpace\04. Service\02. 교회\03. 금요기도회 PPT\friday.pptx
         # We start with Friday default
-        self.template_path_var = tk.StringVar(value=r"D:\02. 열띰!\02. 교회\03. 금요기도회 PPT\friday.pptx")
+        self.template_path_var = tk.StringVar(value=r"D:\00. WorkSpace\04. Service\02. 교회\03. 금요기도회 PPT\friday.pptx")
         
         self.is_wednesday_var = tk.BooleanVar(value=False)
         self.sermon_title_var = tk.StringVar(value="")
@@ -128,8 +126,8 @@ class App:
         friday = today + datetime.timedelta((4 - today.weekday()) % 7)
         default_filename = f"{friday.strftime('%Y년 %m월 %d일')} 금요기도회.pptx"
         
-        # 3) Output File -> D:\02. 열띰!\02. 교회\03. 금요기도회 PPT
-        self.output_path_var = tk.StringVar(value=os.path.join(r"D:\02. 열띰!\02. 교회\03. 금요기도회 PPT", default_filename))
+        # 3) Output File -> D:\00. WorkSpace\04. Service\02. 교회\03. 금요기도회 PPT
+        self.output_path_var = tk.StringVar(value=os.path.join(r"D:\00. WorkSpace\04. Service\02. 교회\03. 금요기도회 PPT", default_filename))
         
         # Style Configuration for Tabs
         style = ttk.Style()
@@ -410,17 +408,17 @@ class App:
             # Wednesday Mode
             # 1. Template Path
             # Explicitly set to the requested Wednesday path
-            new_tpl_path = r"D:\02. 열띰!\02. 교회\04. 수요기도회 PPT\wednesday.pptx"
-            
+            new_tpl_path = r"D:\00. WorkSpace\04. Service\02. 교회\04. 수요기도회 PPT\wednesday.pptx"
+
             # 2. Date Calculation (Next Wednesday)
             target_weekday = 2 # Wednesday
             days_ahead = target_weekday - today.weekday()
             if days_ahead <= 0: # Target day already happened this week
                 days_ahead += 7
             next_date = today + datetime.timedelta(days_ahead)
-            
+
             # 3. Output Path
-            base_output_dir = r"D:\02. 열띰!\02. 교회\04. 수요기도회 PPT"
+            base_output_dir = r"D:\00. WorkSpace\04. Service\02. 교회\04. 수요기도회 PPT"
             
             filename = f"{next_date.strftime('%Y년 %m월 %d일')} 수요기도회.pptx"
             
@@ -430,17 +428,17 @@ class App:
         else:
             # Friday Mode (Default)
             # 1. Template Path
-            new_tpl_path = r"D:\02. 열띰!\02. 교회\03. 금요기도회 PPT\friday.pptx"
-            
+            new_tpl_path = r"D:\00. WorkSpace\04. Service\02. 교회\03. 금요기도회 PPT\friday.pptx"
+
             # 2. Date Calculation (Next Friday)
             target_weekday = 4 # Friday
             days_ahead = target_weekday - today.weekday()
             if days_ahead <= 0:
                 days_ahead += 7
             next_date = today + datetime.timedelta(days_ahead)
-            
+
             # 3. Output Path
-            base_output_dir = r"D:\02. 열띰!\02. 교회\03. 금요기도회 PPT"
+            base_output_dir = r"D:\00. WorkSpace\04. Service\02. 교회\03. 금요기도회 PPT"
             
             filename = f"{next_date.strftime('%Y년 %m월 %d일')} 금요기도회.pptx"
 

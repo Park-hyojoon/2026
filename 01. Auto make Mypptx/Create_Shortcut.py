@@ -9,26 +9,22 @@ def create_shortcut():
     target_script = os.path.join(base_dir, "gui.py")
     icon_path = os.path.join(base_dir, "makeppt001_1.ico")
     
-    # Find pythonw.exe (same dir as python.exe)
+    # Get Python executable (pythonw.exe for no console)
     python_dir = os.path.dirname(sys.executable)
     pythonw_exe = os.path.join(python_dir, "pythonw.exe")
     
     if not os.path.exists(pythonw_exe):
-        print(f"Error: pythonw.exe not found at {pythonw_exe}")
-        # Fallback to python.exe if pythonw is missing
         pythonw_exe = sys.executable
 
-    # Create in Current Directory (User request)
-    shortcut_path = os.path.join(base_dir, "MyPPT 2.5 (Live).lnk")
-    
-    print(f"Creating shortcut at: {shortcut_path}")
-    print(f"Target: {pythonw_exe}")
-    print(f"Arguments: {target_script}")
-    print(f"Start In: {base_dir}")
-    
     # 2. Create Shortcut
     try:
         shell = Dispatch('WScript.Shell')
+        # Get Desktop folder path
+        desktop = shell.SpecialFolders("Desktop")
+        shortcut_path = os.path.join(desktop, "MyPPT 2.5 (Live).lnk")
+        
+        print(f"Creating shortcut at: {shortcut_path}")
+        
         shortcut = shell.CreateShortCut(shortcut_path)
         shortcut.Targetpath = pythonw_exe
         shortcut.Arguments = f'"{target_script}"'
@@ -36,7 +32,7 @@ def create_shortcut():
         if os.path.exists(icon_path):
             shortcut.IconLocation = icon_path
         shortcut.save()
-        print("Shortcut created successfully.")
+        print("Shortcut created successfully on Desktop.")
     except Exception as e:
         print(f"Failed to create shortcut: {e}")
 

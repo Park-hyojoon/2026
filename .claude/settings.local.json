@@ -3,7 +3,8 @@
     "allow": [
       "Bash(echo $env:USERPROFILE)",
       "Bash(git checkout:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(python -m pip list:*)"
     ]
   }
 }

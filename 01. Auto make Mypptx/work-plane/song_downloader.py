@@ -152,7 +152,7 @@ class SongDownloaderApp:
         self.btn_clear_results.pack(side="left")
 
         # === 검색 결과 영역 ===
-        result_frame = tk.LabelFrame(main_frame, text="검색 결과 (더블클릭으로 선택)", padx=10, pady=10)
+        result_frame = tk.LabelFrame(main_frame, text="검색 결과 (클릭/드래그로 다중 선택 가능)", padx=10, pady=10)
         result_frame.pack(fill="both", expand=True, pady=(0, 10))
 
         # 리스트박스 + 스크롤바
@@ -162,7 +162,7 @@ class SongDownloaderApp:
         scrollbar = tk.Scrollbar(list_frame)
         scrollbar.pack(side="right", fill="y")
 
-        self.result_listbox = tk.Listbox(list_frame, selectmode=tk.SINGLE, yscrollcommand=scrollbar.set, height=8)
+        self.result_listbox = tk.Listbox(list_frame, selectmode=tk.EXTENDED, yscrollcommand=scrollbar.set, height=8)
         self.result_listbox.pack(side="left", fill="both", expand=True)
         scrollbar.config(command=self.result_listbox.yview)
 
@@ -591,28 +591,53 @@ class SongDownloaderApp:
         threading.Thread(target=self._search_thread, args=(keyword,), daemon=True).start()
 
     def add_to_queue(self):
-        """선택한 곡을 대기열에 추가"""
+        """선택한 곡을 대기열에 추가 (여러 곡 선택 가능)"""
         selection = self.result_listbox.curselection()
         if not selection:
             messagebox.showwarning("경고", "대기열에 추가할 곡을 선택하세요.")
             return
 
-        index = selection[0]
-        result = self.search_results[index]
+        # 선택된 모든 항목 가져오기
+        selected_results = [self.search_results[idx] for idx in selection]
 
-        # 최대 7곡 제한
-        if len(self.selected_queue) >= 7:
+        # 현재 대기열 크기 확인
+        current_queue_size = len(self.selected_queue)
+        available_slots = 7 - current_queue_size
+
+        if available_slots <= 0:
             messagebox.showwarning("제한", "대기열에는 최대 7곡까지만 추가할 수 있습니다.")
             return
 
-        # 중복 체크
-        if any(r['url'] == result['url'] for r in self.selected_queue):
-            messagebox.showinfo("정보", "이미 대기열에 포함된 곡입니다.")
-            return
+        # 중복 제거 및 추가
+        added_count = 0
+        skipped_count = 0
 
-        self.selected_queue.append(result)
+        for result in selected_results:
+            # 대기열 용량 체크
+            if len(self.selected_queue) >= 7:
+                remaining = len(selected_results) - (added_count + skipped_count)
+                if remaining > 0:
+                    messagebox.showwarning("제한", f"대기열 용량 초과로 {remaining}곡은 추가되지 않았습니다.\n(최대 7곡)")
+                break
+
+            # 중복 체크
+            if any(r['url'] == result['url'] for r in self.selected_queue):
+                skipped_count += 1
+                continue
+
+            self.selected_queue.append(result)
+            added_count += 1
+
         self._redisplay_queue()
-        self.status_label.config(text=f"'{result['title']}' 대기열에 추가됨 (총 {len(self.selected_queue)}곡)")
+
+        # 상태 메시지
+        if added_count > 0 and skipped_count > 0:
+            self.status_label.config(text=f"{added_count}곡 추가됨, {skipped_count}곡 중복 제외 (총 {len(self.selected_queue)}곡)")
+        elif added_count > 0:
+            self.status_label.config(text=f"{added_count}곡 대기열에 추가됨 (총 {len(self.selected_queue)}곡)")
+        else:
+            self.status_label.config(text="선택한 곡이 모두 이미 대기열에 포함되어 있습니다.")
+            messagebox.showinfo("정보", "선택한 곡이 모두 이미 대기열에 포함되어 있습니다.")
 
     def remove_from_queue(self):
         """대기열에서 선택한 곡 삭제"""

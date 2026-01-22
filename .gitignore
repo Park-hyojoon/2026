@@ -24,3 +24,4 @@ nul
 # Ignore all _my_opinion folders
 _my_opinion/
 PDF(ocr)/
+.vscode/

@@ -2,14 +2,22 @@ import tkinter as tk
 from tkinter import messagebox, colorchooser, ttk, simpledialog
 from PIL import Image, ImageTk, ImageGrab
 import os
+import sys
 import json
 from datetime import datetime, timedelta
 
+# --- [경로 설정] ---
+# 어느 위치에서 실행하든 소스 파일 위치를 기준으로 파일을 찾도록 설정
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def get_path(relative_path):
+    return os.path.join(BASE_DIR, relative_path)
+
 # --- [전역 변수] ---
 last_focus_widget = None
-SAVE_FILE = "saved_data.json"
-LAYOUT_FILE = "layout.json"
-BORDER_FILE = "border_settings.json"
+SAVE_FILE = get_path("saved_data.json")
+LAYOUT_FILE = get_path("layout.json")
+BORDER_FILE = get_path("border_settings.json")
 widgets_dict = {}
 widget_window_ids = {}
 container_dict = {}  # 각 key의 container Frame 저장
@@ -136,14 +144,15 @@ def main():
     load_border_settings()
 
     root = tk.Tk()
-    root.title("Making e-mail 1.5 (드래그 이동 모드)")
+    root.title("Making e-mail 2.0 (드래그 이동 모드)")
     
     try:
-        icon_img = tk.PhotoImage(file="main_icon.png")
+        icon_path = get_path("main_icon.png")
+        icon_img = tk.PhotoImage(file=icon_path)
         root.iconphoto(False, icon_img)
     except: pass
 
-    bg_path = os.path.join("img", "bg.jpg")
+    bg_path = get_path(os.path.join("img", "bg.jpg"))
     try:
         with Image.open(bg_path) as temp_img:
             real_img_w, real_img_h = temp_img.size
@@ -505,16 +514,57 @@ def main():
             return focused
         return None
 
-    def save_image():
+    def open_folder():
+        """이미지가 저장된 폴더를 엽니다."""
         try:
-            x = root.winfo_rootx() + 2 
-            y = root.winfo_rooty() + toolbar_height + 2
-            w = min(real_img_w, canvas.winfo_width())
-            h = min(real_img_h, canvas.winfo_height())
-            bbox = (x, y, x + w, y + h)
-            ImageGrab.grab(bbox).save("result.png")
-            set_status("이미지가 result.png로 저장되었습니다!")
+            os.startfile(os.getcwd())
         except Exception as e:
+            messagebox.showerror("에러", f"폴더 열기 실패: {e}")
+
+    def save_image():
+        """창 크기와 상관없이 배경 이미지 전체 영역을 캡처하여 저장합니다."""
+        try:
+            # 캡처 전 현재 상태 저장
+            original_geometry = root.geometry()
+            original_scroll = canvas.yview()
+            
+            # 툴바와 기타 UI 요소를 제외한 순수 배경 영역(real_img_w, real_img_h)을 
+            # 모두 화면에 노출시키기 위해 창 크기 일시 확장
+            # ※ 창 장식(타이틀바)과 툴바 높이를 고려하여 여유 있게 설정
+            temp_width = max(real_img_w + 40, root.winfo_width())
+            temp_height = real_img_h + toolbar_height + 80
+            root.geometry(f"{temp_width}x{temp_height}")
+            
+            # 스크롤을 맨 위로 올려서 배경의 (0,0) 좌표가 캔버스 상단에 오게 함
+            canvas.yview_moveto(0)
+            root.update() # 레이아웃 업데이트 대기
+            
+            # 캔버스의 실제 화면 좌표(rootx, rooty)를 기준으로 배경 이미지 크기만큼 캡처 영역 설정
+            x = canvas.winfo_rootx()
+            y = canvas.winfo_rooty()
+            
+            # 오른쪽 여백이나 스크롤바가 포함되지 않도록 real_img_w를 사용
+            bbox = (x, y, x + real_img_w, y + real_img_h)
+            
+            # 캡처 및 저장
+            img = ImageGrab.grab(bbox)
+            img = img.convert("RGB")
+            img.save("result.jpg", quality=95)
+            
+            # 원래 창 크기와 스크롤 위치로 복구
+            root.geometry(original_geometry)
+            canvas.yview_moveto(original_scroll[0])
+            root.update()
+            
+            set_status("배경 전체 영역이 result.jpg로 저장되었습니다!")
+            os.startfile("result.jpg")
+            
+        except Exception as e:
+            # 에러 발생 시에도 가급적 복구
+            try:
+                root.geometry(original_geometry)
+                canvas.yview_moveto(original_scroll[0])
+            except: pass
             messagebox.showerror("에러", f"저장 실패: {e}")
 
     # (서식 함수들 생략없이 유지)
@@ -671,6 +721,11 @@ def main():
             except: pass
 
     def on_closing():
+        save_all_data()
+        root.destroy()
+
+    def save_all_data():
+        """현재 모든 텍스트 박스의 데이터를 저장합니다."""
         data = {}
         for key, widget in widgets_dict.items():
             data[key] = serialize_widget(widget)
@@ -678,7 +733,12 @@ def main():
             with open(SAVE_FILE, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=4)
         except: pass
-        root.destroy()
+
+    def reload_program(event=None):
+        """데이터를 저장하고 프로그램을 재시작합니다."""
+        save_all_data()
+        python = sys.executable
+        os.execl(python, python, *sys.argv)
 
     def load_saved_data():
         if not os.path.exists(SAVE_FILE): return
@@ -693,7 +753,10 @@ def main():
     # --- [버튼 UI 배치] ---
     btn_opts = {'padx': 5, 'pady': 2, 'bg': 'white', 'relief': 'groove'}
     btn_save = tk.Button(toolbar, text="💾 저장", command=save_image, **btn_opts)
-    btn_save.pack(side=tk.LEFT, padx=(5, 5), pady=5)
+    btn_save.pack(side=tk.LEFT, padx=(5, 2), pady=5)
+
+    btn_open_folder = tk.Button(toolbar, text="📂 폴더 열기", command=open_folder, **btn_opts)
+    btn_open_folder.pack(side=tk.LEFT, padx=(2, 5), pady=5)
     
     btn_refresh = tk.Button(toolbar, text="🔄 새로고침", command=refresh_layout, **btn_opts)
     btn_refresh.pack(side=tk.LEFT, padx=(0, 10), pady=5)
@@ -777,7 +840,7 @@ def main():
     # --- [텍스트 박스 생성] ---
     text_settings = {'bg': 'white', 'bd': 0, 'highlightthickness': 0, 'exportselection': False, 'undo': True, 'maxundo': -1, 'wrap': 'word'}
 
-    def create_text_widget_from_layout(key, font_family, font_size):
+    def create_text_widget_from_layout(key, font_family, font_size, padx=0, pady=0):
         x, y, w, h = current_layout[key]
 
         # 개별 박스 설정 가져오기 (안전하게)
@@ -788,8 +851,8 @@ def main():
                             highlightthickness=box_border["thickness"],
                             highlightbackground=box_border["color"])
 
-        # 텍스트 위젯 생성
-        tw = tk.Text(container, font=(font_family, font_size), **text_settings)
+        # 텍스트 위젯 생성 (패딩 적용)
+        tw = tk.Text(container, font=(font_family, font_size), padx=padx, pady=pady, **text_settings)
         tw.pack(fill=tk.BOTH, expand=True)
 
         # 리사이즈 핸들 (우하단)
@@ -815,10 +878,11 @@ def main():
         return tw
 
     text_date = create_text_widget_from_layout("date", FONT_FAMILY_DATE, 9)
-    text_sermon = create_text_widget_from_layout("sermon", FONT_FAMILY_MAIN, 10)
-    text_order = create_text_widget_from_layout("order", FONT_FAMILY_MAIN, 10)
-    text_today = create_text_widget_from_layout("today", FONT_FAMILY_MAIN, 10)
-    text_notice = create_text_widget_from_layout("notice", FONT_FAMILY_MAIN, 10)
+    # [변경] 주요 4개 박스 여백 정밀 조정 (상하 10px, 좌우 15px)
+    text_sermon = create_text_widget_from_layout("sermon", FONT_FAMILY_MAIN, 10, padx=15, pady=10)
+    text_order = create_text_widget_from_layout("order", FONT_FAMILY_MAIN, 10, padx=15, pady=10)
+    text_today = create_text_widget_from_layout("today", FONT_FAMILY_MAIN, 10, padx=15, pady=10)
+    text_notice = create_text_widget_from_layout("notice", FONT_FAMILY_MAIN, 10, padx=15, pady=10)
 
     today = datetime.now()
     days_until_sunday = (6 - today.weekday()) % 7
@@ -829,6 +893,9 @@ def main():
 
     load_saved_data()
     root.protocol("WM_DELETE_WINDOW", on_closing)
+    
+    # [추가] F5 키를 누르면 저장 후 프로그램 재시작
+    root.bind("<F5>", reload_program)
 
     root.mainloop()
 

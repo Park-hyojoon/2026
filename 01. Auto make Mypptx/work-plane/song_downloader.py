@@ -20,10 +20,11 @@ from song_search import search_songs, get_download_info, download_file, sanitize
 
 
 class SongDownloaderApp:
-    def __init__(self, root, parent=None, is_standalone=True):
+    def __init__(self, root, parent=None, is_standalone=True, on_download_complete=None):
         self.root = root
         self.parent = parent if parent else root
         self.is_standalone = is_standalone
+        self.on_download_complete = on_download_complete
         
         if self.is_standalone:
             self.root.title("찬송가 다운로더 v2.0")
@@ -510,6 +511,11 @@ class SongDownloaderApp:
             self.file_number_var.set(str(new_num))
         except:
             pass
+            
+        # Call the external callback if provided (e.g. to Notify Main App)
+        if self.on_download_complete:
+            # We can pass the list of downloaded files if we tracked them, but for now just signal completion
+            self.on_download_complete(success, failed_list)
 
         # 결과 메시지
         msg = f"일괄 다운로드 완료!\n\n"
@@ -754,6 +760,10 @@ class SongDownloaderApp:
         self.is_batch_downloading = False
         self.download_all_btn.config(state="normal", text="모두 다운로드")
         self.progress['value'] = 100
+        
+        # Call the external callback
+        if self.on_download_complete:
+             self.on_download_complete(success, failed_list)
 
         msg = f"대기열 다운로드 완료!\n\n총 {total}곡 중 {success}곡 성공"
         if failed_list:

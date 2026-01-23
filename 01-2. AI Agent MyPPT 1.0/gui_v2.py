@@ -411,9 +411,11 @@ class App:
                         is_number = True
                     
                     if is_number:
-                        query = f"새찬송가 ppt {song_query}"
+                        # Optimization: Remove 'ppt' for number search to avoid Tistory search failures
+                        # Most hymn blogs are PPTs anyway, so '새찬송가 28장' is more reliable than '새찬송가 ppt 28장'
+                        query = f"새찬송가 {song_query}"
                         if "장" not in song_query and song_query.isdigit():
-                             query = f"새찬송가 ppt {song_query}장"
+                             query = f"새찬송가 {song_query}장"
                     else:
                         # Natural Language (e.g. 실로암, 승리하였네) -> Use as is or with specific handling
                         # User wants this flexibility.

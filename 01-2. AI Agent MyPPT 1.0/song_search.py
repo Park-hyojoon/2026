@@ -214,12 +214,15 @@ def search_cwy0675(keyword):
                     # 2. 포함되지 않았다면 유사도 검사 (오타/조사 차이 허용)
                     else:
                         matcher = difflib.SequenceMatcher(None, normalized_keyword, normalized_title)
-                        # 가장 긴 연속 매칭 구간 찾기
                         match = matcher.find_longest_match(0, len(normalized_keyword), 0, len(normalized_title))
                         
-                        # 검색어의 50% 이상이 연속해서 일치하면 통과 (기준 완화: 승리하(셨네) -> 승리하(였네))
-                        # 3글자 이상인 경우에만 적용
-                        if len(normalized_keyword) >= 3 and match.size >= len(normalized_keyword) * 0.5:
+                        # 검색어의 40% 이상이 연속해서 일치하면 통과 (기존 50%에서 완화)
+                        if len(normalized_keyword) >= 2 and match.size >= len(normalized_keyword) * 0.4:
+                            is_match = True
+                        
+                        # 번호 중심의 보정: 만약 검색어에 숫자가 포함되어 있고, 제목에도 그 숫자가 정확히 있다면 통과
+                        num_match = re.search(r'\d+', normalized_keyword)
+                        if num_match and num_match.group() in normalized_title:
                             is_match = True
                     
                     # 검색어가 제목에 포함되어 있거나 유사하면 결과에 추가

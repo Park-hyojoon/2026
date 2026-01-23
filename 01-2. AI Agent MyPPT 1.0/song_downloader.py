@@ -129,7 +129,7 @@ class SongDownloaderApp:
 
         self.search_entry = tk.Entry(search_input_frame, width=40)
         self.search_entry.pack(side="left", padx=(5, 10), fill="x", expand=True)
-        self.search_entry.insert(0, "새찬송가 ppt ")
+        self.search_entry.insert(0, "")
         self.search_entry.bind("<Return>", lambda e: self.do_search())
 
         self.search_btn = tk.Button(search_input_frame, text="검색", command=self.do_search, width=10)
@@ -316,11 +316,9 @@ class SongDownloaderApp:
         self.batch_btn.config(state="disabled")
         self.search_btn.config(state="disabled")
         
-        # 검색 결과 초기화 (누적 여부와 상관없이 일괄 검색은 보통 새로운 세트로 간주하지만, 
-        # 사용자가 혼동하지 않도록 기존 결과 유지 여부는 옵션을 따름)
-        if not self.cumulative_search.get():
-            self.result_listbox.delete(0, tk.END)
-            self.search_results = []
+        # User requested "Exactly 2 items": Always clear results before batch search
+        self.result_listbox.delete(0, tk.END)
+        self.search_results = []
         
         threading.Thread(target=self._batch_search_thread, args=(numbers, song_type), daemon=True).start()
 
@@ -342,14 +340,27 @@ class SongDownloaderApp:
             try:
                 self.root.after(0, lambda n=num, idx=i+1, t=total:
                     self.status_label.config(text=f"[{idx}/{t}] {n}장 검색 중..."))
-                
+
                 keyword = f"{song_type} {num}장"
                 results = search_songs(keyword, sources=sources)
-                
+
                 if results:
-                    found_count += 1
-                    # 결과 추가 (메인 스레드에서 UI 업데이트 권장하지만, 리스트 조작은 여기서 하고 UI 반영은 after로)
-                    self.search_results.extend(results)
+                    # 정확한 매칭만 필터링 (예: "28장" 검색 시 "128장", "228장" 등 제외)
+                    # 패턴: 공백 또는 시작 + 숫자 + "장"
+                    pattern = r'(?:^|\s)' + str(num) + r'장(?:\s|$|[^\d])'
+                    filtered_results = [r for r in results if re.search(pattern, r['title'])]
+
+                    if filtered_results:
+                        found_count += 1
+                        # 각 소스당 최상위 1개씩만 선택 (정확도 향상)
+                        best_results = []
+                        for source in sources:
+                            source_results = [r for r in filtered_results if r['source'] == source]
+                            if source_results:
+                                best_results.append(source_results[0])
+
+                        # 결과 추가
+                        self.search_results.extend(best_results)
             except:
                 pass
         
@@ -418,7 +429,6 @@ class SongDownloaderApp:
         total = len(numbers)
         success_count = 0
         failed_list = []
-        downloaded_files = []
 
         # 선택된 검색 소스 확인
         sources = []
@@ -429,7 +439,7 @@ class SongDownloaderApp:
         
         if not sources:
             self.root.after(0, lambda: messagebox.showerror("오류", "검색 사이트를 최소 1개 이상 선택해주세요."))
-            self.root.after(0, lambda: self._on_batch_complete(total, 0, ["검색 사이트 미선택"], []))
+            self.root.after(0, lambda: self._on_batch_complete(total, 0, ["검색 사이트 미선택"]))
             return
 
         for i, num in enumerate(numbers):
@@ -490,7 +500,6 @@ class SongDownloaderApp:
                 download_file(info['download_url'], save_path, progress_callback=update_progress)
 
                 success_count += 1
-                downloaded_files.append(new_filename)
                 self.root.after(0, lambda n=num:
                     self.status_label.config(text=f"{n}장 완료!"))
 
@@ -498,9 +507,9 @@ class SongDownloaderApp:
                 failed_list.append(f"{num}장 ({str(e)[:30]})")
 
         # 완료
-        self.root.after(0, lambda: self._on_batch_complete(total, success_count, failed_list, downloaded_files))
+        self.root.after(0, lambda: self._on_batch_complete(total, success_count, failed_list))
 
-    def _on_batch_complete(self, total, success, failed_list, downloaded_files=[]):
+    def _on_batch_complete(self, total, success, failed_list):
         """일괄 다운로드 완료"""
         self.is_batch_downloading = False
         self.batch_btn.config(state="normal", text="일괄 다운로드")
@@ -515,10 +524,9 @@ class SongDownloaderApp:
             pass
             
         # Call the external callback if provided (e.g. to Notify Main App)
-        # Call the external callback if provided (e.g. to Notify Main App)
         if self.on_download_complete:
-            # Pass success count, failed list, AND the list of actual filenames
-            self.on_download_complete(success, failed_list, downloaded_files)
+            # We can pass the list of downloaded files if we tracked them, but for now just signal completion
+            self.on_download_complete(success, failed_list)
 
         # 결과 메시지
         msg = f"일괄 다운로드 완료!\n\n"
@@ -708,7 +716,6 @@ class SongDownloaderApp:
         total = len(queue_to_download)
         success_count = 0
         failed_list = []
-        downloaded_files = []
 
         for i, result in enumerate(queue_to_download):
             if self.batch_cancel_flag:
@@ -738,7 +745,6 @@ class SongDownloaderApp:
                 # 중복 체크
                 if os.path.exists(save_path):
                     success_count += 1
-                    downloaded_files.append(new_filename)
                     self.root.after(0, lambda n=current_num: self.file_number_var.set(str(n + 1)))
                     continue
 
@@ -752,25 +758,23 @@ class SongDownloaderApp:
                 download_file(info['download_url'], save_path, progress_callback=update_progress)
                 
                 success_count += 1
-                downloaded_files.append(new_filename)
                 # 실시간 번호 증가
                 self.root.after(0, lambda n=current_num: self.file_number_var.set(str(n + 1)))
 
             except Exception as e:
                 failed_list.append(f"{result['title']} ({str(e)[:20]})")
 
-        self.root.after(0, lambda: self._on_download_queue_complete(total, success_count, failed_list, downloaded_files))
+        self.root.after(0, lambda: self._on_download_queue_complete(total, success_count, failed_list))
 
-    def _on_download_queue_complete(self, total, success, failed_list, downloaded_files=[]):
+    def _on_download_queue_complete(self, total, success, failed_list):
         """대기열 다운로드 완료 콜백"""
         self.is_batch_downloading = False
         self.download_all_btn.config(state="normal", text="모두 다운로드")
         self.progress['value'] = 100
         
         # Call the external callback
-        # Call the external callback
         if self.on_download_complete:
-             self.on_download_complete(success, failed_list, downloaded_files)
+             self.on_download_complete(success, failed_list)
 
         msg = f"대기열 다운로드 완료!\n\n총 {total}곡 중 {success}곡 성공"
         if failed_list:

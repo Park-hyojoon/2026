@@ -6,6 +6,7 @@ import sys
 import pythoncom
 import webbrowser
 import logging
+import re
 from main import generate_ppt
 from agent_logic import StandardCommandParser
 # Import search and download functions directly
@@ -411,11 +412,10 @@ class App:
                         is_number = True
                     
                     if is_number:
-                        # Optimization: Remove 'ppt' for number search to avoid Tistory search failures
-                        # Most hymn blogs are PPTs anyway, so '새찬송가 28장' is more reliable than '새찬송가 ppt 28장'
-                        query = f"새찬송가 {song_query}"
-                        if "장" not in song_query and song_query.isdigit():
-                             query = f"새찬송가 {song_query}장"
+                        # Logic restored to match v1 exactly: {type} {num}장
+                        # Clean the number (remove '장') if it's there
+                        pure_num = re.search(r'\d+', song_query).group()
+                        query = f"새찬송가 {pure_num}장"
                     else:
                         # Natural Language (e.g. 실로암, 승리하였네) -> Use as is or with specific handling
                         # User wants this flexibility.
@@ -431,7 +431,16 @@ class App:
                         # Trigger Manual Verification
                         self.root.after(0, lambda q=song_query: self.trigger_manual_verification(q))
                         continue
-                        
+
+                    # 2-1. 정확한 매칭 필터링 (번호 검색인 경우)
+                    if is_number:
+                        pure_num = re.search(r'\d+', song_query).group()
+                        pattern = r'(?:^|\s)' + pure_num + r'장(?:\s|$|[^\d])'
+                        filtered_results = [r for r in results if re.search(pattern, r['title'])]
+                        if filtered_results:
+                            results = filtered_results
+                            self.log(f"정확한 매칭 필터링: {len(filtered_results)}개 결과")
+
                     # 3. Select Best Match (Rule 1: Simple Selection / Score based)
                     best_match = results[0]
                     self.log(f"검색 성공: {best_match['title']}")

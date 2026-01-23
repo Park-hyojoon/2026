@@ -111,14 +111,26 @@ class StandardCommandParser:
         Example 2: "예배전 찬양 : 실로암, 28장, 승리하였네" -> ["실로암", "28", "승리하였네"]
         """
         # 1. Remove the header part (e.g., "예배전 찬양 :", "설교후 찬송")
-        # Find the first separator and take everything after it
-        match = re.search(self.sep_pattern, line)
-        if match:
-            # Start after the match
-            content = line[match.end():]
+        # Use a more specific prefix stripping logic
+        prefixes = [
+            r"예배전\s*찬양",
+            r"(설교후|예배\s*후)\s*찬[송양]",
+            r"찬양",
+            r"찬송"
+        ]
+        
+        content = line
+        for p in prefixes:
+            # Match the prefix at the start followed by optional separator
+            match = re.match(r"\s*" + p + r"\s*[:\-\s]+\s*", content)
+            if match:
+                content = content[match.end():]
+                break
         else:
-            # Fallback: maybe no separator? Try to remove known keywords
-            content = re.sub(r"(예배전|설교후|예배\s*후).*찬[송양]", "", line).strip()
+            # If no specific prefix match found, try a generic fallback
+            # but avoid matching spaces inside numbers/words if possible.
+            # Just trim leading whitespace and common separators if they look like a header
+            content = re.sub(r"^[^\d,]+[:\-]\s*", "", content).strip()
             
         # 2. Split by comma
         raw_items = content.split(',')

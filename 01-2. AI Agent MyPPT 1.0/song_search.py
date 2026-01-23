@@ -25,37 +25,6 @@ CWY_SEARCH_URL = "https://cwy0675.tistory.com/search/{keyword}"
 
 
 
-# Filtering Constants
-FILTER_OUT = ['배경없는', '무배경', '흰색', '악보', 'wide', '와이드', 'nwc']
-PRIORITY_IN = ['배경']
-
-def calculate_score(title, keyword):
-    """
-    제목의 적합도를 점수로 계산 (낮을수록 좋음: 0 = 최상)
-    """
-    score = 0
-    title_norm = title.replace(" ", "").lower()
-    keyword_norm = keyword.replace(" ", "").lower()
-    
-    # Base Score: Position of keyword
-    if keyword_norm in title_norm:
-        score += title_norm.find(keyword_norm)
-    else:
-        score += 100 # Not exact match
-        
-    # Penalties (Filter Out)
-    for bad_word in FILTER_OUT:
-        if bad_word in title.replace(" ", "").lower():
-            score += 500 # Push to bottom
-            
-    # Bonuses (Priority)
-    # If "배경" is explicitly mentioned, it's good (unless it says "배경없는")
-    if "배경" in title and "배경없는" not in title and "무배경" not in title:
-        score -= 50
-        
-    return score
-
-
 def sanitize_filename(filename):
     """
     파일명에서 Windows에서 금지된 특수문자 제거
@@ -141,11 +110,6 @@ def search_getwater(keyword):
         print(f"[getwater] 검색 오류: {e}")
         # 오류 발생해도 빈 결과 반환 (다른 소스 검색 계속)
 
-    # Sort by Score for getwater too if needed
-    for r in results:
-        r['score'] = calculate_score(r['title'], keyword)
-    results.sort(key=lambda x: x['score'])
-    
     return results
 
 
@@ -214,36 +178,40 @@ def search_cwy0675(keyword):
                     # 2. 포함되지 않았다면 유사도 검사 (오타/조사 차이 허용)
                     else:
                         matcher = difflib.SequenceMatcher(None, normalized_keyword, normalized_title)
+                        # 가장 긴 연속 매칭 구간 찾기
                         match = matcher.find_longest_match(0, len(normalized_keyword), 0, len(normalized_title))
                         
-                        # 검색어의 40% 이상이 연속해서 일치하면 통과 (기존 50%에서 완화)
-                        if len(normalized_keyword) >= 2 and match.size >= len(normalized_keyword) * 0.4:
-                            is_match = True
-                        
-                        # 번호 중심의 보정: 만약 검색어에 숫자가 포함되어 있고, 제목에도 그 숫자가 정확히 있다면 통과
-                        num_match = re.search(r'\d+', normalized_keyword)
-                        if num_match and num_match.group() in normalized_title:
+                        # 검색어의 60% 이상이 연속해서 일치하면 통과 (예: '승리하'셨네 -> '승리하'였네)
+                        # 3글자 이상인 경우에만 적용 (짧은 단어는 오탐 방지)
+                        if len(normalized_keyword) >= 3 and match.size >= len(normalized_keyword) * 0.6:
                             is_match = True
                     
                     # 검색어가 제목에 포함되어 있거나 유사하면 결과에 추가
                     if is_match:
                         # 중복 체크
                         if not any(r['url'] == full_url for r in results):
-                            # 관련도 점수 계산
-                            final_score = calculate_score(title, keyword)
-                            
+                            # 관련도 점수 계산 (앞에 있을수록 높음)
+                            # 유사 매칭인 경우 find가 -1일 수 있으므로 처리
+                            idx = normalized_title.find(normalized_keyword)
+                            if idx == -1:
+                                idx = 999  # 정확한 매칭이 아니면 뒤로 보냄
+                                
                             results.append({
                                 'title': title,
                                 'url': full_url,
                                 'source': 'cwy0675',
                                 'thumbnail': None,
-                                'score': final_score
+                                'score': idx
                             })
             except Exception as e:
                 continue
 
         # 관련도(score) 순으로 정렬 (0에 가까울수록 제목 시작 부분에 위치)
         results.sort(key=lambda x: x['score'])
+        
+        # 임시 score 필드 삭제
+        for r in results:
+            r.pop('score', None)
 
     except requests.RequestException as e:
         print(f"[cwy0675] 검색 오류: {e}")
@@ -282,9 +250,6 @@ def search_songs(keyword, sources=None):
             results.extend(cwy_results)
         except Exception as e:
             print(f"[cwy0675] 검색 실패: {e}")
-
-    # 통합 후 한 번 더 정렬 (옵션)
-    results.sort(key=lambda x: x.get('score', 999))
 
     return results
 
@@ -500,7 +465,7 @@ if __name__ == "__main__":
     
     # 테스트 1: 번호 검색 (getwater)
     keyword1 = "새찬송가 ppt 28장"
-    print(f"\\n[테스트 1] 검색어: {keyword1}")
+    print(f"\n[테스트 1] 검색어: {keyword1}")
     
     try:
         results = search_songs(keyword1)
@@ -523,7 +488,7 @@ if __name__ == "__main__":
     
     # 테스트 2: 자연어 검색 (cwy0675)
     keyword2 = "찬송하라 여호와의 종들아"
-    print(f"\\n[테스트 2] 검색어: {keyword2}")
+    print(f"\n[테스트 2] 검색어: {keyword2}")
     
     try:
         results = search_songs(keyword2)
@@ -534,7 +499,7 @@ if __name__ == "__main__":
             print(f"  {i+1}. [{source}] {result['title']}")
         
         if results:
-            print("\\n첫 번째 결과 상세 정보:")
+            print("\n첫 번째 결과 상세 정보:")
             info = get_download_info(results[0]['url'])
             print(f"  제목: {info['title']}")
             print(f"  파일명: {info['filename']}")
@@ -543,5 +508,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"오류: {e}")
     
-    print("\\n" + "=" * 50)
+    print("\n" + "=" * 50)
     print("테스트 완료!")
+

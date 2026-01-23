@@ -1,6 +1,6 @@
-# AI Agent Development Plan (Auto make Mypptx v2)
+# AI Agent Development Plan (AI Agent MyPPT 1.0)
 
-This plan outlines the steps to create a "Text-to-Workflow" AI agent that automates church service PPT creation using natural language commands. The project is located in `d:\00. WorkSpace\02. Creat\01. Antigravity\2026\01-2. Auto make Mypptx v2\`.
+This plan outlines the steps to create a "Text-to-Workflow" AI agent that automates church service PPT creation using natural language commands. The project is located in `d:\00. WorkSpace\02. Creat\01. Antigravity\2026\01-2. AI Agent MyPPT 1.0\`.
 
 ## 1. Goal
 Develop a console-based (or simple UI) AI agent that accepts commands like "Prepare Friday service with hymns 28 and 436, Psalm 23" and autonomously executes the necessary Python scripts (`song_search`, `bible_search`, `main.py`) to generate the final PPT.
@@ -41,7 +41,7 @@ graph TD
 - [ ] **에러 로깅**: 모든 이슈를 `error_log.md`에 기록.
 
 ## 4. Immediate Next Task
-- Verify the copied files in `01-2. Auto make Mypptx v2`.
+- Verify the copied files in `01-2. AI Agent MyPPT 1.0`.
 - Create a test script `test_agent_capabilities.py` to verify we can call all 3 core functions (song, bible, ppt generation) programmatically from one place.
 
 ## User Review Required

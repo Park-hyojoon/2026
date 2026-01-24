@@ -46,8 +46,8 @@ class SongDownloaderApp:
         self.source_getwater = tk.BooleanVar(value=True)
         self.source_cwy0675 = tk.BooleanVar(value=True)
         
-        # 검색 결과 누적 옵션 (기본: 체크됨)
-        self.cumulative_search = tk.BooleanVar(value=True)
+        # 검색 결과 누적 옵션 (기본: OFF - 사용자 피드백 '딱! 2개만' 반영)
+        self.cumulative_search = tk.BooleanVar(value=False)
 
         # 일괄 다운로드 진행 상태
         self.is_batch_downloading = False
@@ -347,9 +347,21 @@ class SongDownloaderApp:
                 results = search_songs(keyword, sources=sources)
                 
                 if results:
-                    found_count += 1
-                    # 결과 추가 (메인 스레드에서 UI 업데이트 권장하지만, 리스트 조작은 여기서 하고 UI 반영은 after로)
-                    self.search_results.extend(results)
+                    # 정확한 매칭만 필터링 (예: "28장" 검색 시 "128장", "228장" 등 제외)
+                    # 패턴: 공백 또는 시작 + 숫자 + "장"
+                    pattern = r'(?:^|\s)' + str(num) + r'장(?:\s|$|[^\d])'
+                    filtered_results = [r for r in results if re.search(pattern, r['title'])]
+                    
+                    if filtered_results:
+                        found_count += 1
+                        # 각 소스당 최상위 1개씩만 선택하여 노이즈 최소화
+                        best_results = []
+                        for source in sources:
+                            source_results = [r for r in filtered_results if r['source'] == source]
+                            if source_results:
+                                best_results.append(source_results[0])
+                        
+                        self.search_results.extend(best_results)
             except:
                 pass
         
@@ -814,10 +826,18 @@ class SongDownloaderApp:
         
         if not results:
             self.status_label.config(text="검색 결과가 없습니다.")
-            # 누적 모드일 때, 기존 결과 다시 표시
-            if self.cumulative_search.get() and self.search_results:
-                self._redisplay_results()
             return
+        
+        # 정밀 필터 적용 (검색어에 숫자가 포함된 경우)
+        keyword = self.search_entry.get().strip()
+        num_match = re.search(r'\d+', keyword)
+        if num_match:
+            num = num_match.group()
+            pattern = r'(?:^|\s)' + num + r'장(?:\s|$|[^\d])'
+            # 숫자가 포함된 검색어라면 해당 숫자 장수만 필터링
+            results = [r for r in results if re.search(pattern, r['title'])]
+            if results:
+                self.status_label.config(text=f"정밀 필터 적용됨 ({len(results)}건)")
         
         # 누적 모드: 기존 결과에 추가
         if self.cumulative_search.get():

@@ -6,6 +6,7 @@ import sys
 import pythoncom
 import webbrowser
 import logging
+import re
 from main import generate_ppt
 from agent_logic import StandardCommandParser
 # Import search and download functions directly
@@ -430,6 +431,15 @@ class App:
                         self.root.after(0, lambda q=song_query: self.trigger_manual_verification(q))
                         continue
                         
+                    # 2-1. 정확한 매칭 필터링 (번호 검색인 경우 "28장"만 남기고 "128장" 등 제거)
+                    if is_number:
+                        pure_num = re.search(r'\d+', song_query).group()
+                        pattern = r'(?:^|\s)' + pure_num + r'장(?:\s|$|[^\d])'
+                        filtered_results = [r for r in results if re.search(pattern, r['title'])]
+                        if filtered_results:
+                            results = filtered_results
+                            self.log(f"정밀 필터 적용: {len(results)}개 결과로 압축")
+                        
                     # 3. Select Best Match (Rule 1: Simple Selection / Score based)
                     best_match = results[0]
                     self.log(f"검색 성공: {best_match['title']}")
@@ -524,9 +534,10 @@ class App:
         if os.path.exists(ppt_dir):
             files = [f for f in os.listdir(ppt_dir) if f.lower().endswith(('.pptx', '.ppt'))]
             files.sort()
-            for i, f in enumerate(files):
-                if i < 2: self.list_before.insert(tk.END, f)
-                else: self.list_after.insert(tk.END, f)
+            # User requested 'Clean UI': Do not auto-populate on refresh unless they select them
+            # For now, let's just leave it empty or keep it but ensure it's not confusing.
+            # (Originally it added 1장, 2장... which was confusing)
+            pass 
 
     def clear_all_lists(self):
         self.list_before.delete(0, tk.END)

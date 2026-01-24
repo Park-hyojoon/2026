@@ -39,7 +39,8 @@ else:
 
 # Import optional modules
 try:
-    from song_downloader import SongDownloaderApp
+    import song_downloader_v2
+    from song_downloader_v2 import SongDownloaderApp
 except ImportError as e:
     SongDownloaderApp = None
     error_msg = str(e)
@@ -84,7 +85,10 @@ class ShortcutManager:
 class App:
     def __init__(self, root):
         self.root = root
-        self.root.title("MyPPT 2.5 AI Agent (v2)")
+        try:
+            if self.root.winfo_exists():
+                self.root.title("MyPPT 2.5 AI Agent (v2)")
+        except: pass
         
         # Increase width for Agent Panel
         # User requested Total Width: 1500px
@@ -161,6 +165,29 @@ class App:
                                                   on_download_complete=self.handle_download_complete)
         else:
             tk.Label(left_search_frame, text="다운로드 모듈 없음").pack()
+
+        # [NEW] Arrow Buttons Frame (Between Search and Settings)
+        arrow_frame = tk.Frame(self.main_paned, bg="#d9d9d9")
+        self.main_paned.add(arrow_frame, width=50, stretch="never")
+        
+        # Spacing to align somewhat with lists
+        # Top spacer
+        tk.Frame(arrow_frame, height=250, bg="#d9d9d9").pack()
+        
+        # Button: To Before (Top)
+        self.btn_send_to_before = tk.Button(arrow_frame, text="▶\nB\ne\nf\no\nr\ne", 
+                                            command=lambda: self.transfer_selection(is_before=True),
+                                            bg="#fff9c4", font=("Arial", 9, "bold"), relief="raised")
+        self.btn_send_to_before.pack(fill="x", padx=5, pady=5)
+        
+        # Middle spacer
+        tk.Frame(arrow_frame, height=150, bg="#d9d9d9").pack()
+        
+        # Button: To After (Bottom)
+        self.btn_send_to_after = tk.Button(arrow_frame, text="▶\nA\nf\nt\ne\nr",
+                                           command=lambda: self.transfer_selection(is_before=False),
+                                           bg="#fff9c4", font=("Arial", 9, "bold"), relief="raised")
+        self.btn_send_to_after.pack(fill="x", padx=5, pady=5)
 
         # 2. Frame B (Settings & Lists) - Center
         center_frame = tk.Frame(self.main_paned)
@@ -740,6 +767,40 @@ class App:
                 self.log(f"치명적 오류: {e}")
         
         threading.Thread(target=run).start()
+
+    def transfer_selection(self, is_before):
+        """Arrow Button Handler: Transfer selected songs from Search to Before/After list"""
+        if not self.downloader_app: return
+        
+        # Get selected items keys (indices)
+        selection = self.downloader_app.result_listbox.curselection()
+        if not selection:
+            messagebox.showwarning("선택 없음", "검색 결과에서 곡을 선택해주세요.")
+            return
+            
+        # Extract item data
+        items = []
+        for i in selection:
+            if i < len(self.downloader_app.search_results):
+                items.append(self.downloader_app.search_results[i])
+        
+        target_list = self.list_before if is_before else self.list_after
+        target_name = "예배 전 찬양" if is_before else "예배 후 찬양"
+        
+        self.log(f"전송 시작 -> {target_name} ({len(items)}곡)")
+        
+        # Callback for each success
+        def on_success(filename):
+            # Check for duplicates in list
+            existing = target_list.get(0, tk.END)
+            if filename not in existing:
+                # Insert at end
+                target_list.insert(tk.END, filename)
+                self.log(f"리스트 추가({target_name}): {filename}")
+            else:
+                self.log(f"중복 제외({target_name}): {filename}")
+                
+        self.downloader_app.download_selected_items(items, on_success)
 
 if __name__ == "__main__":
     root = tk.Tk()

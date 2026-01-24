@@ -109,13 +109,20 @@ class SongDownloaderApp:
         type_combo['values'] = ("새찬송가 ppt", "통일찬송가 ppt", "새찬송가 악보")
         type_combo.pack(side="left", padx=(0, 10))
 
-        self.batch_search_btn = tk.Button(batch_frame, text="일괄 검색", command=self.batch_search,
-                                   bg="#FFD700", font=("Arial", 10, "bold"))  # Gold color
-        self.batch_search_btn.pack(side="right", padx=2)
+        # [Relocated] 일괄 검색 및 다운로드 버튼 (상단 배치)
+        # 버튼들은 아래의 전용 프레임으로 이동했습니다.
 
-        self.batch_btn = tk.Button(batch_frame, text="일괄 다운로드", command=self.batch_download,
-                                   bg="#90EE90", font=("Arial", 10, "bold"))
-        self.batch_btn.pack(side="right", padx=2)
+        # === [Relocated] 일괄 실행 버튼 영역 (프레임 사이 빈 공간) ===
+        btn_action_frame = tk.Frame(main_frame)
+        btn_action_frame.pack(fill="x", pady=(0, 10))
+
+        self.batch_search_btn = tk.Button(btn_action_frame, text="🔍 일괄 검색", command=self.batch_search,
+                                   bg="#FFD700", font=("Arial", 10, "bold"), width=15)
+        self.batch_search_btn.pack(side="left", padx=(10, 5))
+
+        self.batch_btn = tk.Button(btn_action_frame, text="📥 일괄 다운로드", command=self.batch_download,
+                                   bg="#90EE90", font=("Arial", 10, "bold"), width=15)
+        self.batch_btn.pack(side="left", padx=5)
 
         # === 검색 영역 ===
         search_frame = tk.LabelFrame(main_frame, text="개별 검색", padx=10, pady=10)
@@ -713,6 +720,54 @@ class SongDownloaderApp:
         self.download_all_btn.config(state="disabled", text="다운로드 중...")
         
         threading.Thread(target=self._download_queue_thread, daemon=True).start()
+
+    def download_selected_items(self, items, callback=None):
+        """외부에서 호출: 선택된 항목 리스트를 다운로드하고 callback(filename)을 호출"""
+        if not items: return
+        
+        # 다운로드 로직 재사용을 위해 스레드 시작
+        threading.Thread(target=self._download_items_thread, args=(items, callback), daemon=True).start()
+
+    def _download_items_thread(self, items, callback):
+        """특정 항목 리스트 다운로드 스레드"""
+        total = len(items)
+        success_count = 0
+        
+        for i, result in enumerate(items):
+            try:
+                self.root.after(0, lambda r=result, idx=i+1, t=total:
+                    self.status_label.config(text=f"전송 중... [{idx}/{t}] '{r['title']}'"))
+
+                info = get_download_info(result['url'])
+                if not info['download_url']: continue
+
+                filename = info['filename'] or f"{result['title']}.ppt"
+                filename = sanitize_filename(filename)
+                
+                # 파일 번호 사용 안 함 (전송 모드에서는 번호 없이 또는 기존 번호 유지?)
+                # 사용자 요구: 그냥 다운받아서 리스트에 넣기를 원함.
+                # 번호가 필요하면 file_number_var 사용.
+                current_num = int(self.file_number_var.get())
+                new_filename = f"{current_num}. {filename}"
+                
+                save_dir = self.save_dir_var.get()
+                save_path = os.path.join(save_dir, new_filename)
+
+                # 이미 있으면 그냥 사용
+                if not os.path.exists(save_path):
+                    download_file(info['download_url'], save_path)
+                
+                # 성공 처리
+                success_count += 1
+                self.root.after(0, lambda n=current_num: self.file_number_var.set(str(n + 1)))
+                
+                if callback:
+                    self.root.after(0, lambda f=new_filename: callback(f))
+                    
+            except Exception as e:
+                print(f"Error downloading {result['title']}: {e}")
+
+        self.root.after(0, lambda: self.status_label.config(text=f"전송 완료: {success_count}곡"))
 
     def _download_queue_thread(self):
         """대기열 다운로드 스레드"""

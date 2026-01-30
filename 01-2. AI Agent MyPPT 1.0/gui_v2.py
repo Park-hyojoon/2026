@@ -142,6 +142,9 @@ class App:
 
         self.create_widgets()
         
+        # [MOD] Automate Kill PPT on startup
+        self.reset_powerpoint()
+        
         # Open Work Folder Button
         self.btn_open_work = tk.Button(self.root, text="📂 작업폴더 열기", 
                                       command=lambda: os.startfile(self.current_dir),
@@ -276,13 +279,13 @@ class App:
         # User wants Input | Button | Log
         
         agent_upper_frame = tk.Frame(v_paned, bg="#f0f8ff")
-        v_paned.add(agent_upper_frame, height=500, stretch="always") # Top half large
+        v_paned.add(agent_upper_frame, height=400, stretch="always") # Top half large
 
         tk.Label(agent_upper_frame, text="🤖 AI Agent Panel", font=("Arial", 11, "bold"), bg="#f0f8ff").pack(anchor="w")
         tk.Label(agent_upper_frame, text="명령어 입력 (예: 금요 28, 436 시 23:1)", bg="#f0f8ff").pack(anchor="w")
         
-        # Input Text
-        self.agent_input_text = scrolledtext.ScrolledText(agent_upper_frame, bg="white", height=10) 
+        # Input Text (Reduced height by 20%: 10 -> 8)
+        self.agent_input_text = scrolledtext.ScrolledText(agent_upper_frame, bg="white", height=8) 
         self.agent_input_text.pack(fill="both", expand=True, pady=2)
         
         # Send Button 
@@ -293,7 +296,8 @@ class App:
 
         # Agent Log
         tk.Label(agent_upper_frame, text="에이전트 로그:", bg="#f0f8ff").pack(anchor="w")
-        self.agent_log_text = scrolledtext.ScrolledText(agent_upper_frame, bg="#2b2b2b", fg="#00ff00", height=12, state='disabled')
+        # Agent Log (Reduced height by 20%: 12 -> 10)
+        self.agent_log_text = scrolledtext.ScrolledText(agent_upper_frame, bg="#2b2b2b", fg="#00ff00", height=10, state='disabled')
         self.agent_log_text.pack(fill="both", expand=True)
 
         # Bottom: Final Controls (Inputs Frame content moved here)
@@ -319,7 +323,8 @@ class App:
             self.btn_search.pack(side="right")
 
         tk.Label(final_control_frame, text="Bible Body:", font=("Arial", 10, "bold"), bg="#f0f8ff").pack(anchor="w", pady=(10,0))
-        self.bible_body_text = scrolledtext.ScrolledText(final_control_frame, height=8)
+        # Bible Body (Increased height: 8 + 2 + 2 = 12)
+        self.bible_body_text = scrolledtext.ScrolledText(final_control_frame, height=12)
         self.bible_body_text.pack(fill="both", expand=True)
 
         self.btn_gen = tk.Button(final_control_frame, text="Generate PPT", command=self.start_generation, bg="lightblue", font=("Arial", 12, "bold"))
@@ -675,11 +680,11 @@ class App:
         2. Auto-fill Search Bar in SongDownloaderApp
         3. User takes over.
         """
-        msg = f"찬송곡 '{song_query}' 검색에 실패했거나 중복이 발견되었습니다.\n"
-        msg += "사용자께서 직접 검수해주세요.\n\n"
-        msg += "확인을 누르면 검색어가 자동으로 입력됩니다."
+        # msg = f"찬송곡 '{song_query}' 검색에 실패했거나 중복이 발견되었습니다.\n"
+        # msg += "사용자께서 직접 검수해주세요.\n\n"
+        # msg += "확인을 누르면 검색어가 자동으로 입력됩니다."
         
-        messagebox.showwarning("검색 확인 필요", msg)
+        # messagebox.showwarning("검색 확인 필요", msg)
         
         # Auto-fill and Click
         if self.downloader_app:
@@ -752,8 +757,9 @@ class App:
                     msg = "PPT 생성 성공!"
                     if warns: msg += f"\n(경고: {len(warns)}건)"
                     self.log(msg)
-                    if warns:
-                         self.root.after(0, lambda: messagebox.showinfo("완료 (경고 포함)", msg + "\n로그를 확인하세요."))
+                    # [MOD] Remove success popup
+                    # if warns:
+                    #      self.root.after(0, lambda: messagebox.showinfo("완료 (경고 포함)", msg + "\n로그를 확인하세요."))
                     
                     os.startfile(out)
                     try:

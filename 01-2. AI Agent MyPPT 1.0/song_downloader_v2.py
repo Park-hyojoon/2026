@@ -393,7 +393,7 @@ class SongDownloaderApp:
         
         self._redisplay_results()
         self.status_label.config(text=f"일괄 검색 완료: {found}/{total}곡 찾음 (총 {len(self.search_results)}개 결과)")
-        messagebox.showinfo("완료", f"일괄 검색이 완료되었습니다.\n{found}/{total}곡을 찾았습니다.")
+        # messagebox.showinfo("완료", f"일괄 검색이 완료되었습니다.\n{found}/{total}곡을 찾았습니다.")
 
     def batch_download(self):
         """일괄 다운로드 실행"""
@@ -550,11 +550,11 @@ class SongDownloaderApp:
                 msg += f"\n... (+{len(failed_list)-10}개)"
 
         self.status_label.config(text=f"완료: {success}/{total}곡 성공")
-        messagebox.showinfo("완료", msg)
+        # messagebox.showinfo("완료", msg)
 
         # 폴더 열기
-        if success > 0 and messagebox.askyesno("확인", "저장 폴더를 여시겠습니까?"):
-            os.startfile(self.save_dir_var.get())
+        # if success > 0 and messagebox.askyesno("확인", "저장 폴더를 여시겠습니까?"):
+        #     os.startfile(self.save_dir_var.get())
 
     def browse_save_dir(self):
         """저장 폴더 선택"""

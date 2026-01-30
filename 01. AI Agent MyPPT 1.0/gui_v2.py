@@ -768,7 +768,11 @@ class App:
                 else:
                     error_msg = "\n".join(errs)
                     self.log(f"오류 발생: {error_msg}")
-                    self.root.after(0, lambda: messagebox.showerror("PPT 생성 오류", f"다음 오류가 발생했습니다:\n{error_msg}"))
+                    # Show error and TERMINATE application
+                    def on_error_exit():
+                        messagebox.showerror("PPT 생성 오류", f"다음 오류가 발생했습니다. (앱이 종료됩니다):\n{error_msg}")
+                        self.root.destroy()
+                    self.root.after(0, on_error_exit)
             except Exception as e:
                 self.log(f"치명적 오류: {e}")
         

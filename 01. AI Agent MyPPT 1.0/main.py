@@ -248,8 +248,7 @@ def generate_ppt(songs_before, songs_after, template_path, output_path, worship_
                                 processed.append(converted_path)
                         except Exception as e:
                             msg = f"Failed to convert {os.path.basename(file_path)}: {str(e)}"
-                            print(msg)
-                            errors.append(msg)
+                            raise Exception(msg) # Stop immediately on conversion error
                     elif file_path.lower().endswith(".pptx"):
                         processed.append(file_path)
                     else:
@@ -394,8 +393,7 @@ def generate_ppt(songs_before, songs_after, template_path, output_path, worship_
                         
                     except Exception as e:
                         msg = f"Error inserting song {os.path.basename(song_path)}: {e}"
-                        print(msg)
-                        errors.append(msg)
+                        raise Exception(msg) # Stop immediately on insertion error
                 
                 return target_index
 
@@ -471,6 +469,15 @@ def generate_ppt(songs_before, songs_after, template_path, output_path, worship_
         msg = f"An unexpected error occurred: {e}"
         print(msg)
         traceback.print_exc()
+        
+        # [NEW] Save progress before exiting if possible
+        if 'main_pres' in locals() and main_pres:
+            try:
+                main_pres.Save()
+                print("Progress saved before emergency exit.")
+            except:
+                print("Could not save progress during emergency exit.")
+                
         errors.append(msg)
     
     return errors, warnings

@@ -126,6 +126,10 @@ def search_getwater(keyword):
                         title = title_elem.get_text(strip=True)
 
                 if title and len(title) > 3:  # 너무 짧은 제목 제외
+                    # [필터링] '통일찬송가', '배경없는', '무배경' 제외 (사용자 요청)
+                    if any(bad_word in title for bad_word in ["통일찬송가", "배경없는", "무배경"]):
+                        continue
+                        
                     # 중복 체크
                     if not any(r['url'] == full_url for r in results):
                         results.append({
@@ -224,6 +228,10 @@ def search_cwy0675(keyword):
                     
                     # 검색어가 제목에 포함되어 있거나 유사하면 결과에 추가
                     if is_match:
+                        # [필터링] '통일찬송가', '배경없는', '무배경' 제외 (사용자 요청)
+                        if any(bad_word in title for bad_word in ["통일찬송가", "배경없는", "무배경"]):
+                            continue
+
                         # 중복 체크
                         if not any(r['url'] == full_url for r in results):
                             # 관련도 점수 계산

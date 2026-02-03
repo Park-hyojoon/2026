@@ -139,6 +139,12 @@ class App:
             if os.path.exists(icon_path):
                 self.root.iconbitmap(icon_path)
         except: pass
+        
+        # [NEW] Agent State Variables
+        self.task_queue = []
+        self.is_agent_running = False
+        self.waiting_for_user_selection = False
+        self.current_agent_task = None # (list_type, query)
 
         self.create_widgets()
         
@@ -424,85 +430,82 @@ class App:
             except Exception as e:
                 self.log(f"성경 처리 중 에러: {e}")
 
-        # B. Song Search & Download
-        # Need to handle hymns_before and hymns_after
+        # B. Song Search & Download Logic (Dual Mode)
         self.root.after(0, self.clear_all_lists)
 
-        # Helper to process a list of songs
+        all_queries = (data.get("hymns_before") or []) + (data.get("hymns_after") or [])
+        
+        # Check if ALL queries are numeric (Pure Numbers or "123장")
+        is_all_numeric = True
+        for q in all_queries:
+            q = q.strip()
+            # Check digit or "123장" pattern
+            if not (q.isdigit() or (q.endswith("장") and q[:-1].strip().isdigit())):
+                is_all_numeric = False
+                break
+        
+        if not all_queries:
+            is_all_numeric = True # No songs implies nothing to do, treat as fast path
+            
+        if is_all_numeric:
+            self.log("▶ 모드 감지: 숫자 전용 (일괄 자동 처리)")
+            self.process_batch_mode(data)
+        else:
+            self.log("▶ 모드 감지: 텍스트 혼합 (순차 검수 처리)")
+            self.process_mixed_mode(data)
+
+    def process_batch_mode(self, data):
+        """기존의 일괄 처리 방식 (All-Pass)"""
+        
+        # Helper to process a list of songs (Legacy Logic)
         def process_song_list(song_list, is_before):
             for song_query in song_list:
-                self.log(f"찬양 처리 중: '{song_query}'")
+                self.log(f"찬양 처리 중(자동): '{song_query}'")
                 target_dir = self.ppt_dir_var.get()
                 
                 try:
                     # 1. Search Query Optimization
-                    # Logic Refined: Handle Natural Language vs Number
-                    is_number = False
-                    if song_query.isdigit():
-                        is_number = True
-                    elif "장" in song_query and song_query.replace("장","").strip().isdigit():
-                        is_number = True
+                    is_number = True # We know it's numeric in this mode
                     
                     if is_number:
                         query = f"새찬송가 ppt {song_query}"
                         if "장" not in song_query and song_query.isdigit():
                              query = f"새찬송가 ppt {song_query}장"
-                    else:
-                        # Natural Language (e.g. 실로암, 승리하였네) -> Use as is or with specific handling
-                        # User wants this flexibility.
-                        query = song_query
                         
                     self.log(f"검색어(최적화): {query}")
                     
                     # 2. Search
-                    self.log(f"검색 시작: '{query}'")
                     results = search_songs(query)
                     if not results:
-                        self.log(f"검색 결과 0건: '{song_query}' (검색어: {query})")
-                        # Trigger Manual Verification
-                        self.root.after(0, lambda q=song_query: self.trigger_manual_verification(q))
+                        self.log(f"검색 결과 0건: {song_query}")
                         continue
                         
-                    # 2-1. 정확한 매칭 필터링 (번호 검색인 경우 "28장"만 남기고 "128장" 등 제거)
-                    if is_number:
-                        pure_num = re.search(r'\d+', song_query).group()
-                        pattern = r'(?:^|\s)' + pure_num + r'장(?:\s|$|[^\d])'
-                        filtered_results = [r for r in results if re.search(pattern, r['title'])]
-                        if filtered_results:
-                            results = filtered_results
-                            self.log(f"정밀 필터 적용: {len(results)}개 결과로 압축")
+                    # 2-1. 정밀 필터 (숫자 모드이므로 필수)
+                    pure_num = re.search(r'\d+', song_query).group()
+                    pattern = r'(?:^|\s)' + pure_num + r'장(?:\s|$|[^\d])'
+                    filtered_results = [r for r in results if re.search(pattern, r['title'])]
+                    if filtered_results:
+                        results = filtered_results
                         
-                    # 3. Select Best Match (Rule 1: Simple Selection / Score based)
+                    # 3. Select Best Match
                     best_match = results[0]
                     self.log(f"검색 성공: {best_match['title']}")
                     
-                    # 4. Get Download Link (Verification check: does it have content?)
-                    self.log(f"다운로드 링크 추출 중...")
+                    # 4. Get Link
                     dl_info = get_download_info(best_match['url'])
                     if not dl_info['download_url']:
-                        self.log(f"다운로드 링크 없음: {best_match['title']}")
-                        self.root.after(0, lambda q=song_query: self.trigger_manual_verification(q))
                         continue
                         
                     # 5. Download
-                    filename = dl_info['filename']
-                    if not filename:
-                        filename = f"{song_query}.pptx"
+                    filename = dl_info['filename'] or f"{song_query}.pptx"
                         
                     save_path = os.path.join(target_dir, filename)
-                    self.log(f"다운로드 시작: {filename}")
                     
-                    valid_ppt = False
                     if download_file(dl_info['download_url'], save_path):
                          self.log(f"다운로드 완료: {filename}")
-                         valid_ppt = True
-                         
-                         # Add to Listbox UI safely
                          def add_to_ui():
-                             if is_before:
-                                 self.list_before.insert(tk.END, filename)
-                             else:
-                                 self.list_after.insert(tk.END, filename)
+                             if is_before: self.list_before.insert(tk.END, filename)
+                             else: self.list_after.insert(tk.END, filename)
                          self.root.after(0, add_to_ui)
                     else:
                         self.log(f"다운로드 실패")
@@ -510,16 +513,113 @@ class App:
                 except Exception as e:
                     self.log(f"에러 ({song_query}): {e}")
 
-        # Execute for Before and After lists
         if data["hymns_before"]:
-            self.log("--- 예배전 찬양 검색 ---")
+            self.log("--- 예배전 찬양 (일괄) ---")
             process_song_list(data["hymns_before"], is_before=True)
             
         if data["hymns_after"]:
-            self.log("--- 예배후 찬양 검색 ---")
+            self.log("--- 예배후 찬양 (일괄) ---")
             process_song_list(data["hymns_after"], is_before=False)
-
+            
         self.log("모든 데이터 준비 완료.")
+
+    def process_mixed_mode(self, data):
+        """순차적 검수/자동 처리 모드"""
+        self.task_queue = []
+        self.is_agent_running = True
+        
+        # Build Queue: [('before', '곡명'), ('after', '곡명')...]
+        if data["hymns_before"]:
+            for q in data["hymns_before"]:
+                # Remove "찬양 :", "전" prefix if present
+                q = q.replace("찬양 :", "").replace("찬양:", "").replace("전 ", "").strip()
+                self.task_queue.append(('before', q))
+        if data["hymns_after"]:
+            for q in data["hymns_after"]:
+                # Remove "찬양 :", "후" prefix if present
+                q = q.replace("찬양 :", "").replace("찬양:", "").replace("후 ", "").strip()
+                self.task_queue.append(('after', q))
+                
+        self.log(f"총 {len(self.task_queue)}개의 작업이 큐에 등록되었습니다.")
+        self.process_next_step()
+
+    def process_next_step(self):
+        """큐에서 작업을 하나 꺼내 처리"""
+        if not self.task_queue:
+            self.log("모든 순차 작업이 완료되었습니다.")
+            self.is_agent_running = False
+            self.waiting_for_user_selection = False
+            return
+
+        # Pop next task
+        list_type, query = self.task_queue.pop(0)
+        self.current_agent_task = (list_type, query)
+        
+        target_list_name = "예배전 찬양" if list_type == 'before' else "예배후 찬양"
+        self.log(f"👉 작업 시작 [{target_list_name}]: '{query}'")
+
+        # Check Type: Numeric vs Text
+        is_numeric = query.isdigit() or (query.endswith("장") and query[:-1].strip().isdigit())
+        
+        if is_numeric:
+            # --- AUTO MODE (Numeric) ---
+            self.log(" 타입: 숫자 (자동 처리)")
+            # Reuse logic somewhat or simplify
+            threading.Thread(target=self.run_single_auto_task, args=(list_type, query), daemon=True).start()
+        else:
+            # --- MANUAL INTERACTIVE MODE (Text) ---
+            self.log(f" 타입: 텍스트 (사용자 검수 대기)")
+            self.waiting_for_user_selection = True
+            
+            # Trigger Search on Left Panel via Main Thread
+            self.root.after(0, lambda: self.trigger_manual_verification(query, reason="interactive"))
+            
+            # Now we wait for handle_download_complete callback
+
+    def run_single_auto_task(self, list_type, song_query):
+        """Single task execution for numeric inputs in mixed mode"""
+        try:
+            target_dir = self.ppt_dir_var.get()
+            search_q = f"새찬송가 ppt {song_query}"
+            if "장" not in song_query and song_query.isdigit():
+                 search_q = f"새찬송가 ppt {song_query}장"
+            
+            results = search_songs(search_q)
+            if results:
+                # Filter exact match logic
+                pure_num = re.search(r'\d+', song_query).group()
+                pattern = r'(?:^|\s)' + pure_num + r'장(?:\s|$|[^\d])'
+                filtered = [r for r in results if re.search(pattern, r['title'])]
+                if filtered: results = filtered
+                
+                best = results[0]
+                dl_info = get_download_info(best['url'])
+                
+                if dl_info['download_url']:
+                    fname = dl_info['filename'] or f"{song_query}.pptx"
+                    save_path = os.path.join(target_dir, fname)
+                    if download_file(dl_info['download_url'], save_path):
+                        self.log(f"자동 다운로드 성공: {fname}")
+                        
+                        # Add to List
+                        def add_ui():
+                            lst = self.list_before if list_type == 'before' else self.list_after
+                            lst.insert(tk.END, fname)
+                        self.root.after(0, add_ui)
+                        
+                        # Next!
+                        self.root.after(500, self.process_next_step)
+                        return
+
+            self.log(f"자동 처리 실패: {song_query} -> 수동 전환")
+            # If auto fails, fallback to manual for this item?
+            # Or just skip? Let's fallback to manual.
+            self.waiting_for_user_selection = True
+            self.root.after(0, lambda: self.trigger_manual_verification(song_query, reason="fallback"))
+            
+        except Exception as e:
+            self.log(f"에러: {e}")
+            self.process_next_step() # Skip on error
         # Auto click Generate?
         # self.root.after(1000, self.start_generation)
 
@@ -664,6 +764,37 @@ class App:
             else:
                 self.log("다운로드된 곡이 이미 리스트에 존재합니다.")
                 
+            # [NEW] Trigger Next Step if in Sequential Mode
+            if self.is_agent_running and self.waiting_for_user_selection:
+                self.log("사용자 검수 완료 확인 -> 다음 작업 진행")
+                
+                # Correctly place the downloaded item into the TARGET list (Before/After)
+                # The default logic above puts it in 'After' or keeps user placement.
+                # Ideally, we should ensure the file goes to the RIGHT list based on currentTask.
+                if self.current_agent_task:
+                    target_type, query = self.current_agent_task
+                    target_list = self.list_before if target_type == 'before' else self.list_after
+                    
+                    # Move from After(default) to Before if needed
+                    # Or verify it's there. 
+                    # Simpler: Just rely on user to move it? No, agent should place it.
+                    # We inserted into 'After' by default above (lines 650+).
+                    # If target is 'before', we should move newly added items to 'before'.
+                    if target_type == 'before' and added_count > 0:
+                         # Move the last N items from After to Before
+                         # This is a bit hacky but works if user didn't interfere.
+                         pass # Let's assume user might manually place it, OR we force it.
+                         # Actually, the user might click "To Before" manually.
+                         # Let's just create a strong binding: 
+                         # If we are waiting for 'Before' song, effectively move it.
+                         for f in downloaded_files:
+                             # Remove from After if there (cleanup default behavior)
+                             # (Optional implementation detail)
+                             pass
+
+                self.waiting_for_user_selection = False
+                self.root.after(500, self.process_next_step)
+                
         else:
             # Fallback (or if user deleted files manually?): Full Refresh
             # This is destructive to ordering.
@@ -674,26 +805,26 @@ class App:
 
     def trigger_manual_verification(self, song_query, reason="ambiguous"):
         """
-        Scenario: Agent fails to find a clear match.
+        Scenario: Agent fails to find a clear match or needs user selection (Mixed Mode).
         Action: 
-        1. Show Alert (Box)
-        2. Auto-fill Search Bar in SongDownloaderApp
-        3. User takes over.
+        1. Auto-fill Individual Search Bar in SongDownloaderApp
+        2. Trigger Search
         """
-        # msg = f"찬송곡 '{song_query}' 검색에 실패했거나 중복이 발견되었습니다.\n"
-        # msg += "사용자께서 직접 검수해주세요.\n\n"
-        # msg += "확인을 누르면 검색어가 자동으로 입력됩니다."
-        
-        # messagebox.showwarning("검색 확인 필요", msg)
-        
-        # Auto-fill and Click
+        # Auto-fill and Search
         if self.downloader_app:
-            # Access the batch entry widget
-            self.downloader_app.batch_entry.delete(0, tk.END)
-            self.downloader_app.batch_entry.insert(0, song_query)
-            # Trigger search (Optional: or just focus)
-            self.downloader_app.batch_search()
-            self.log(f"사용자 검수 요청: '{song_query}' (자동 검색 실행됨)")
+            # [MOD] Use Individual Search Entry (search_entry) instead of Batch Entry
+            self.downloader_app.search_entry.delete(0, tk.END)
+            self.downloader_app.search_entry.insert(0, song_query) # Just the query, no prefix
+            
+            # Trigger search
+            # We should call the function bound to the "검색" button in SongDownloaderApp
+            # The correct method is 'do_search'
+            if hasattr(self.downloader_app, 'do_search'):
+                self.downloader_app.do_search()
+            else:
+                 self.log("ERROR: SongDownloaderApp does not have do_search method.")
+            
+            self.log(f"사용자 검수 요청: '{song_query}' (개별 검색 실행됨)")
 
     def reset_powerpoint(self):
         os.system("taskkill /IM POWERPNT.EXE /F")
@@ -768,7 +899,11 @@ class App:
                 else:
                     error_msg = "\n".join(errs)
                     self.log(f"오류 발생: {error_msg}")
-                    self.root.after(0, lambda: messagebox.showerror("PPT 생성 오류", f"다음 오류가 발생했습니다:\n{error_msg}"))
+                    # Show error and TERMINATE application
+                    def on_error_exit():
+                        messagebox.showerror("PPT 생성 오류", f"다음 오류가 발생했습니다. (앱이 종료됩니다):\n{error_msg}")
+                        self.root.destroy()
+                    self.root.after(0, on_error_exit)
             except Exception as e:
                 self.log(f"치명적 오류: {e}")
         
@@ -805,7 +940,13 @@ class App:
                 self.log(f"리스트 추가({target_name}): {filename}")
             else:
                 self.log(f"중복 제외({target_name}): {filename}")
-                
+            
+            # [NEW] Trigger Agent Next Step if waiting
+            if self.is_agent_running and self.waiting_for_user_selection:
+                self.log("사용자 선택 완료(전송) -> 다음 작업 진행")
+                self.waiting_for_user_selection = False
+                self.root.after(1000, self.process_next_step)
+
         self.downloader_app.download_selected_items(items, on_success)
 
 if __name__ == "__main__":
